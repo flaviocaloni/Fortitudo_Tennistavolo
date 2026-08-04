@@ -4,10 +4,9 @@ import { bookSlot, cancelBooking } from "@/lib/actions/bookings";
 import { formatDateIT, formatTime, slotsForDate, upcomingDates } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
+import { getCalendarDaysAhead } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
-
-const DAYS_AHEAD = 14;
 
 export default async function CalendarioPage({
   searchParams,
@@ -17,6 +16,7 @@ export default async function CalendarioPage({
   const { supabase, user, profile } = await getSessionProfile();
   if (!user || !profile) redirect("/login");
 
+  const DAYS_AHEAD = await getCalendarDaysAhead(supabase);
   const dates = upcomingDates(DAYS_AHEAD);
   const from = dates[0];
   const to = dates[dates.length - 1];

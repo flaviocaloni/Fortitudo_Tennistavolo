@@ -5,7 +5,9 @@ import {
   deleteClosure,
   deleteSlot,
   toggleSlotActive,
+  updateCalendarDays,
 } from "@/lib/actions/admin";
+import { getCalendarDaysAhead } from "@/lib/settings";
 import { formatTime } from "@/lib/dates";
 import { AUDIENCE_LABEL, WEEKDAYS, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
@@ -28,6 +30,7 @@ export default async function AdminSlotPage({
       .order("start_time"),
     supabase.from("club_closures").select("*").order("start_date"),
   ]);
+  const calendarDays = await getCalendarDaysAhead(supabase);
 
   const recurring = (slots ?? []).filter((s: TrainingSlot) => !s.event_date);
   const events = (slots ?? []).filter((s: TrainingSlot) => s.event_date);
@@ -36,6 +39,29 @@ export default async function AdminSlotPage({
     <div>
       <h1 className="mb-4 text-2xl font-bold">Gestione slot</h1>
       <ErrorBanner message={searchParams.error} />
+
+      <form
+        action={updateCalendarDays}
+        className="card mb-6 flex flex-wrap items-end gap-3"
+      >
+        <div>
+          <label className="label">Visibilità calendario (giorni)</label>
+          <input
+            name="days"
+            type="number"
+            min={1}
+            max={365}
+            defaultValue={calendarDays}
+            required
+            className="input w-32"
+          />
+        </div>
+        <button className="btn-navy">Salva</button>
+        <p className="text-xs text-slate-500">
+          Gli utenti vedono e possono prenotare gli allenamenti fino a{" "}
+          {calendarDays} giorni da oggi.
+        </p>
+      </form>
 
       <div className="mb-8">
         <h2 className="mb-2 font-semibold text-slate-700">Nuovo slot</h2>

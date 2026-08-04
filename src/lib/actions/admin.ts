@@ -61,6 +61,23 @@ export async function deleteSlot(formData: FormData) {
   revalidatePath("/calendario");
 }
 
+/** Aggiorna la finestra di visibilità del calendario (giorni). */
+export async function updateCalendarDays(formData: FormData) {
+  const supabase = await requireAdmin();
+  const days = Number(formData.get("days"));
+  if (!Number.isInteger(days) || days < 1 || days > 365) {
+    backWithError("/admin/slot", "Valore non valido: inserire un numero di giorni tra 1 e 365");
+  }
+
+  const { error } = await supabase
+    .from("app_settings")
+    .upsert({ key: "calendar_days_ahead", value: String(days), updated_at: new Date().toISOString() });
+
+  if (error) backWithError("/admin/slot", error.message);
+  revalidatePath("/admin/slot");
+  revalidatePath("/calendario");
+}
+
 /** Aggiunge un periodo di chiusura del centro. */
 export async function createClosure(formData: FormData) {
   const supabase = await requireAdmin();
