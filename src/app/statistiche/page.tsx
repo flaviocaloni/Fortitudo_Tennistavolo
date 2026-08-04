@@ -39,7 +39,7 @@ function countPeriods(bookings: Pick<Booking, "session_date" | "status">[]): Per
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="card text-center">
-      <p className="text-3xl font-bold text-emerald-700">{value}</p>
+      <p className="text-3xl font-bold text-navy-700">{value}</p>
       <p className="text-sm text-slate-600">{label}</p>
     </div>
   );
@@ -103,7 +103,7 @@ export default async function StatistichePage() {
           <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
             <span className="text-xs text-slate-600">{v || ""}</span>
             <div
-              className="w-full rounded-t bg-emerald-500"
+              className="w-full rounded-t bg-navy-500"
               style={{ height: `${(v / maxMonthly) * 100}px` }}
             />
             <span className="text-[10px] text-slate-500">{MONTHS[i]}</span>

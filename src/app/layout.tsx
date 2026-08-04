@@ -3,8 +3,9 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
-  title: "Tennistavolo — Prenotazione allenamenti",
-  description: "Prenota gli allenamenti di ping pong del club",
+  title: "Fortitudo Busnago Tennistavolo — Prenotazioni",
+  description: "Prenota gli allenamenti della Fortitudo Busnago Tennistavolo",
+  icons: { icon: "/logo.jpg" },
 };
 
 export default function RootLayout({

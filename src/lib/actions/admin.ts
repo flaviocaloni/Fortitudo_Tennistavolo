@@ -80,19 +80,3 @@ export async function adminCancelBooking(formData: FormData) {
   revalidatePath("/admin/prenotazioni");
   revalidatePath("/calendario");
 }
-
-/** Aggiorna ruolo e limite settimanale di un utente. */
-export async function updateUser(formData: FormData) {
-  const supabase = await requireAdmin();
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      role: String(formData.get("role")),
-      weekly_limit: Number(formData.get("weekly_limit")),
-    })
-    .eq("id", String(formData.get("user_id")));
-
-  if (error) backWithError("/admin/utenti", error.message);
-  revalidatePath("/admin/utenti");
-}

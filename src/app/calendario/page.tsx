@@ -93,7 +93,7 @@ export default async function CalendarioPage({
                             slot.audience === "agonisti"
                               ? "bg-blue-100 text-blue-800"
                               : slot.audience === "amatori"
-                                ? "bg-emerald-100 text-emerald-800"
+                                ? "bg-navy-100 text-navy-800"
                                 : "bg-slate-100 text-slate-700"
                           }`}
                         >

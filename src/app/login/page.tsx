@@ -89,7 +89,7 @@ export default function LoginPage() {
           </p>
         )}
         {info && (
-          <p className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          <p className="mb-3 rounded-md bg-navy-50 px-3 py-2 text-sm text-navy-800">
             {info}
           </p>
         )}

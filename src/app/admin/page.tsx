@@ -28,15 +28,15 @@ export default async function AdminDashboard() {
 
       <div className="mb-8 grid grid-cols-3 gap-3">
         <div className="card text-center">
-          <p className="text-3xl font-bold text-emerald-700">{slots.count ?? 0}</p>
+          <p className="text-3xl font-bold text-navy-700">{slots.count ?? 0}</p>
           <p className="text-sm text-slate-600">Slot attivi</p>
         </div>
         <div className="card text-center">
-          <p className="text-3xl font-bold text-emerald-700">{users.count ?? 0}</p>
+          <p className="text-3xl font-bold text-navy-700">{users.count ?? 0}</p>
           <p className="text-sm text-slate-600">Utenti registrati</p>
         </div>
         <div className="card text-center">
-          <p className="text-3xl font-bold text-emerald-700">{activeFuture.count ?? 0}</p>
+          <p className="text-3xl font-bold text-navy-700">{activeFuture.count ?? 0}</p>
           <p className="text-sm text-slate-600">Prenotazioni future</p>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default async function AdminDashboard() {
                   <span
                     className={`badge ${
                       h.action === "created"
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? "bg-navy-100 text-navy-800"
                         : "bg-red-100 text-red-700"
                     }`}
                   >
