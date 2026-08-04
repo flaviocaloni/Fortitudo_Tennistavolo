@@ -58,7 +58,9 @@ create or replace function public.protect_profile_fields()
 returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
+  -- auth.uid() null = SQL editor / service role: sempre consentito
   if (new.role <> old.role or new.weekly_limit <> old.weekly_limit)
+     and auth.uid() is not null
      and public.current_user_role() is distinct from 'admin' then
     raise exception 'Solo l''admin può modificare ruolo e limite settimanale';
   end if;
