@@ -7,7 +7,7 @@ export default async function AdminDashboard() {
   const supabase = createClient();
   const today = toISODate(new Date());
 
-  const [slots, users, activeFuture, history] = await Promise.all([
+  const [slots, users, activeFuture, history, allProfiles] = await Promise.all([
     supabase.from("training_slots").select("id", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase
@@ -15,12 +15,18 @@ export default async function AdminDashboard() {
       .select("id", { count: "exact", head: true })
       .eq("status", "active")
       .gte("session_date", today),
+    // niente join: booking_history non ha FK verso profiles
     supabase
       .from("booking_history")
-      .select("*, profiles:user_id(full_name)")
+      .select("*")
       .order("occurred_at", { ascending: false })
       .limit(15),
+    supabase.from("profiles").select("id, full_name"),
   ]);
+
+  const nameById = new Map<string, string>(
+    (allProfiles.data ?? []).map((p) => [p.id, p.full_name])
+  );
 
   return (
     <div>
@@ -58,7 +64,7 @@ export default async function AdminDashboard() {
                 <td className="px-3 py-2 text-slate-500">
                   {new Date(h.occurred_at).toLocaleString("it-IT")}
                 </td>
-                <td className="px-3 py-2">{h.profiles?.full_name ?? "—"}</td>
+                <td className="px-3 py-2">{nameById.get(h.user_id) ?? "—"}</td>
                 <td className="px-3 py-2">
                   <span
                     className={`badge ${
