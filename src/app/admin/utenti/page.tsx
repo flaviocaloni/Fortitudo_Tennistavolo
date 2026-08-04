@@ -19,12 +19,13 @@ interface AuthInfo {
   provider: string;
 }
 
-export default async function AdminUtentiPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; ok?: string };
-}) {
-  const supabase = createClient();
+export default async function AdminUtentiPage(
+  props: {
+    searchParams: Promise<{ error?: string; ok?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const supabase = await createClient();
   const admin = createAdminClient();
 
   const { data: profiles } = await supabase

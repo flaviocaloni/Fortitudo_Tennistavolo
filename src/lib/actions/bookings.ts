@@ -13,7 +13,7 @@ function backWithError(path: string, message: string): never {
 export async function bookSlot(formData: FormData) {
   const slotId = String(formData.get("slot_id") ?? "");
   const sessionDate = String(formData.get("session_date") ?? "");
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -35,7 +35,7 @@ export async function bookSlot(formData: FormData) {
 export async function cancelBooking(formData: FormData) {
   const bookingId = String(formData.get("booking_id") ?? "");
   const from = String(formData.get("from") ?? "/prenotazioni");
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -59,7 +59,7 @@ export async function cancelBooking(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
 }

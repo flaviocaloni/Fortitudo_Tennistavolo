@@ -15,12 +15,13 @@ import SlotForm from "@/components/admin/slot-form";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminSlotPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
-  const supabase = createClient();
+export default async function AdminSlotPage(
+  props: {
+    searchParams: Promise<{ error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const supabase = await createClient();
   const [{ data: slots }, { data: closures }] = await Promise.all([
     supabase
       .from("training_slots")

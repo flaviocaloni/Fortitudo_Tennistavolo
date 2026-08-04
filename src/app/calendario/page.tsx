@@ -8,11 +8,12 @@ import { getCalendarDaysAhead } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-export default async function CalendarioPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function CalendarioPage(
+  props: {
+    searchParams: Promise<{ error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { supabase, user, profile } = await getSessionProfile();
   if (!user || !profile) redirect("/login");
 

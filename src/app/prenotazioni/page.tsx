@@ -6,11 +6,12 @@ import ErrorBanner from "@/components/error-banner";
 
 export const dynamic = "force-dynamic";
 
-export default async function PrenotazioniPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function PrenotazioniPage(
+  props: {
+    searchParams: Promise<{ error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { supabase, user } = await getSessionProfile();
   if (!user) redirect("/login");
 

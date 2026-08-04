@@ -4,7 +4,7 @@ import { toISODate } from "@/lib/dates";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const today = toISODate(new Date());
 
   const [slots, users, activeFuture, history, allProfiles] = await Promise.all([
