@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { createSlot, deleteSlot, toggleSlotActive } from "@/lib/actions/admin";
+import {
+  createClosure,
+  createSlot,
+  deleteClosure,
+  deleteSlot,
+  toggleSlotActive,
+} from "@/lib/actions/admin";
 import { formatTime } from "@/lib/dates";
 import { AUDIENCE_LABEL, WEEKDAYS, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
@@ -13,12 +19,15 @@ export default async function AdminSlotPage({
   searchParams: { error?: string };
 }) {
   const supabase = createClient();
-  const { data: slots } = await supabase
-    .from("training_slots")
-    .select("*")
-    .order("event_date", { ascending: true, nullsFirst: true })
-    .order("weekday")
-    .order("start_time");
+  const [{ data: slots }, { data: closures }] = await Promise.all([
+    supabase
+      .from("training_slots")
+      .select("*")
+      .order("event_date", { ascending: true, nullsFirst: true })
+      .order("weekday")
+      .order("start_time"),
+    supabase.from("club_closures").select("*").order("start_date"),
+  ]);
 
   const recurring = (slots ?? []).filter((s: TrainingSlot) => !s.event_date);
   const events = (slots ?? []).filter((s: TrainingSlot) => s.event_date);
@@ -82,6 +91,61 @@ export default async function AdminSlotPage({
           </div>
         </section>
       ))}
+
+      <section className="mb-8">
+        <h2 className="mb-2 font-semibold text-slate-700">
+          Chiusure del centro
+        </h2>
+        <p className="mb-3 text-sm text-slate-600">
+          Nei giorni di chiusura il calendario è bloccato e le prenotazioni
+          vengono rifiutate.
+        </p>
+        <form
+          action={createClosure}
+          className="card mb-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          <div>
+            <label className="label">Dal</label>
+            <input name="start_date" type="date" required className="input" />
+          </div>
+          <div>
+            <label className="label">Al (vuoto = solo un giorno)</label>
+            <input name="end_date" type="date" className="input" />
+          </div>
+          <div>
+            <label className="label">Motivo</label>
+            <input name="reason" className="input" placeholder="es. Chiusura natalizia" />
+          </div>
+          <div className="flex items-end">
+            <button className="btn-navy">Aggiungi chiusura</button>
+          </div>
+        </form>
+        {(closures ?? []).length === 0 && (
+          <p className="text-sm text-slate-500">
+            Nessuna chiusura definita (se hai già eseguito la migration 0003,
+            qui compariranno le chiusure della stagione).
+          </p>
+        )}
+        <div className="space-y-2">
+          {(closures ?? []).map((c) => (
+            <div key={c.id} className="card flex items-center justify-between">
+              <p className="text-sm">
+                <span className="font-medium">
+                  {new Date(c.start_date + "T00:00:00").toLocaleDateString("it-IT")}
+                  {c.end_date !== c.start_date &&
+                    " → " +
+                      new Date(c.end_date + "T00:00:00").toLocaleDateString("it-IT")}
+                </span>{" "}
+                · {c.reason}
+              </p>
+              <form action={deleteClosure}>
+                <input type="hidden" name="closure_id" value={c.id} />
+                <button className="btn-danger">Elimina</button>
+              </form>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

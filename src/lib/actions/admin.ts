@@ -61,6 +61,31 @@ export async function deleteSlot(formData: FormData) {
   revalidatePath("/calendario");
 }
 
+/** Aggiunge un periodo di chiusura del centro. */
+export async function createClosure(formData: FormData) {
+  const supabase = await requireAdmin();
+  const start = String(formData.get("start_date"));
+  const { error } = await supabase.from("club_closures").insert({
+    start_date: start,
+    end_date: String(formData.get("end_date") || start),
+    reason: String(formData.get("reason") || "Chiusura"),
+  });
+  if (error) backWithError("/admin/slot", error.message);
+  revalidatePath("/admin/slot");
+  revalidatePath("/calendario");
+}
+
+export async function deleteClosure(formData: FormData) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase
+    .from("club_closures")
+    .delete()
+    .eq("id", String(formData.get("closure_id")));
+  if (error) backWithError("/admin/slot", error.message);
+  revalidatePath("/admin/slot");
+  revalidatePath("/calendario");
+}
+
 /** L'admin cancella la prenotazione di qualsiasi utente. */
 export async function adminCancelBooking(formData: FormData) {
   const { supabase, user, profile } = await getSessionProfile();

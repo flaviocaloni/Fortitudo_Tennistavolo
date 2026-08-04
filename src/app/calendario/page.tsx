@@ -21,7 +21,7 @@ export default async function CalendarioPage({
   const from = dates[0];
   const to = dates[dates.length - 1];
 
-  const [{ data: slots }, { data: occupancy }, { data: myBookings }] =
+  const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }] =
     await Promise.all([
       supabase.from("training_slots").select("*").eq("is_active", true),
       supabase.rpc("slot_occupancy", { p_from: from, p_to: to }),
@@ -32,7 +32,15 @@ export default async function CalendarioPage({
         .eq("status", "active")
         .gte("session_date", from)
         .lte("session_date", to),
+      supabase
+        .from("club_closures")
+        .select("start_date, end_date, reason")
+        .lte("start_date", to)
+        .gte("end_date", from),
     ]);
+
+  const closureFor = (date: string) =>
+    (closures ?? []).find((c) => date >= c.start_date && date <= c.end_date);
 
   const booked = new Map<string, number>();
   for (const o of occupancy ?? []) {
@@ -62,6 +70,19 @@ export default async function CalendarioPage({
         {dates.map((date) => {
           const daySlots = slotsForDate(slots ?? [], date);
           if (daySlots.length === 0) return null;
+          const closure = closureFor(date);
+          if (closure) {
+            return (
+              <section key={date}>
+                <h2 className="mb-2 font-semibold capitalize text-slate-700">
+                  {formatDateIT(date)}
+                </h2>
+                <div className="card border-crimson-100 bg-crimson-50 text-sm text-crimson-800">
+                  🔒 Centro chiuso — {closure.reason}
+                </div>
+              </section>
+            );
+          }
           return (
             <section key={date}>
               <h2 className="mb-2 font-semibold capitalize text-slate-700">
