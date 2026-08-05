@@ -4,10 +4,11 @@ import {
   createSlot,
   deleteClosure,
   deleteSlot,
+  toggleGoogleOAuth,
   toggleSlotActive,
   updateCalendarDays,
 } from "@/lib/actions/admin";
-import { getCalendarDaysAhead } from "@/lib/settings";
+import { getCalendarDaysAhead, isGoogleOAuthEnabled } from "@/lib/settings";
 import { formatTime } from "@/lib/dates";
 import { AUDIENCE_LABEL, WEEKDAYS, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
@@ -22,7 +23,7 @@ export default async function AdminSlotPage(
 ) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
-  const [{ data: slots }, { data: closures }] = await Promise.all([
+  const [{ data: slots }, { data: closures }, googleOAuthEnabled] = await Promise.all([
     supabase
       .from("training_slots")
       .select("*")
@@ -30,6 +31,7 @@ export default async function AdminSlotPage(
       .order("weekday")
       .order("start_time"),
     supabase.from("club_closures").select("*").order("start_date"),
+    isGoogleOAuthEnabled(supabase),
   ]);
   const calendarDays = await getCalendarDaysAhead(supabase);
 
@@ -61,6 +63,28 @@ export default async function AdminSlotPage(
         <p className="text-xs text-slate-500">
           Gli utenti vedono e possono prenotare gli allenamenti fino a{" "}
           {calendarDays} giorni da oggi.
+        </p>
+      </form>
+
+      <form
+        action={toggleGoogleOAuth}
+        className="card mb-6 flex flex-wrap items-end gap-3"
+      >
+        <div>
+          <label className="label">Google OAuth</label>
+          <select
+            name="enabled"
+            defaultValue={googleOAuthEnabled ? "true" : "false"}
+            className="input w-40"
+          >
+            <option value="true">Abilitato</option>
+            <option value="false">Disabilitato</option>
+          </select>
+        </div>
+        <button className="btn-navy">Salva</button>
+        <p className="text-xs text-slate-500">
+          Il bottone "Continua con Google" {googleOAuthEnabled ? "è" : "non è"}{" "}
+          visibile nella pagina di login.
         </p>
       </form>
 

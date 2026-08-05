@@ -16,3 +16,16 @@ export async function getCalendarDaysAhead(
   const n = Number(data?.value);
   return Number.isInteger(n) && n >= 1 && n <= 365 ? n : DEFAULT_CALENDAR_DAYS;
 }
+
+/** Verifica se Google OAuth è abilitato (impostazione admin). */
+export async function isGoogleOAuthEnabled(
+  supabase: SupabaseClient
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "google_oauth_enabled")
+    .maybeSingle();
+
+  return data?.value === "true";
+}

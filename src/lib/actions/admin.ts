@@ -122,3 +122,20 @@ export async function adminCancelBooking(formData: FormData) {
   revalidatePath("/admin/prenotazioni");
   revalidatePath("/calendario");
 }
+
+/** Attiva/disattiva Google OAuth. */
+export async function toggleGoogleOAuth(formData: FormData) {
+  const supabase = await requireAdmin();
+  const enabled = String(formData.get("enabled") ?? "false") === "true";
+
+  const { error } = await supabase
+    .from("app_settings")
+    .upsert({
+      key: "google_oauth_enabled",
+      value: enabled ? "true" : "false",
+    });
+
+  if (error) backWithError("/admin/slot", error.message);
+  revalidatePath("/admin/slot");
+  revalidatePath("/login");
+}
