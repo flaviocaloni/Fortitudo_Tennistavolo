@@ -29,6 +29,7 @@ export async function bookSlot(formData: FormData) {
   if (error) backWithError("/calendario", error.message);
   revalidatePath("/calendario");
   revalidatePath("/prenotazioni");
+  redirect("/calendario");
 }
 
 /** Cancella (stato -> cancelled) una propria prenotazione. */
@@ -56,6 +57,7 @@ export async function cancelBooking(formData: FormData) {
   revalidatePath("/calendario");
   revalidatePath("/prenotazioni");
   revalidatePath("/admin/prenotazioni");
+  redirect(from);
 }
 
 export async function signOut() {
