@@ -14,12 +14,11 @@ export async function sendPasswordResetEmail(formData: FormData) {
 
   const supabase = await createClient();
 
-  // Costruisci l'URL: VERCEL_URL è iniettato da Vercel, oppure fallback a localhost
-  const siteUrl =
-    process.env.VERCEL_ENV === "production" && process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_SITE_URL ||
-        "http://localhost:3000";
+  // Usa VERCEL_URL se disponibile (Vercel lo inietta automaticamente)
+  // Altrimenti fallback a localhost per development
+  const siteUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/account/password`,
