@@ -21,7 +21,7 @@ export async function sendPasswordResetEmail(formData: FormData) {
     : "http://localhost:3000";
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/account/password`,
+    redirectTo: `${siteUrl}/auth/callback?next=/account/password`,
   });
 
   if (error) {
