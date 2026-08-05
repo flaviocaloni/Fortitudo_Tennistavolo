@@ -13,8 +13,17 @@ export async function sendPasswordResetEmail(formData: FormData) {
   }
 
   const supabase = await createClient();
+
+  // Determina l'URL del sito (Vercel inietta VERCEL_URL in production)
+  let siteUrl = "http://localhost:3000";
+  if (process.env.VERCEL_URL) {
+    siteUrl = `https://${process.env.VERCEL_URL}`;
+  } else if (process.env.NEXT_PUBLIC_SITE_URL) {
+    siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  }
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/account/password`,
+    redirectTo: `${siteUrl}/account/password`,
   });
 
   if (error) {
