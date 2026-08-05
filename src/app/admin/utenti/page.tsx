@@ -6,6 +6,7 @@ import {
   adminSetPassword,
   adminUpdateUser,
 } from "@/lib/actions/users";
+import { impersonateUser } from "@/lib/actions/auth";
 import type { Profile } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
 
@@ -223,6 +224,12 @@ export default async function AdminUtentiPage(
                         />
                       </div>
                       <button className="btn-ghost">Imposta</button>
+                    </form>
+
+                    {/* Impersona utente */}
+                    <form action={impersonateUser}>
+                      <input type="hidden" name="user_id" value={p.id} />
+                      <button className="btn-ghost">👁️ Accedi come</button>
                     </form>
                   </>
                 )}
