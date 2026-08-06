@@ -94,6 +94,16 @@ export default async function StatistichePage() {
     <div>
       <h1 className="mb-4 text-2xl font-bold">Statistiche</h1>
 
+      {bookingsError && (
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <b>Errore caricamento dati:</b> {bookingsError.message}
+        </div>
+      )}
+
+      <div className="mb-4 text-xs text-slate-500">
+        Debug: {allVisible.length} prenotazioni caricate | Ruolo: {profile.role}
+      </div>
+
       <h2 className="mb-2 font-semibold text-slate-700">Le mie prenotazioni</h2>
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Questa settimana" value={my.week} />
