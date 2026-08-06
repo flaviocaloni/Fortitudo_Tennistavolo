@@ -5,6 +5,29 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/supabase/server";
 
+/** Login via email/password lato server. */
+export async function loginWithEmail(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "").trim();
+
+  if (!email || !password) {
+    redirect(`/login?error=${encodeURIComponent("Email e password sono obbligatori")}`);
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect("/calendario");
+}
+
 /** Invia email di reset password per un dato indirizzo email. */
 export async function sendPasswordResetEmail(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();

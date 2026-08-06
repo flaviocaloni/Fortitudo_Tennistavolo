@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { loginWithEmail } from "@/lib/actions/auth";
 
 export default function LoginForm({
   googleOAuthEnabled,
@@ -35,22 +36,13 @@ export default function LoginForm({
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
-    const email = String(form.get("email"));
-    const password = String(form.get("password"));
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setLoading(false);
-        return setError(error.message);
-      }
-      // Attendi un attimo per assicurare che i cookie siano settati
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      router.push("/calendario");
+      // Usa azione server per il login (gestisce i cookie correttamente)
+      await loginWithEmail(form);
     } else {
+      const email = String(form.get("email"));
+      const password = String(form.get("password"));
       const { error } = await supabase.auth.signUp({
         email,
         password,
