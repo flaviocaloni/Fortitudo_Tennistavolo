@@ -69,7 +69,7 @@ export default async function StatistichePage() {
 
     const { data: bookings, error } = await supabase
       .from("bookings")
-      .select("*")
+      .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at")
       .gte("session_date", minDate)
       .order("session_date", { ascending: false });
 
