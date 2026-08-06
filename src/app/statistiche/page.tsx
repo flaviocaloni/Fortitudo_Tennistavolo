@@ -62,9 +62,16 @@ export default async function StatistichePage() {
   let errorMsg: string | null = null;
 
   try {
+    // Carica solo i booking degli ultimi 2 anni per evitare timeout
+    const twoYearsAgo = new Date();
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    const minDate = twoYearsAgo.toISOString().split("T")[0];
+
     const { data: bookings, error } = await supabase
       .from("bookings")
-      .select("*");
+      .select("*")
+      .gte("session_date", minDate)
+      .order("session_date", { ascending: false });
 
     if (error) {
       errorMsg = error.message || "Errore sconosciuto nel caricamento dati";
