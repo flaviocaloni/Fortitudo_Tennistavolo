@@ -58,11 +58,23 @@ export default async function StatistichePage() {
   // RLS filtra automaticamente:
   // - Admin vede TUTTI i booking
   // - Utente normale vede solo i suoi booking
-  const { data: bookings, error: bookingsError } = await supabase
-    .from("bookings")
-    .select("*");
+  let allVisible: Booking[] = [];
+  let errorMsg: string | null = null;
 
-  const allVisible = bookings ?? [];
+  try {
+    const { data: bookings, error } = await supabase
+      .from("bookings")
+      .select("*");
+
+    if (error) {
+      errorMsg = error.message || "Errore sconosciuto nel caricamento dati";
+    } else {
+      allVisible = bookings ?? [];
+    }
+  } catch (e) {
+    errorMsg = e instanceof Error ? e.message : "Errore nel caricamento dati";
+  }
+
   const mineAll = (allVisible).filter((b) => b.user_id === user.id);
   const my = countPeriods(mineAll);
 
@@ -94,9 +106,9 @@ export default async function StatistichePage() {
     <div>
       <h1 className="mb-4 text-2xl font-bold">Statistiche</h1>
 
-      {bookingsError && (
+      {errorMsg && (
         <div className="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-          <b>Errore caricamento dati:</b> {bookingsError.message}
+          <b>Errore caricamento dati:</b> {errorMsg}
         </div>
       )}
 
