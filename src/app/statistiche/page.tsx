@@ -55,13 +55,15 @@ export default async function StatistichePage() {
   const isAdmin = profile.role === "admin";
   const year = new Date().getFullYear();
 
-  // RLS: un utente normale riceve solo le proprie prenotazioni,
-  // l'admin le riceve tutte — filtriamo comunque per le sezioni personali.
-  const { data: allVisible } = await supabase
+  // RLS filtra automaticamente:
+  // - Admin vede TUTTI i booking
+  // - Utente normale vede solo i suoi booking
+  const { data: bookings, error: bookingsError } = await supabase
     .from("bookings")
     .select("*");
 
-  const mineAll = (allVisible ?? []).filter((b) => b.user_id === user.id);
+  const allVisible = bookings ?? [];
+  const mineAll = (allVisible).filter((b) => b.user_id === user.id);
   const my = countPeriods(mineAll);
 
   // Andamento mensile personale (anno corrente, senza cancellate)
