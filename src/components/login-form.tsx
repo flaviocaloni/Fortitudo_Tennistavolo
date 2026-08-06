@@ -47,7 +47,8 @@ export default function LoginForm({
         setLoading(false);
         return setError(error.message);
       }
-      router.refresh();
+      // Attendi un attimo per assicurare che i cookie siano settati
+      await new Promise((resolve) => setTimeout(resolve, 100));
       router.push("/calendario");
     } else {
       const { error } = await supabase.auth.signUp({
