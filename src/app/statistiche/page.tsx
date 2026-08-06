@@ -3,6 +3,8 @@ import { getSessionProfile } from "@/lib/supabase/server";
 import { startOfISOWeek, toISODate } from "@/lib/dates";
 import type { Booking, Profile } from "@/lib/types";
 import CertificateReportClient from "@/components/certificate-report-client";
+import AdminBookingsChart from "@/components/admin-bookings-chart";
+import AdminUsersReport from "@/components/admin-users-report";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +59,7 @@ export default async function StatistichePage() {
   // l'admin le riceve tutte — filtriamo comunque per le sezioni personali.
   const { data: allVisible } = await supabase
     .from("bookings")
-    .select("user_id, session_date, status");
+    .select("*");
 
   const mineAll = (allVisible ?? []).filter((b) => b.user_id === user.id);
   const my = countPeriods(mineAll);
@@ -116,39 +118,14 @@ export default async function StatistichePage() {
 
       {isAdmin && (
         <>
-          <h2 className="mb-2 font-semibold text-amber-700">
+          <AdminBookingsChart bookings={allVisible ?? []} />
+
+          <h2 className="my-8 font-semibold text-amber-700">
             Riepilogo per utente (solo admin)
           </h2>
-          <div className="card overflow-x-auto p-0 mb-8">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-100 text-left">
-                <tr>
-                  <th className="px-3 py-2">Utente</th>
-                  <th className="px-3 py-2">Ruolo</th>
-                  <th className="px-3 py-2">Limite/sett.</th>
-                  <th className="px-3 py-2 text-right">Settimana</th>
-                  <th className="px-3 py-2 text-right">Mese</th>
-                  <th className="px-3 py-2 text-right">Anno</th>
-                  <th className="px-3 py-2 text-right">Cancellate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {adminRows.map(({ profile: p, stats }) => (
-                  <tr key={p.id} className="border-t border-slate-100">
-                    <td className="px-3 py-2 font-medium">{p.full_name}</td>
-                    <td className="px-3 py-2">{p.role}</td>
-                    <td className="px-3 py-2">{p.weekly_limit}</td>
-                    <td className="px-3 py-2 text-right">{stats.week}</td>
-                    <td className="px-3 py-2 text-right">{stats.month}</td>
-                    <td className="px-3 py-2 text-right">{stats.year}</td>
-                    <td className="px-3 py-2 text-right">{stats.cancelled}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminUsersReport users={adminRows} />
 
-          <h2 className="mb-2 font-semibold text-amber-700">
+          <h2 className="my-8 font-semibold text-amber-700">
             Certificati medici (solo admin)
           </h2>
           <CertificateReportClient profiles={allProfiles} />
