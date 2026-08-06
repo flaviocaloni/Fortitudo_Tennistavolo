@@ -43,10 +43,12 @@ export default function LoginForm({
         email,
         password,
       });
-      setLoading(false);
-      if (error) return setError(error.message);
-      router.push("/calendario");
+      if (error) {
+        setLoading(false);
+        return setError(error.message);
+      }
       router.refresh();
+      router.push("/calendario");
     } else {
       const { error } = await supabase.auth.signUp({
         email,
