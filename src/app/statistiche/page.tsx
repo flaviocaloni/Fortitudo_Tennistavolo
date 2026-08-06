@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { startOfISOWeek, toISODate } from "@/lib/dates";
 import type { Booking, Profile } from "@/lib/types";
+import CertificateReportClient from "@/components/certificate-report-client";
 
 export const dynamic = "force-dynamic";
 
@@ -72,12 +73,14 @@ export default async function StatistichePage() {
 
   // Riepilogo admin per utente
   let adminRows: { profile: Profile; stats: Periods }[] = [];
+  let allProfiles: Profile[] = [];
   if (isAdmin) {
     const { data: profiles } = await supabase
       .from("profiles")
       .select("*")
       .order("full_name");
-    adminRows = (profiles ?? []).map((p: Profile) => ({
+    allProfiles = profiles ?? [];
+    adminRows = allProfiles.map((p: Profile) => ({
       profile: p,
       stats: countPeriods((allVisible ?? []).filter((b) => b.user_id === p.id)),
     }));
@@ -116,7 +119,7 @@ export default async function StatistichePage() {
           <h2 className="mb-2 font-semibold text-amber-700">
             Riepilogo per utente (solo admin)
           </h2>
-          <div className="card overflow-x-auto p-0">
+          <div className="card overflow-x-auto p-0 mb-8">
             <table className="w-full text-sm">
               <thead className="bg-slate-100 text-left">
                 <tr>
@@ -144,6 +147,11 @@ export default async function StatistichePage() {
               </tbody>
             </table>
           </div>
+
+          <h2 className="mb-2 font-semibold text-amber-700">
+            Certificati medici (solo admin)
+          </h2>
+          <CertificateReportClient profiles={allProfiles} />
         </>
       )}
     </div>

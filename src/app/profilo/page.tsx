@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
-import { updateOwnName } from "@/lib/actions/profile";
+import { updateOwnName, updateMedicalCertificate } from "@/lib/actions/profile";
 import ErrorBanner from "@/components/error-banner";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +26,19 @@ export default async function ProfiloPage(props: {
           timeStyle: "short",
         })
       : "—";
+
+  const fmtDate = (d?: string | null) =>
+    d ? new Date(d).toLocaleDateString("it-IT", { dateStyle: "long" }) : "—";
+
+  const getCertStatus = (expiry?: string | null) => {
+    if (!expiry) return { status: "missing", label: "Non inserito", color: "bg-slate-100 text-slate-800" };
+    const exp = new Date(expiry);
+    const today = new Date();
+    const daysLeft = Math.floor((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 0) return { status: "expired", label: "Scaduto", color: "bg-red-100 text-red-800" };
+    if (daysLeft <= 30) return { status: "expiring", label: `Scade tra ${daysLeft} gg`, color: "bg-amber-100 text-amber-800" };
+    return { status: "valid", label: "Valido", color: "bg-green-100 text-green-800" };
+  };
 
   return (
     <div className="mx-auto max-w-xl">
@@ -88,6 +101,38 @@ export default async function ProfiloPage(props: {
               name="full_name"
               defaultValue={profile.full_name}
               required
+              className="input"
+            />
+          </div>
+          <button className="btn-navy">Salva</button>
+        </div>
+      </form>
+
+      <form action={updateMedicalCertificate} className="card mb-4">
+        <h2 className="mb-3 font-semibold text-navy-800">Certificato medico</h2>
+        {(() => {
+          const cert = getCertStatus(profile.medical_certificate_expiry);
+          return (
+            <>
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm text-slate-600">Data di scadenza:</span>
+                <span className={`badge ${cert.color}`}>{cert.label}</span>
+              </div>
+              {profile.medical_certificate_expiry && (
+                <p className="mb-3 text-sm text-slate-600">
+                  Scade il: <span className="font-medium">{fmtDate(profile.medical_certificate_expiry)}</span>
+                </p>
+              )}
+            </>
+          );
+        })()}
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="grow">
+            <label className="label">Data di scadenza</label>
+            <input
+              type="date"
+              name="medical_certificate_expiry"
+              defaultValue={profile.medical_certificate_expiry ?? ""}
               className="input"
             />
           </div>

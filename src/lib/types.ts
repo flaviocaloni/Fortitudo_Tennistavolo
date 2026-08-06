@@ -8,6 +8,7 @@ export interface Profile {
   role: UserRole;
   weekly_limit: number;
   created_at: string;
+  medical_certificate_expiry: string | null;
 }
 
 export interface TrainingSlot {

@@ -55,6 +55,19 @@ export default async function AdminUtentiPage(
   const fmt = (d: string | null) =>
     d ? new Date(d).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" }) : "mai";
 
+  const fmtDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString("it-IT", { dateStyle: "long" }) : "—";
+
+  const getCertStatus = (expiry: string | null) => {
+    if (!expiry) return { status: "missing", label: "Cert. mancante", color: "bg-slate-100 text-slate-800" };
+    const exp = new Date(expiry);
+    const today = new Date();
+    const daysLeft = Math.floor((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 0) return { status: "expired", label: "Cert. SCADUTO", color: "bg-red-100 text-red-800" };
+    if (daysLeft <= 30) return { status: "expiring", label: `Cert. scade tra ${daysLeft}gg`, color: "bg-amber-100 text-amber-800" };
+    return { status: "valid", label: "Cert. valido", color: "bg-green-100 text-green-800" };
+  };
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Gestione utenti</h1>
@@ -131,24 +144,39 @@ export default async function AdminUtentiPage(
           const info = authInfo.get(p.id);
           return (
             <div key={p.id} className="card">
-              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                <div>
-                  <span className="font-semibold">{p.full_name}</span>
-                  {info && (
-                    <span className="ml-2 text-sm text-slate-500">
-                      {info.email} · via {info.provider}
-                      {!info.confirmed && (
-                        <span className="badge ml-2 bg-amber-100 text-amber-800">
-                          email non confermata
+              <div className="mb-2 space-y-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <span className="font-semibold">{p.full_name}</span>
+                    {info && (
+                      <span className="ml-2 text-sm text-slate-500">
+                        {info.email} · via {info.provider}
+                        {!info.confirmed && (
+                          <span className="badge ml-2 bg-amber-100 text-amber-800">
+                            email non confermata
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-500">
+                    Registrato: {fmt(info?.created_at ?? p.created_at)} · Ultimo
+                    accesso: {fmt(info?.last_sign_in_at ?? null)}
+                  </span>
+                </div>
+                {(() => {
+                  const cert = getCertStatus(p.medical_certificate_expiry);
+                  return (
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className={`badge ${cert.color}`}>{cert.label}</span>
+                      {p.medical_certificate_expiry && (
+                        <span className="text-slate-600">
+                          Scade il: {fmtDate(p.medical_certificate_expiry)}
                         </span>
                       )}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-slate-500">
-                  Registrato: {fmt(info?.created_at ?? p.created_at)} · Ultimo
-                  accesso: {fmt(info?.last_sign_in_at ?? null)}
-                </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="flex flex-wrap items-end gap-4">
