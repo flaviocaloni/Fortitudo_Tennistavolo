@@ -25,18 +25,14 @@ export async function loginWithEmail(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
-  if (!data.session) {
-    redirect(`/login?error=${encodeURIComponent("DEBUG: signIn ok ma nessuna sessione creata")}`);
-  }
-
-  // DEBUG: verifica che i cookie siano stati effettivamente scritti
+  // DEBUG: mostra sempre lo stato per diagnosticare il loop
   const cookieStore = await cookies();
-  const sbCookies = cookieStore.getAll().filter((c) => c.name.includes("sb-") || c.name.includes("auth"));
-  if (sbCookies.length === 0) {
-    redirect(`/login?error=${encodeURIComponent("DEBUG: sessione creata ma nessun cookie sb- trovato dopo il set")}`);
-  }
-
-  redirect("/calendario");
+  const allCookieNames = cookieStore.getAll().map((c) => c.name).join(", ");
+  redirect(
+    `/login?error=${encodeURIComponent(
+      `DEBUG: session=${!!data.session} user=${data.user?.email ?? "null"} cookies=[${allCookieNames}]`
+    )}`
+  );
 }
 
 /** Invia email di reset password per un dato indirizzo email. */
