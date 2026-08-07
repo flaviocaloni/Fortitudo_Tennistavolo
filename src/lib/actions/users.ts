@@ -114,3 +114,47 @@ export async function adminSetPassword(formData: FormData) {
   if (error) backWithError(error.message);
   backWithOk("Password aggiornata");
 }
+
+/** Disattiva/riattiva l'accesso di un utente senza toccare i dati storicizzati:
+ *  blocca il login (ban Supabase Auth) e marca il profilo come inattivo. */
+export async function adminToggleUserActive(formData: FormData) {
+  const { supabase, admin } = await requireAdminWithService();
+  const userId = String(formData.get("user_id"));
+  const activate = String(formData.get("activate")) === "true";
+
+  const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: activate ? "none" : "876000h",
+  });
+  if (authErr) backWithError(authErr.message);
+
+  const { error: profErr } = await supabase
+    .from("profiles")
+    .update({ is_active: activate })
+    .eq("id", userId);
+  if (profErr) backWithError(profErr.message);
+
+  revalidatePath(PAGE);
+  backWithOk(activate ? "Accesso utente riattivato" : "Accesso utente disattivato");
+}
+
+/** Elimina definitivamente un utente e tutti i suoi dati (profilo, prenotazioni).
+ *  Richiede conferma esplicita (checkbox) dal form. */
+export async function adminDeleteUser(formData: FormData) {
+  const { profile: currentAdmin } = await getSessionProfile();
+  const { admin } = await requireAdminWithService();
+  const userId = String(formData.get("user_id"));
+  const confirmed = formData.get("confirm_delete") === "on";
+
+  if (!confirmed) {
+    backWithError("Devi confermare la casella per eliminare l'utente");
+  }
+  if (currentAdmin?.id === userId) {
+    backWithError("Non puoi eliminare il tuo stesso account");
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) backWithError(error.message);
+
+  revalidatePath(PAGE);
+  backWithOk("Utente e dati associati eliminati");
+}

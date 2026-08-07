@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import {
+  adminDeleteUser,
   adminSendPasswordReset,
   adminSetPassword,
+  adminToggleUserActive,
   adminUpdateUser,
 } from "@/lib/actions/users";
 import { impersonateUser } from "@/lib/actions/auth";
@@ -57,6 +59,8 @@ export default function AdminUsersListClient({
 }) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
+  const [confirmChecked, setConfirmChecked] = useState(false);
 
   const counts = useMemo(
     () => ({
@@ -150,6 +154,11 @@ export default function AdminUsersListClient({
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <div>
                       <span className="font-semibold">{p.full_name}</span>
+                      {!p.is_active && (
+                        <span className="badge ml-2 bg-red-100 text-red-800">
+                          Accesso disattivato
+                        </span>
+                      )}
                       {info && (
                         <span className="ml-2 text-sm text-slate-500">
                           {info.email} · via {info.provider}
@@ -253,6 +262,24 @@ export default function AdminUsersListClient({
                         <input type="hidden" name="user_id" value={p.id} />
                         <button className="btn-ghost">👁️ Accedi come</button>
                       </form>
+
+                      <form action={adminToggleUserActive}>
+                        <input type="hidden" name="user_id" value={p.id} />
+                        <input type="hidden" name="activate" value={String(!p.is_active)} />
+                        <button className="btn-ghost">
+                          {p.is_active ? "🚫 Disattiva accesso" : "✅ Riattiva accesso"}
+                        </button>
+                      </form>
+
+                      <button
+                        className="btn-danger"
+                        onClick={() => {
+                          setDeleteTarget(p);
+                          setConfirmChecked(false);
+                        }}
+                      >
+                        🗑️ Elimina utente
+                      </button>
                     </>
                   )}
                 </div>
@@ -260,6 +287,45 @@ export default function AdminUsersListClient({
             ))}
           </div>
         </>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="card w-full max-w-md">
+            <h3 className="mb-2 font-semibold text-red-700">Elimina utente</h3>
+            <p className="mb-3 text-sm text-slate-700">
+              Stai per eliminare <b>{deleteTarget.full_name}</b> e{" "}
+              <b>tutti i dati storicizzati</b> (profilo, prenotazioni, storico).
+              L&apos;operazione è <b>irreversibile</b>.
+            </p>
+            <form action={adminDeleteUser} className="space-y-3">
+              <input type="hidden" name="user_id" value={deleteTarget.id} />
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="confirm_delete"
+                  checked={confirmChecked}
+                  onChange={(e) => setConfirmChecked(e.target.checked)}
+                  className="mt-0.5 rounded"
+                />
+                Confermo di voler eliminare definitivamente questo utente e tutti i
+                suoi dati.
+              </label>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setDeleteTarget(null)}
+                >
+                  Annulla
+                </button>
+                <button type="submit" disabled={!confirmChecked} className="btn-danger">
+                  Elimina definitivamente
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
