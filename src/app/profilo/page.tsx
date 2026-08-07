@@ -132,6 +132,26 @@ export default async function ProfiloPage(props: {
         </p>
       </div>
 
+      {profile.role === "agonista" && (
+        <div className="card mb-4">
+          <h2 className="mb-3 font-semibold text-navy-800">Tessera FITET</h2>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-600">Numero tessera:</span>
+            {profile.fitet_card_number ? (
+              <span className="badge bg-navy-100 text-navy-800">
+                {profile.fitet_card_number}
+              </span>
+            ) : (
+              <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
+            )}
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            Il numero tessera FITET è gestito dall&apos;amministratore: per
+            aggiornarlo contatta il club.
+          </p>
+        </div>
+      )}
+
       <div className="card">
         <h2 className="mb-2 font-semibold text-navy-800">Sicurezza</h2>
         <p className="mb-3 text-sm text-slate-600">
