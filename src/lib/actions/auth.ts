@@ -16,13 +16,24 @@ export async function loginWithEmail(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (!data.session) {
+    redirect(`/login?error=${encodeURIComponent("DEBUG: signIn ok ma nessuna sessione creata")}`);
+  }
+
+  // DEBUG: verifica che i cookie siano stati effettivamente scritti
+  const cookieStore = await cookies();
+  const sbCookies = cookieStore.getAll().filter((c) => c.name.includes("sb-") || c.name.includes("auth"));
+  if (sbCookies.length === 0) {
+    redirect(`/login?error=${encodeURIComponent("DEBUG: sessione creata ma nessun cookie sb- trovato dopo il set")}`);
   }
 
   redirect("/calendario");
