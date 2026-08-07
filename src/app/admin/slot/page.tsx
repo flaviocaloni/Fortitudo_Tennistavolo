@@ -7,6 +7,7 @@ import {
   toggleGoogleOAuth,
   toggleSlotActive,
   updateCalendarDays,
+  updateSlotDates,
 } from "@/lib/actions/admin";
 import { getCalendarDaysAhead, getCurrentSeason, isGoogleOAuthEnabled } from "@/lib/settings";
 import { formatTime } from "@/lib/dates";
@@ -132,11 +133,45 @@ export default async function AdminSlotPage(
                     Stagione: {seasonNameById.get(s.season_id) ?? "—"}
                     {" · "}
                     Stato: {s.is_active ? "Attivo" : "DISATTIVATO"}
+                    {!s.event_date && s.start_date && s.end_date && (
+                      <>
+                        {" · "}
+                        Periodo:{" "}
+                        {new Date(s.start_date + "T00:00:00").toLocaleDateString("it-IT")} →{" "}
+                        {new Date(s.end_date + "T00:00:00").toLocaleDateString("it-IT")}
+                      </>
+                    )}
                   </p>
                   {s.notes && (
                     <p className="text-sm text-slate-600">Note: {s.notes}</p>
                   )}
                   <p className="text-xs text-slate-400">ID: {s.id}</p>
+                  {!s.event_date && (
+                    <form action={updateSlotDates} className="mt-2 flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="slot_id" value={s.id} />
+                      <div>
+                        <label className="label">Data inizio</label>
+                        <input
+                          name="start_date"
+                          type="date"
+                          defaultValue={s.start_date ?? ""}
+                          required
+                          className="input"
+                        />
+                      </div>
+                      <div>
+                        <label className="label">Data fine</label>
+                        <input
+                          name="end_date"
+                          type="date"
+                          defaultValue={s.end_date ?? ""}
+                          required
+                          className="input"
+                        />
+                      </div>
+                      <button className="btn-navy">Aggiorna date</button>
+                    </form>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <form action={toggleSlotActive}>

@@ -20,14 +20,21 @@ export async function createSlot(formData: FormData) {
 
   const kind = String(formData.get("kind") ?? "recurring");
   const eventDate = String(formData.get("event_date") ?? "");
+  const startDate = String(formData.get("start_date") ?? "");
+  const endDate = String(formData.get("end_date") ?? "");
 
   const seasonId = String(formData.get("season_id") ?? "");
   if (!seasonId) backWithError("/admin/slot", "Seleziona una stagione");
+  if (kind === "recurring" && (!startDate || !endDate)) {
+    backWithError("/admin/slot", "Data inizio e data fine sono obbligatorie per gli slot ricorrenti");
+  }
 
   const payload = {
     title: String(formData.get("title") || "Allenamento"),
     weekday: kind === "event" ? null : Number(formData.get("weekday")),
     event_date: kind === "event" ? eventDate : null,
+    start_date: kind === "recurring" ? startDate : null,
+    end_date: kind === "recurring" ? endDate : null,
     start_time: String(formData.get("start_time")),
     end_time: String(formData.get("end_time")),
     audience: String(formData.get("audience") ?? "misto"),
@@ -38,6 +45,28 @@ export async function createSlot(formData: FormData) {
   };
 
   const { error } = await supabase.from("training_slots").insert(payload);
+  if (error) backWithError("/admin/slot", error.message);
+  revalidatePath("/admin/slot");
+  revalidatePath("/calendario");
+}
+
+/** Modifica data inizio/fine di uno slot ricorrente esistente. */
+export async function updateSlotDates(formData: FormData) {
+  const supabase = await requireAdmin();
+  const startDate = String(formData.get("start_date") ?? "");
+  const endDate = String(formData.get("end_date") ?? "");
+
+  if (!startDate || !endDate) {
+    backWithError("/admin/slot", "Data inizio e data fine sono obbligatorie");
+  }
+  if (endDate <= startDate) {
+    backWithError("/admin/slot", "La data fine deve essere successiva alla data inizio");
+  }
+
+  const { error } = await supabase
+    .from("training_slots")
+    .update({ start_date: startDate, end_date: endDate })
+    .eq("id", String(formData.get("slot_id")));
   if (error) backWithError("/admin/slot", error.message);
   revalidatePath("/admin/slot");
   revalidatePath("/calendario");

@@ -26,6 +26,8 @@ export interface TrainingSlot {
   is_active: boolean;
   notes: string | null;
   season_id: string;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 export interface Booking {

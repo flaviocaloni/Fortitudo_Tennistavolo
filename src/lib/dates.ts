@@ -46,6 +46,8 @@ export function slotsForDate(
     .filter((s) => {
       if (s.event_date) return s.event_date === isoDate;
       if (s.weekday !== dow) return false;
+      if (s.start_date && isoDate < s.start_date) return false;
+      if (s.end_date && isoDate > s.end_date) return false;
       return !recurringCutoff || isoDate <= recurringCutoff;
     })
     .sort((a, b) => a.start_time.localeCompare(b.start_time));

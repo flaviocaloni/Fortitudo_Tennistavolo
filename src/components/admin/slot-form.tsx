@@ -47,16 +47,26 @@ export default function SlotForm({
       </div>
 
       {kind === "recurring" ? (
-        <div>
-          <label className="label">Giorno della settimana</label>
-          <select name="weekday" className="input" defaultValue="1">
-            {WEEKDAYS.map((d, i) => (
-              <option key={i} value={i}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div>
+            <label className="label">Giorno della settimana</label>
+            <select name="weekday" className="input" defaultValue="1">
+              {WEEKDAYS.map((d, i) => (
+                <option key={i} value={i}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Data inizio</label>
+            <input name="start_date" type="date" required className="input" />
+          </div>
+          <div>
+            <label className="label">Data fine</label>
+            <input name="end_date" type="date" required className="input" />
+          </div>
+        </>
       ) : (
         <div>
           <label className="label">Data evento</label>
