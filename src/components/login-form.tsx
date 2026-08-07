@@ -87,11 +87,7 @@ export default function LoginForm({
         )}
 
         {mode === "login" ? (
-          <form
-            action={loginWithEmail}
-            onSubmit={() => setLoading(true)}
-            className="space-y-3"
-          >
+          <form action={loginWithEmail} className="space-y-3">
             <div>
               <label className="label">Email</label>
               <input name="email" type="email" required className="input" />
@@ -107,8 +103,8 @@ export default function LoginForm({
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? "Attendere…" : "Accedi"}
+            <button type="submit" className="btn-primary w-full">
+              Accedi
             </button>
           </form>
         ) : (
