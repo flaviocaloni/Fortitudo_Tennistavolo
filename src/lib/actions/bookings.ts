@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { toISODate } from "@/lib/dates";
 
 function backWithError(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -32,16 +33,25 @@ export async function bookSlot(formData: FormData) {
   redirect("/calendario");
 }
 
-/** Cancella (stato -> cancelled) una propria prenotazione. */
+/** Cancella (stato -> cancelled) una propria prenotazione.
+ *  Amatori e agonisti non possono agire su prenotazioni passate: solo l'admin può. */
 export async function cancelBooking(formData: FormData) {
   const bookingId = String(formData.get("booking_id") ?? "");
   const from = String(formData.get("from") ?? "/prenotazioni");
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
+
+  if (profile?.role !== "admin") {
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("session_date")
+      .eq("id", bookingId)
+      .single();
+
+    if (booking && booking.session_date < toISODate(new Date())) {
+      backWithError(from, "Non puoi modificare una prenotazione passata");
+    }
+  }
 
   const { error } = await supabase
     .from("bookings")

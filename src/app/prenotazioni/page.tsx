@@ -3,6 +3,7 @@ import { getSessionProfile } from "@/lib/supabase/server";
 import { cancelBooking } from "@/lib/actions/bookings";
 import { formatDateIT, formatTime, toISODate } from "@/lib/dates";
 import ErrorBanner from "@/components/error-banner";
+import PastBookingsClient from "@/components/past-bookings-client";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +22,14 @@ export default async function PrenotazioniPage(
     .from("bookings")
     .select("*, training_slots(title, start_time, end_time)")
     .eq("user_id", user.id)
-    .order("session_date", { ascending: false });
+    .order("session_date", { ascending: true });
 
   const active = (bookings ?? []).filter(
     (b) => b.status === "active" && b.session_date >= today
   );
-  const past = (bookings ?? []).filter(
-    (b) => b.status !== "active" || b.session_date < today
-  );
+  const past = (bookings ?? [])
+    .filter((b) => b.status !== "active" || b.session_date < today)
+    .sort((a, b) => (a.session_date < b.session_date ? 1 : -1));
 
   return (
     <div>
@@ -63,36 +64,7 @@ export default async function PrenotazioniPage(
       </div>
 
       <h2 className="mb-2 font-semibold text-slate-700">Storico</h2>
-      <div className="space-y-2">
-        {past.map((b) => (
-          <div
-            key={b.id}
-            className="card flex items-center justify-between opacity-70"
-          >
-            <div>
-              <p className="font-medium capitalize">
-                {formatDateIT(b.session_date)} — {b.training_slots?.title}
-              </p>
-              <p className="text-sm text-slate-600">
-                {formatTime(b.training_slots?.start_time ?? "")}–
-                {formatTime(b.training_slots?.end_time ?? "")}
-              </p>
-            </div>
-            <span
-              className={`badge ${
-                b.status === "cancelled"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              {b.status === "cancelled" ? "Cancellata" : "Completata"}
-            </span>
-          </div>
-        ))}
-        {past.length === 0 && (
-          <p className="text-sm text-slate-500">Nessuna prenotazione passata.</p>
-        )}
-      </div>
+      <PastBookingsClient bookings={past} />
     </div>
   );
 }
