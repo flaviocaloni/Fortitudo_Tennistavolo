@@ -1,52 +1,62 @@
 # Tennistavolo Booking 🏓
 
-App di prenotazione allenamenti di ping pong — stack 100% gratuito:
-**Next.js 14 (App Router) · Supabase (Postgres + Auth) · Tailwind CSS · Vercel Hobby**
+App di prenotazione allenamenti per il club Fortitudo Busnago Tennistavolo.
+**Next.js 16 (App Router) · Supabase (Postgres + Auth) · Tailwind CSS · Vercel**
+
+**Release 0 — 7/8/2026** (consolidamento della prima versione funzionante in produzione)
+
+Produzione: https://fortitudo-tennistavolo.vercel.app
 
 ## Funzionalità
 
-- **Slot ricorrenti settimanali** configurabili dall'admin (giorno, orario, destinatari, capienza min/max)
-- **Slot extra / eventi** una tantum con data specifica
-- **Registrazione** con scelta profilo **Agonista / Amatore** (mai admin) e **limite di prenotazioni settimanali (1–3)**, modificabile solo dall'admin
-- **Prenotazioni** con vincoli applicati a livello di database: capienza massima, ruolo compatibile con lo slot, limite settimanale
-- **Login** Google OAuth o email/password (Supabase Auth)
-- **Statistiche personali** (settimana / mese / anno + andamento mensile) e **riepilogo per utente riservato all'admin**
-- **Storico e audit log** completo (creazioni, cancellazioni, interventi admin)
+- **Stagioni**: contenitore per slot e prenotazioni, con date inizio/fine e stagione "corrente"; il calendario mostra solo le date della stagione attiva. Gestione in `/admin/stagioni`.
+- **Slot ricorrenti settimanali** e **slot extra/eventi**, associati a una stagione; disattivazione/modifica incide solo sulla generazione futura del calendario.
+- **Chiusure del centro** indipendenti dalla stagione.
+- **Registrazione** con profilo **Agonista / Amatore** (mai admin) e limite settimanale (1–3), modificabile solo dall'admin.
+- **Certificato medico**: data di scadenza per utente, badge di stato (valido/in scadenza/scaduto), editabile solo dall'admin; visibile in sola lettura nel profilo utente.
+- **Tessera FITET**: numero tessera per gli agonisti, editabile solo dall'admin, visibile in sola lettura nel profilo.
+- **Gestione utenti admin**: ricerca, drill-down per ruolo, disattivazione/riattivazione accesso (senza perdere dati storicizzati), eliminazione definitiva con conferma via checkbox.
+- **Prenotazioni** con vincoli a livello di database: capienza massima, ruolo compatibile, limite settimanale; non modificabili nel passato da amatori/agonisti (solo l'admin può agire su prenotazioni passate).
+- **Statistiche personali** e **statistiche amministrative** (andamento prenotazioni per periodo, riepilogo per utente filtrabile/ordinabile, report certificati medici), filtrabili per stagione.
+- **Storico e audit log** completo (creazioni, cancellazioni, interventi admin).
+
+## Problemi noti
+
+- **Impersonificazione utente** ("Accedi come"): temporaneamente disabilitata lato frontend, non funzionante. Vedi [TODO_IMPERSONIFICAZIONE.md](TODO_IMPERSONIFICAZIONE.md).
 
 ## Struttura del progetto
 
 ```
 tennistavolo-booking/
 ├── .env.example
-├── supabase/migrations/0001_init.sql   # Schema: tabelle, trigger, RLS, funzione occupazione
+├── supabase/migrations/               # 0001 → 0013, applicate manualmente in ordine nel SQL Editor Supabase
 ├── src/
-│   ├── middleware.ts                   # Redirect a /login per rotte protette
+│   ├── proxy.ts                       # Middleware: redirect a /login per rotte protette
 │   ├── app/
-│   │   ├── layout.tsx / page.tsx / globals.css
-│   │   ├── login/page.tsx              # Login + registrazione (ruolo & limite settimanale)
-│   │   ├── auth/callback/route.ts      # Callback OAuth
-│   │   ├── calendario/page.tsx         # Calendario 14 giorni, prenota/cancella
-│   │   ├── prenotazioni/page.tsx       # Prossime + storico personale
-│   │   ├── statistiche/page.tsx        # Statistiche personali + riepilogo admin
+│   │   ├── login/page.tsx             # Login (server action) + registrazione
+│   │   ├── calendario/page.tsx        # Calendario vincolato alla stagione corrente
+│   │   ├── prenotazioni/page.tsx      # Prossime (ordinate) + storico on-demand
+│   │   ├── profilo/page.tsx           # Dati account, certificato medico, tessera FITET
+│   │   ├── statistiche/page.tsx       # Statistiche personali, filtro stagione
 │   │   └── admin/
-│   │       ├── layout.tsx              # Guard: solo admin
-│   │       ├── page.tsx                # Dashboard + log attività
-│   │       ├── slot/page.tsx           # CRUD slot ricorrenti ed eventi
-│   │       ├── prenotazioni/page.tsx   # Tutte le prenotazioni, cancellazione admin
-│   │       └── utenti/page.tsx         # Ruoli e limiti settimanali
-│   ├── components/                     # navbar, error-banner, admin/slot-form
+│   │       ├── stagioni/page.tsx      # Crea/modifica/imposta stagione corrente
+│   │       ├── slot/page.tsx          # CRUD slot, chiusure centro
+│   │       ├── prenotazioni/page.tsx  # Tutte le prenotazioni, filtri multipli
+│   │       ├── utenti/page.tsx        # Ricerca, drill-down, disattiva/elimina utenti
+│   │       └── statistiche/page.tsx   # Andamento, riepilogo utenti, certificati
+│   ├── components/                    # navbar, admin-*-client, season-filter, ecc.
 │   └── lib/
-│       ├── supabase/                   # client browser / server / middleware
-│       ├── actions/                    # Server Actions: bookings, admin
-│       ├── dates.ts / types.ts
+│       ├── supabase/                  # client browser / server / admin (service role) / middleware
+│       ├── actions/                   # Server Actions: auth, bookings, admin, users, seasons, profile
+│       └── dates.ts / types.ts / settings.ts
 ```
 
 ## Setup locale
 
 1. Crea un progetto gratuito su [supabase.com](https://supabase.com).
-2. SQL Editor → incolla ed esegui `supabase/migrations/0001_init.sql`.
-3. Authentication → Providers: abilita **Email**; per **Google** crea le credenziali OAuth (gratuite) su [Google Cloud Console](https://console.cloud.google.com) (tipo "Web application", redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`) e incolla Client ID/Secret in Supabase.
-4. Copia `.env.example` in `.env.local` e inserisci URL e anon key (Project Settings → API).
+2. SQL Editor → esegui **in ordine** tutte le migrazioni in `supabase/migrations/` (0001 → 0013).
+3. Authentication → Providers: abilita **Email**; opzionale **Google** OAuth.
+4. Copia `.env.example` in `.env.local` con URL, anon/publishable key e (per le funzioni admin) service role/secret key.
 5. Installa e avvia:
    ```
    npm install
@@ -58,22 +68,14 @@ tennistavolo-booking/
    where id = (select id from auth.users where email = 'tua@email.it');
    ```
 
-## Deploy gratuito su Vercel
+## Deploy su Vercel
 
-1. Crea un repo GitHub e fai push del progetto:
-   ```
-   git init && git add -A && git commit -m "Tennistavolo booking app"
-   git remote add origin https://github.com/<utente>/tennistavolo-booking.git
-   git push -u origin main
-   ```
-2. Su [vercel.com](https://vercel.com) → **Add New → Project** → importa il repo (piano Hobby, gratuito).
-3. In *Environment Variables* aggiungi le variabili di `.env.example` (URL e anon key bastano).
-4. Deploy. Poi in Supabase → Authentication → URL Configuration:
-   - **Site URL**: `https://<app>.vercel.app`
-   - **Redirect URLs**: aggiungi `https://<app>.vercel.app/auth/callback`
-5. Se usi Google OAuth, aggiungi il dominio Vercel agli *Authorized JavaScript origins* in Google Cloud Console.
+Repo GitHub collegato a Vercel (branch `main` → produzione automatica). Variabili
+d'ambiente da configurare nel progetto Vercel: le stesse di `.env.local`.
+Dopo ogni modifica alle migrazioni, applicarle manualmente nel SQL Editor di
+Supabase — non vengono eseguite automaticamente dal deploy.
 
 ## Note sui limiti free tier
 
-- **Vercel Hobby**: 100 GB banda/mese, serverless illimitate per uso hobbistico — ampiamente sufficiente per un club.
-- **Supabase Free**: 500 MB database, 50.000 utenti attivi mensili di Auth. Il progetto viene messo in pausa dopo 7 giorni di inattività: basta riattivarlo dal dashboard (o una visita periodica lo tiene attivo).
+- **Vercel Hobby**: 100 GB banda/mese — ampiamente sufficiente per un club.
+- **Supabase Free**: 500 MB database, 50.000 utenti attivi mensili di Auth.

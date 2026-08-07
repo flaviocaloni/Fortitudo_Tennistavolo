@@ -8,7 +8,6 @@ import {
   adminToggleUserActive,
   adminUpdateUser,
 } from "@/lib/actions/users";
-import { impersonateUser } from "@/lib/actions/auth";
 import type { Profile } from "@/lib/types";
 
 interface AuthInfo {
@@ -269,10 +268,7 @@ export default function AdminUsersListClient({
                         <button className="btn-ghost">✉️ Invia reset password</button>
                       </form>
 
-                      <form action={impersonateUser}>
-                        <input type="hidden" name="user_id" value={p.id} />
-                        <button className="btn-ghost">👁️ Accedi come</button>
-                      </form>
+                      {/* Impersonificazione temporaneamente disabilitata: vedi TODO_IMPERSONIFICAZIONE.md */}
 
                       <form action={adminToggleUserActive}>
                         <input type="hidden" name="user_id" value={p.id} />
