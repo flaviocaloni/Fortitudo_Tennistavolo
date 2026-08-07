@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
-import { updateOwnName, updateMedicalCertificate } from "@/lib/actions/profile";
+import { updateOwnName } from "@/lib/actions/profile";
 import ErrorBanner from "@/components/error-banner";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +108,7 @@ export default async function ProfiloPage(props: {
         </div>
       </form>
 
-      <form action={updateMedicalCertificate} className="card mb-4">
+      <div className="card mb-4">
         <h2 className="mb-3 font-semibold text-navy-800">Certificato medico</h2>
         {(() => {
           const cert = getCertStatus(profile.medical_certificate_expiry);
@@ -126,19 +126,11 @@ export default async function ProfiloPage(props: {
             </>
           );
         })()}
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="grow">
-            <label className="label">Data di scadenza</label>
-            <input
-              type="date"
-              name="medical_certificate_expiry"
-              defaultValue={profile.medical_certificate_expiry ?? ""}
-              className="input"
-            />
-          </div>
-          <button className="btn-navy">Salva</button>
-        </div>
-      </form>
+        <p className="text-xs text-slate-500">
+          La data del certificato medico è gestita dall&apos;amministratore:
+          per aggiornarla contatta il club.
+        </p>
+      </div>
 
       <div className="card">
         <h2 className="mb-2 font-semibold text-navy-800">Sicurezza</h2>
