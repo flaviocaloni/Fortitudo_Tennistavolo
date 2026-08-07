@@ -15,10 +15,9 @@ export default async function AdminDashboard() {
       .select("id", { count: "exact", head: true })
       .eq("status", "active")
       .gte("session_date", today),
-    // niente join: booking_history non ha FK verso profiles
     supabase
       .from("booking_history")
-      .select("*")
+      .select("id, occurred_at, user_id, action, session_date")
       .order("occurred_at", { ascending: false })
       .limit(15),
     supabase.from("profiles").select("id, full_name"),
