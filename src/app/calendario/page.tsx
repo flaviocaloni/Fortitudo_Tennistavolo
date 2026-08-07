@@ -30,8 +30,13 @@ export default async function CalendarioPage(
   const season = await getCurrentSeason(supabase);
 
   const today = toISODate(new Date());
+  // La finestra "giorni visibilità" decorre da oggi, oppure dall'inizio
+  // stagione se la stagione non è ancora iniziata (altrimenti gli slot
+  // ricorrenti del primo mese di stagione risulterebbero sempre nascosti
+  // quando "oggi" precede di molto l'avvio della stagione).
+  const windowStart = season && today < season.start_date ? season.start_date : today;
   const cutoffDate = toISODate(
-    new Date(Date.now() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
+    new Date(new Date(windowStart + "T00:00:00").getTime() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
   );
 
   const todayMonth = today.slice(0, 7);
