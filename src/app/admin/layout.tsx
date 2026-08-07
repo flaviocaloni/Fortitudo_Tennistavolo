@@ -18,6 +18,7 @@ export default async function AdminLayout({
         <Link href="/admin/slot" className="hover:text-navy-700">Slot</Link>
         <Link href="/admin/prenotazioni" className="hover:text-navy-700">Prenotazioni</Link>
         <Link href="/admin/utenti" className="hover:text-navy-700">Utenti</Link>
+        <Link href="/admin/statistiche" className="hover:text-navy-700">Statistiche</Link>
       </div>
       {children}
     </div>
