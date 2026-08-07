@@ -10,6 +10,7 @@ export interface Profile {
   created_at: string;
   medical_certificate_expiry: string | null;
   is_active: boolean;
+  fitet_card_number: string | null;
 }
 
 export interface TrainingSlot {

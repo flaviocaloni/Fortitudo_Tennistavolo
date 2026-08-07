@@ -62,6 +62,7 @@ export async function adminUpdateUser(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
 
   const certExpiry = String(formData.get("medical_certificate_expiry") ?? "").trim();
+  const fitetCard = String(formData.get("fitet_card_number") ?? "").trim();
 
   const { error: profErr } = await supabase
     .from("profiles")
@@ -70,6 +71,7 @@ export async function adminUpdateUser(formData: FormData) {
       role: String(formData.get("role")),
       weekly_limit: Number(formData.get("weekly_limit")),
       medical_certificate_expiry: certExpiry || null,
+      fitet_card_number: fitetCard || null,
     })
     .eq("id", userId);
   if (profErr) backWithError(profErr.message);

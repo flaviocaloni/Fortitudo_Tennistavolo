@@ -233,16 +233,22 @@ export default function AdminUsersListClient({
                         className="input w-auto"
                       />
                     </div>
+                    {p.role === "agonista" && (
+                      <div>
+                        <label className="label">Tessera FITET</label>
+                        <input
+                          name="fitet_card_number"
+                          defaultValue={p.fitet_card_number ?? ""}
+                          placeholder="Numero tessera"
+                          className="input w-40"
+                        />
+                      </div>
+                    )}
                     <button className="btn-navy">Salva</button>
                   </form>
 
                   {isAdmin && info && (
                     <>
-                      <form action={adminSendPasswordReset}>
-                        <input type="hidden" name="email" value={info.email} />
-                        <button className="btn-ghost">✉️ Invia reset password</button>
-                      </form>
-
                       <form action={adminSetPassword} className="flex items-end gap-2">
                         <input type="hidden" name="user_id" value={p.id} />
                         <div>
@@ -255,7 +261,12 @@ export default function AdminUsersListClient({
                             placeholder="min 6 caratteri"
                           />
                         </div>
-                        <button className="btn-ghost">Imposta</button>
+                        <button className="btn-ghost">Imposta password</button>
+                      </form>
+
+                      <form action={adminSendPasswordReset}>
+                        <input type="hidden" name="email" value={info.email} />
+                        <button className="btn-ghost">✉️ Invia reset password</button>
                       </form>
 
                       <form action={impersonateUser}>
