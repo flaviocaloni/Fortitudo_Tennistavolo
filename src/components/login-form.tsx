@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { loginWithEmail } from "@/lib/actions/auth";
 
 export default function LoginForm({
   googleOAuthEnabled,
+  loginError,
 }: {
   googleOAuthEnabled: boolean;
+  loginError?: string;
 }) {
-  const router = useRouter();
   const supabase = createClient();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(loginError ?? null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,38 +29,32 @@ export default function LoginForm({
     if (error) setError(error.message);
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setInfo(null);
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
-
-    if (mode === "login") {
-      // Usa azione server per il login (gestisce i cookie correttamente)
-      await loginWithEmail(form);
-    } else {
-      const email = String(form.get("email"));
-      const password = String(form.get("password"));
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: String(form.get("full_name")),
-            role: String(form.get("role")),
-            weekly_limit: String(form.get("weekly_limit")),
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+    const email = String(form.get("email"));
+    const password = String(form.get("password"));
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: String(form.get("full_name")),
+          role: String(form.get("role")),
+          weekly_limit: String(form.get("weekly_limit")),
         },
-      });
-      setLoading(false);
-      if (error) return setError(error.message);
-      setInfo(
-        "Registrazione inviata! Controlla la tua email per confermare l'account."
-      );
-    }
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    setLoading(false);
+    if (error) return setError(error.message);
+    setInfo(
+      "Registrazione inviata! Controlla la tua email per confermare l'account."
+    );
   }
 
   return (
@@ -92,61 +86,78 @@ export default function LoginForm({
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {mode === "register" && (
+        {mode === "login" ? (
+          <form
+            action={loginWithEmail}
+            onSubmit={() => setLoading(true)}
+            className="space-y-3"
+          >
+            <div>
+              <label className="label">Email</label>
+              <input name="email" type="email" required className="input" />
+            </div>
+            <div>
+              <label className="label">Password</label>
+              <input
+                name="password"
+                type="password"
+                required
+                minLength={6}
+                className="input"
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              {loading ? "Attendere…" : "Accedi"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-3">
             <div>
               <label className="label">Nome e cognome</label>
               <input name="full_name" required className="input" />
             </div>
-          )}
-          <div>
-            <label className="label">Email</label>
-            <input name="email" type="email" required className="input" />
-          </div>
-          <div>
-            <label className="label">Password</label>
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              className="input"
-            />
-          </div>
+            <div>
+              <label className="label">Email</label>
+              <input name="email" type="email" required className="input" />
+            </div>
+            <div>
+              <label className="label">Password</label>
+              <input
+                name="password"
+                type="password"
+                required
+                minLength={6}
+                className="input"
+              />
+            </div>
 
-          {mode === "register" && (
-            <>
-              <div>
-                <label className="label">Profilo</label>
-                <select name="role" className="input" defaultValue="amatore">
-                  <option value="amatore">Amatore</option>
-                  <option value="agonista">Agonista</option>
-                </select>
-              </div>
-              <div>
-                <label className="label">
-                  Prenotazioni settimanali desiderate
-                </label>
-                <select name="weekly_limit" className="input" defaultValue="1">
-                  <option value="1">1 a settimana</option>
-                  <option value="2">2 a settimana</option>
-                  <option value="3">3 a settimana</option>
-                </select>
-                <p className="mt-1 text-xs text-slate-500">
-                  Modificabile in seguito solo dall&apos;amministratore.
-                </p>
-              </div>
-            </>
-          )}
+            <div>
+              <label className="label">Profilo</label>
+              <select name="role" className="input" defaultValue="amatore">
+                <option value="amatore">Amatore</option>
+                <option value="agonista">Agonista</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">
+                Prenotazioni settimanali desiderate
+              </label>
+              <select name="weekly_limit" className="input" defaultValue="1">
+                <option value="1">1 a settimana</option>
+                <option value="2">2 a settimana</option>
+                <option value="3">3 a settimana</option>
+              </select>
+              <p className="mt-1 text-xs text-slate-500">
+                Modificabile in seguito solo dall&apos;amministratore.
+              </p>
+            </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading
-              ? "Attendere…"
-              : mode === "login"
-                ? "Accedi"
-                : "Crea account"}
-          </button>
-        </form>
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              {loading ? "Attendere…" : "Crea account"}
+            </button>
+          </form>
+        )}
 
         {mode === "login" && (
           <p className="mt-3 text-center text-xs">
