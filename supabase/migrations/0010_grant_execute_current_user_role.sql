@@ -1,0 +1,26 @@
+-- ============================================================
+-- Fix: "permission denied for function current_user_role"
+--
+-- Le migrazioni 0006 e 0009 revocavano EXECUTE su
+-- current_user_role() da public/anon/authenticated, pensando
+-- fosse solo una funzione "helper interna" richiamabile da altre
+-- funzioni SECURITY DEFINER.
+--
+-- In realta' e' referenziata DIRETTAMENTE nelle policy RLS di
+-- profiles, training_slots, app_settings (es. "profiles read":
+-- using (id = auth.uid() or current_user_role() = 'admin')).
+-- Quando Postgres valuta una policy, la funzione viene eseguita
+-- nel contesto del ruolo che ha lanciato la query (authenticated),
+-- NON del proprietario della funzione: senza EXECUTE su
+-- "authenticated", la valutazione della policy fallisce con
+-- "permission denied for function current_user_role" per
+-- QUALSIASI query di un utente normale su queste tabelle.
+--
+-- Fix: ripristina EXECUTE per authenticated (necessario per le
+-- policy RLS). La funzione resta SECURITY DEFINER e non accetta
+-- argomenti: espone solo il ruolo dell'utente corrente (auth.uid()),
+-- quindi e' sicura da rendere eseguibile da qualsiasi utente
+-- autenticato.
+-- ============================================================
+
+grant execute on function public.current_user_role() to authenticated;
