@@ -144,9 +144,47 @@ export default function BookingsTableClient({
   return (
     <div className="space-y-4">
       <div className="card space-y-3">
-        <div className="text-sm font-semibold text-slate-700">Filtri</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-slate-700">Filtri</div>
+          <button
+            onClick={() => {
+              setDateFrom("");
+              setDateTo("");
+              setSelectedSlots(new Set());
+              setSelectedRoles(new Set());
+              setSelectedUsers(new Set());
+            }}
+            className="btn-ghost text-xs"
+          >
+            Reset
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label className="label text-xs">Data</label>
+            <div className="space-y-1">
+              <div>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="Da"
+                />
+              </div>
+              <div>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="A"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="label text-xs">Slot</label>
             <div className="max-h-32 space-y-1 overflow-y-auto">
@@ -197,31 +235,13 @@ export default function BookingsTableClient({
               ))}
             </div>
           </div>
-
-          <div className="space-y-1">
-            <div>
-              <label className="label text-xs">Da</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="input w-full text-sm"
-              />
-            </div>
-            <div>
-              <label className="label text-xs">A</label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="input w-full text-sm"
-              />
-            </div>
-          </div>
         </div>
 
-        <div className="text-xs text-slate-500">
-          Visualizzate {sorted.length} di {initialBookings.length} prenotazioni
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-500">
+            Visualizzate {sorted.length} di {initialBookings.length} prenotazioni
+          </span>
+          <button className="btn-primary text-xs">Cerca</button>
         </div>
       </div>
 
