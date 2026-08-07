@@ -40,6 +40,7 @@ export default async function AdminSlotPage(
 
   const recurring = (slots ?? []).filter((s: TrainingSlot) => !s.event_date);
   const events = (slots ?? []).filter((s: TrainingSlot) => s.event_date);
+  const seasonNameById = new Map((seasons ?? []).map((s) => [s.id, s.name]));
 
   return (
     <div>
@@ -122,10 +123,20 @@ export default async function AdminSlotPage(
                     · {formatTime(s.start_time)}–{formatTime(s.end_time)}
                   </p>
                   <p className="text-sm text-slate-600">
-                    {AUDIENCE_LABEL[s.audience]} · posti {s.min_capacity}–{s.max_capacity}
-                    {s.notes && ` · ${s.notes}`}
-                    {!s.is_active && " · DISATTIVATO"}
+                    Tipo: {s.event_date ? "Extra / evento" : "Ricorrente settimanale"}
+                    {" · "}
+                    Destinatari: {AUDIENCE_LABEL[s.audience]}
+                    {" · "}
+                    Posti: min {s.min_capacity} – max {s.max_capacity}
+                    {" · "}
+                    Stagione: {seasonNameById.get(s.season_id) ?? "—"}
+                    {" · "}
+                    Stato: {s.is_active ? "Attivo" : "DISATTIVATO"}
                   </p>
+                  {s.notes && (
+                    <p className="text-sm text-slate-600">Note: {s.notes}</p>
+                  )}
+                  <p className="text-xs text-slate-400">ID: {s.id}</p>
                 </div>
                 <div className="flex gap-2">
                   <form action={toggleSlotActive}>
