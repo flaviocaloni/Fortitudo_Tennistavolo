@@ -1,7 +1,16 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { bookSlot, cancelBooking } from "@/lib/actions/bookings";
-import { formatDateIT, formatTime, slotsForDate, upcomingDates } from "@/lib/dates";
+import {
+  datesBetween,
+  formatDateIT,
+  formatTime,
+  monthBounds,
+  shiftMonth,
+  slotsForDate,
+  toISODate,
+} from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
 import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
@@ -10,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CalendarioPage(
   props: {
-    searchParams: Promise<{ error?: string }>;
+    searchParams: Promise<{ error?: string; month?: string }>;
   }
 ) {
   const searchParams = await props.searchParams;
@@ -20,49 +29,59 @@ export default async function CalendarioPage(
   const DAYS_AHEAD = await getCalendarDaysAhead(supabase);
   const season = await getCurrentSeason(supabase);
 
-  let dates = upcomingDates(DAYS_AHEAD);
+  const today = toISODate(new Date());
+  const cutoffDate = toISODate(
+    new Date(Date.now() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
+  );
+
+  const todayMonth = today.slice(0, 7);
+  const seasonStartMonth = season ? season.start_date.slice(0, 7) : todayMonth;
+  const seasonEndMonth = season ? season.end_date.slice(0, 7) : todayMonth;
+  const minMonth = todayMonth > seasonStartMonth ? todayMonth : seasonStartMonth;
+
+  let month = searchParams.month || minMonth;
+  if (month < minMonth) month = minMonth;
+  if (season && month > seasonEndMonth) month = seasonEndMonth;
+
+  const { first: monthFirst, last: monthLast } = monthBounds(month);
+  let rangeFrom = monthFirst < today ? today : monthFirst;
+  let rangeTo = monthLast;
   if (season) {
-    dates = dates.filter((d) => d >= season.start_date && d <= season.end_date);
+    if (rangeFrom < season.start_date) rangeFrom = season.start_date;
+    if (rangeTo > season.end_date) rangeTo = season.end_date;
   }
 
-  if (dates.length === 0) {
-    return (
-      <div>
-        <h1 className="mb-1 text-2xl font-bold">Calendario allenamenti</h1>
-        <ErrorBanner message={searchParams.error} />
-        <div className="card mt-4 text-sm text-slate-600">
-          {season
-            ? `Nessuna data disponibile: la stagione ${season.name} va dal ${new Date(
-                season.start_date + "T00:00:00"
-              ).toLocaleDateString("it-IT")} al ${new Date(
-                season.end_date + "T00:00:00"
-              ).toLocaleDateString("it-IT")}.`
-            : "Nessuna stagione corrente configurata: contatta l'amministratore."}
-        </div>
-      </div>
-    );
-  }
+  const dates = rangeFrom <= rangeTo ? datesBetween(rangeFrom, rangeTo) : [];
 
-  const from = dates[0];
-  const to = dates[dates.length - 1];
+  const prevMonth = shiftMonth(month, -1);
+  const nextMonth = shiftMonth(month, 1);
+  const canGoPrev = prevMonth >= minMonth;
+  const canGoNext = !season || nextMonth <= seasonEndMonth;
+
+  const monthLabel = new Date(month + "-01T00:00:00").toLocaleDateString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
 
   const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }] =
-    await Promise.all([
-      supabase.from("training_slots").select("*").eq("is_active", true),
-      supabase.rpc("slot_occupancy", { p_from: from, p_to: to }),
-      supabase
-        .from("bookings")
-        .select("id, slot_id, session_date")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .gte("session_date", from)
-        .lte("session_date", to),
-      supabase
-        .from("club_closures")
-        .select("start_date, end_date, reason")
-        .lte("start_date", to)
-        .gte("end_date", from),
-    ]);
+    dates.length > 0
+      ? await Promise.all([
+          supabase.from("training_slots").select("*").eq("is_active", true),
+          supabase.rpc("slot_occupancy", { p_from: rangeFrom, p_to: rangeTo }),
+          supabase
+            .from("bookings")
+            .select("id, slot_id, session_date")
+            .eq("user_id", user.id)
+            .eq("status", "active")
+            .gte("session_date", rangeFrom)
+            .lte("session_date", rangeTo),
+          supabase
+            .from("club_closures")
+            .select("start_date, end_date, reason")
+            .lte("start_date", rangeTo)
+            .gte("end_date", rangeFrom),
+        ])
+      : [{ data: null }, { data: null }, { data: null }, { data: null }];
 
   const closureFor = (date: string) =>
     (closures ?? []).find((c) => date >= c.start_date && date <= c.end_date);
@@ -86,14 +105,40 @@ export default async function CalendarioPage(
     <div>
       <h1 className="mb-1 text-2xl font-bold">Calendario allenamenti</h1>
       <p className="mb-4 text-sm text-slate-600">
-        Prossimi {DAYS_AHEAD} giorni{season ? ` · stagione ${season.name}` : ""} · il tuo limite:{" "}
-        {profile.weekly_limit} prenotazion{profile.weekly_limit === 1 ? "e" : "i"} a settimana
+        Slot ricorrenti visibili fino a {DAYS_AHEAD} giorni da oggi (gli eventi extra
+        futuri sono sempre visibili){season ? ` · stagione ${season.name}` : ""} · il
+        tuo limite: {profile.weekly_limit} prenotazion
+        {profile.weekly_limit === 1 ? "e" : "i"} a settimana
       </p>
       <ErrorBanner message={searchParams.error} />
 
+      <div className="mb-4 flex items-center justify-between">
+        <Link
+          href={canGoPrev ? `/calendario?month=${prevMonth}` : "#"}
+          className={`btn-ghost ${!canGoPrev ? "pointer-events-none opacity-40" : ""}`}
+        >
+          ← Mese precedente
+        </Link>
+        <h2 className="text-lg font-semibold capitalize text-navy-800">{monthLabel}</h2>
+        <Link
+          href={canGoNext ? `/calendario?month=${nextMonth}` : "#"}
+          className={`btn-ghost ${!canGoNext ? "pointer-events-none opacity-40" : ""}`}
+        >
+          Mese successivo →
+        </Link>
+      </div>
+
+      {dates.length === 0 && (
+        <div className="card text-sm text-slate-600">
+          {season
+            ? `Nessuna data disponibile in questo mese per la stagione ${season.name}.`
+            : "Nessuna stagione corrente configurata: contatta l'amministratore."}
+        </div>
+      )}
+
       <div className="space-y-6">
         {dates.map((date) => {
-          const daySlots = slotsForDate(slots ?? [], date);
+          const daySlots = slotsForDate(slots ?? [], date, cutoffDate);
           if (daySlots.length === 0) return null;
           const closure = closureFor(date);
           if (closure) {
