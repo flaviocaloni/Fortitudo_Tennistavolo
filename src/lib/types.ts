@@ -23,6 +23,7 @@ export interface TrainingSlot {
   max_capacity: number;
   is_active: boolean;
   notes: string | null;
+  season_id: string;
 }
 
 export interface Booking {
@@ -33,6 +34,16 @@ export interface Booking {
   status: BookingStatus;
   created_at: string;
   cancelled_at: string | null;
+  season_id: string | null;
+}
+
+export interface Season {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  is_current: boolean;
+  created_at: string;
 }
 
 export const WEEKDAYS = [

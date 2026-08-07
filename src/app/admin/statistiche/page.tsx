@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
-import type { Booking, Profile } from "@/lib/types";
+import { getCurrentSeason } from "@/lib/settings";
+import type { Booking, Profile, Season } from "@/lib/types";
 import AdminBookingsChart from "@/components/admin-bookings-chart";
 import AdminUsersReport from "@/components/admin-users-report";
 import CertificateReportClient from "@/components/certificate-report-client";
+import SeasonFilter from "@/components/season-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -35,19 +37,35 @@ function countPeriods(bookings: Pick<Booking, "session_date" | "status">[]): Per
   return res;
 }
 
-export default async function AdminStatistichePage() {
+export default async function AdminStatistichePage(props: {
+  searchParams: Promise<{ season?: string }>;
+}) {
+  const searchParams = await props.searchParams;
   const { supabase, profile } = await getSessionProfile();
   if (!profile || profile.role !== "admin") redirect("/login");
+
+  const { data: seasons } = await supabase
+    .from("seasons")
+    .select("*")
+    .order("start_date", { ascending: false });
+  const currentSeason = await getCurrentSeason(supabase);
+  const selectedSeasonId = searchParams.season || currentSeason?.id || "all";
 
   const twoYearsAgo = new Date();
   twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
   const minDate = twoYearsAgo.toISOString().split("T")[0];
 
-  const { data: bookings } = await supabase
+  let query = supabase
     .from("bookings")
-    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at")
+    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at, season_id")
     .gte("session_date", minDate)
     .order("session_date", { ascending: false });
+
+  if (selectedSeasonId !== "all") {
+    query = query.eq("season_id", selectedSeasonId);
+  }
+
+  const { data: bookings } = await query;
 
   const { data: profiles } = await supabase
     .from("profiles")
@@ -65,6 +83,8 @@ export default async function AdminStatistichePage() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Statistiche Amministrative</h1>
+
+      <SeasonFilter seasons={(seasons ?? []) as Season[]} selectedSeasonId={selectedSeasonId} />
 
       <AdminBookingsChart bookings={allVisible} />
 

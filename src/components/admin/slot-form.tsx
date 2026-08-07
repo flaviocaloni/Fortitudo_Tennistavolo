@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { WEEKDAYS } from "@/lib/types";
+import { WEEKDAYS, type Season } from "@/lib/types";
 
 export default function SlotForm({
   action,
+  seasons,
+  currentSeasonId,
 }: {
   action: (formData: FormData) => Promise<void>;
+  seasons: Season[];
+  currentSeasonId?: string;
 }) {
   const [kind, setKind] = useState<"recurring" | "event">("recurring");
 
@@ -88,6 +92,17 @@ export default function SlotForm({
       <div>
         <label className="label">Note (opzionale)</label>
         <input name="notes" className="input" />
+      </div>
+      <div>
+        <label className="label">Stagione</label>
+        <select name="season_id" className="input" defaultValue={currentSeasonId}>
+          {seasons.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+              {s.is_current ? " (corrente)" : ""}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="sm:col-span-2 lg:col-span-4">

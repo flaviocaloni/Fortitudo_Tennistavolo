@@ -15,6 +15,7 @@ export default async function AdminLayout({
       <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-slate-200 pb-3 text-sm">
         <span className="font-bold text-amber-700">Area Admin</span>
         <Link href="/admin" className="hover:text-navy-700">Dashboard</Link>
+        <Link href="/admin/stagioni" className="hover:text-navy-700">Stagioni</Link>
         <Link href="/admin/slot" className="hover:text-navy-700">Slot</Link>
         <Link href="/admin/prenotazioni" className="hover:text-navy-700">Prenotazioni</Link>
         <Link href="/admin/utenti" className="hover:text-navy-700">Utenti</Link>

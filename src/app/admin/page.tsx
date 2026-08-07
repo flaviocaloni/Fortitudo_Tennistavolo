@@ -3,6 +3,11 @@ import Link from "next/link";
 export default function AdminDashboard() {
   const sections = [
     {
+      href: "/admin/stagioni",
+      title: "🗓️ Stagioni",
+      description: "Crea e gestisci le stagioni",
+    },
+    {
       href: "/admin/slot",
       title: "📅 Slot",
       description: "Gestisci gli slot di allenamento",

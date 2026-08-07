@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { startOfISOWeek, toISODate } from "@/lib/dates";
-import type { Booking } from "@/lib/types";
+import { getCurrentSeason } from "@/lib/settings";
+import type { Booking, Season } from "@/lib/types";
+import SeasonFilter from "@/components/season-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -45,22 +47,38 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-export default async function StatistichePage() {
+export default async function StatistichePage(props: {
+  searchParams: Promise<{ season?: string }>;
+}) {
+  const searchParams = await props.searchParams;
   const { supabase, user, profile } = await getSessionProfile();
   if (!user || !profile) redirect("/login");
 
   const year = new Date().getFullYear();
 
+  const { data: seasons } = await supabase
+    .from("seasons")
+    .select("*")
+    .order("start_date", { ascending: false });
+  const currentSeason = await getCurrentSeason(supabase);
+  const selectedSeasonId = searchParams.season || currentSeason?.id || "all";
+
   const twoYearsAgo = new Date();
   twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
   const minDate = twoYearsAgo.toISOString().split("T")[0];
 
-  const { data: bookings } = await supabase
+  let query = supabase
     .from("bookings")
-    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at")
+    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at, season_id")
     .eq("user_id", user.id)
     .gte("session_date", minDate)
     .order("session_date", { ascending: false });
+
+  if (selectedSeasonId !== "all") {
+    query = query.eq("season_id", selectedSeasonId);
+  }
+
+  const { data: bookings } = await query;
 
   const mineAll = bookings ?? [];
   const my = countPeriods(mineAll);
@@ -76,6 +94,8 @@ export default async function StatistichePage() {
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Statistiche</h1>
+
+      <SeasonFilter seasons={(seasons ?? []) as Season[]} selectedSeasonId={selectedSeasonId} />
 
       <h2 className="mb-2 font-semibold text-slate-700">Le mie prenotazioni</h2>
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

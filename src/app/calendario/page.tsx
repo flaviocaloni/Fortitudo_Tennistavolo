@@ -4,7 +4,7 @@ import { bookSlot, cancelBooking } from "@/lib/actions/bookings";
 import { formatDateIT, formatTime, slotsForDate, upcomingDates } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
-import { getCalendarDaysAhead } from "@/lib/settings";
+import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,31 @@ export default async function CalendarioPage(
   if (!user || !profile) redirect("/login");
 
   const DAYS_AHEAD = await getCalendarDaysAhead(supabase);
-  const dates = upcomingDates(DAYS_AHEAD);
+  const season = await getCurrentSeason(supabase);
+
+  let dates = upcomingDates(DAYS_AHEAD);
+  if (season) {
+    dates = dates.filter((d) => d >= season.start_date && d <= season.end_date);
+  }
+
+  if (dates.length === 0) {
+    return (
+      <div>
+        <h1 className="mb-1 text-2xl font-bold">Calendario allenamenti</h1>
+        <ErrorBanner message={searchParams.error} />
+        <div className="card mt-4 text-sm text-slate-600">
+          {season
+            ? `Nessuna data disponibile: la stagione ${season.name} va dal ${new Date(
+                season.start_date + "T00:00:00"
+              ).toLocaleDateString("it-IT")} al ${new Date(
+                season.end_date + "T00:00:00"
+              ).toLocaleDateString("it-IT")}.`
+            : "Nessuna stagione corrente configurata: contatta l'amministratore."}
+        </div>
+      </div>
+    );
+  }
+
   const from = dates[0];
   const to = dates[dates.length - 1];
 
@@ -62,8 +86,8 @@ export default async function CalendarioPage(
     <div>
       <h1 className="mb-1 text-2xl font-bold">Calendario allenamenti</h1>
       <p className="mb-4 text-sm text-slate-600">
-        Prossimi {DAYS_AHEAD} giorni · il tuo limite: {profile.weekly_limit}{" "}
-        prenotazion{profile.weekly_limit === 1 ? "e" : "i"} a settimana
+        Prossimi {DAYS_AHEAD} giorni{season ? ` · stagione ${season.name}` : ""} · il tuo limite:{" "}
+        {profile.weekly_limit} prenotazion{profile.weekly_limit === 1 ? "e" : "i"} a settimana
       </p>
       <ErrorBanner message={searchParams.error} />
 

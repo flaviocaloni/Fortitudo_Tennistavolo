@@ -21,6 +21,9 @@ export async function createSlot(formData: FormData) {
   const kind = String(formData.get("kind") ?? "recurring");
   const eventDate = String(formData.get("event_date") ?? "");
 
+  const seasonId = String(formData.get("season_id") ?? "");
+  if (!seasonId) backWithError("/admin/slot", "Seleziona una stagione");
+
   const payload = {
     title: String(formData.get("title") || "Allenamento"),
     weekday: kind === "event" ? null : Number(formData.get("weekday")),
@@ -31,6 +34,7 @@ export async function createSlot(formData: FormData) {
     min_capacity: Number(formData.get("min_capacity") ?? 2),
     max_capacity: Number(formData.get("max_capacity") ?? 12),
     notes: String(formData.get("notes") ?? "") || null,
+    season_id: seasonId,
   };
 
   const { error } = await supabase.from("training_slots").insert(payload);

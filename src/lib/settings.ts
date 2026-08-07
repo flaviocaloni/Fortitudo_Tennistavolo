@@ -1,6 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Season } from "./types";
 
 export const DEFAULT_CALENDAR_DAYS = 90;
+
+/** Stagione attualmente attiva (is_current = true), se presente. */
+export async function getCurrentSeason(
+  supabase: SupabaseClient
+): Promise<Season | null> {
+  const { data } = await supabase
+    .from("seasons")
+    .select("*")
+    .eq("is_current", true)
+    .maybeSingle();
+  return data ?? null;
+}
 
 /** Giorni di calendario visibili/prenotabili (impostazione admin).
  *  Torna il default se la tabella non esiste ancora o il valore non è valido. */

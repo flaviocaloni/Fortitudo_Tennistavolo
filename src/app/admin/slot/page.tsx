@@ -8,7 +8,7 @@ import {
   toggleSlotActive,
   updateCalendarDays,
 } from "@/lib/actions/admin";
-import { getCalendarDaysAhead, isGoogleOAuthEnabled } from "@/lib/settings";
+import { getCalendarDaysAhead, getCurrentSeason, isGoogleOAuthEnabled } from "@/lib/settings";
 import { formatTime } from "@/lib/dates";
 import { AUDIENCE_LABEL, WEEKDAYS, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
@@ -23,17 +23,20 @@ export default async function AdminSlotPage(
 ) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
-  const [{ data: slots }, { data: closures }, googleOAuthEnabled] = await Promise.all([
-    supabase
-      .from("training_slots")
-      .select("*")
-      .order("event_date", { ascending: true, nullsFirst: true })
-      .order("weekday")
-      .order("start_time"),
-    supabase.from("club_closures").select("*").order("start_date"),
-    isGoogleOAuthEnabled(supabase),
-  ]);
+  const [{ data: slots }, { data: closures }, { data: seasons }, googleOAuthEnabled] =
+    await Promise.all([
+      supabase
+        .from("training_slots")
+        .select("*")
+        .order("event_date", { ascending: true, nullsFirst: true })
+        .order("weekday")
+        .order("start_time"),
+      supabase.from("club_closures").select("*").order("start_date"),
+      supabase.from("seasons").select("*").order("start_date", { ascending: false }),
+      isGoogleOAuthEnabled(supabase),
+    ]);
   const calendarDays = await getCalendarDaysAhead(supabase);
+  const currentSeason = await getCurrentSeason(supabase);
 
   const recurring = (slots ?? []).filter((s: TrainingSlot) => !s.event_date);
   const events = (slots ?? []).filter((s: TrainingSlot) => s.event_date);
@@ -90,7 +93,7 @@ export default async function AdminSlotPage(
 
       <div className="mb-8">
         <h2 className="mb-2 font-semibold text-slate-700">Nuovo slot</h2>
-        <SlotForm action={createSlot} />
+        <SlotForm action={createSlot} seasons={seasons ?? []} currentSeasonId={currentSeason?.id} />
       </div>
 
       {[
