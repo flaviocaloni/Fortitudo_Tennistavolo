@@ -16,7 +16,7 @@ export async function loginWithEmail(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -25,14 +25,7 @@ export async function loginWithEmail(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
-  // DEBUG: mostra sempre lo stato per diagnosticare il loop
-  const cookieStore = await cookies();
-  const allCookieNames = cookieStore.getAll().map((c) => c.name).join(", ");
-  redirect(
-    `/login?error=${encodeURIComponent(
-      `DEBUG: session=${!!data.session} user=${data.user?.email ?? "null"} cookies=[${allCookieNames}]`
-    )}`
-  );
+  redirect("/calendario");
 }
 
 /** Invia email di reset password per un dato indirizzo email. */
