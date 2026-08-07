@@ -44,10 +44,6 @@ export default async function AdminPrenotazioniPage(
         </div>
       )}
 
-      <div className="mb-4 text-xs text-slate-500">
-        Debug: {bookings.length} prenotazioni caricate
-      </div>
-
       <BookingsTableClient bookings={bookings} />
     </div>
   );

@@ -34,6 +34,8 @@ export default function BookingsTableClient({
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const slotTitles = useMemo(
     () => [...new Set(initialBookings.map((b) => getTrainingSlot(b.training_slots)?.title || "").filter(Boolean))],
@@ -46,8 +48,16 @@ export default function BookingsTableClient({
   );
 
   const userNames = useMemo(
-    () => [...new Set(initialBookings.map((b) => getProfile(b.profiles)?.full_name || "").filter(Boolean))],
+    () => [...new Set(initialBookings.map((b) => getProfile(b.profiles)?.full_name || "").filter(Boolean))].sort(),
     [initialBookings]
+  );
+
+  const filteredUserNames = useMemo(
+    () =>
+      userSearch
+        ? userNames.filter((u) => u.toLowerCase().includes(userSearch.toLowerCase()))
+        : userNames,
+    [userNames, userSearch]
   );
 
   const filtered = useMemo(() => {
@@ -153,6 +163,7 @@ export default function BookingsTableClient({
               setSelectedSlots(new Set());
               setSelectedRoles(new Set());
               setSelectedUsers(new Set());
+              setUserSearch("");
             }}
             className="btn-ghost text-xs"
           >
@@ -219,21 +230,59 @@ export default function BookingsTableClient({
             </div>
           </div>
 
-          <div>
+          <div className="relative">
             <label className="label text-xs">Utente</label>
-            <div className="max-h-32 space-y-1 overflow-y-auto">
-              {userNames.map((user) => (
-                <label key={user} className="flex items-center gap-2 text-xs">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.has(user)}
-                    onChange={() => toggleUser(user)}
-                    className="rounded"
-                  />
-                  {user}
-                </label>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              onFocus={() => setUserDropdownOpen(true)}
+              onBlur={() => setTimeout(() => setUserDropdownOpen(false), 150)}
+              placeholder={
+                selectedUsers.size > 0 ? `${selectedUsers.size} selezionati` : "Cerca utente…"
+              }
+              className="input w-full text-sm"
+            />
+            {userDropdownOpen && (
+              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+                {filteredUserNames.length === 0 && (
+                  <p className="px-2 py-2 text-xs text-slate-500">Nessun utente trovato</p>
+                )}
+                {filteredUserNames.map((user) => (
+                  <label
+                    key={user}
+                    className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-slate-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user)}
+                      onChange={() => toggleUser(user)}
+                      className="rounded"
+                    />
+                    {user}
+                  </label>
+                ))}
+              </div>
+            )}
+            {selectedUsers.size > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {[...selectedUsers].map((user) => (
+                  <span
+                    key={user}
+                    className="badge flex items-center gap-1 bg-navy-100 text-xs text-navy-800"
+                  >
+                    {user}
+                    <button
+                      type="button"
+                      onClick={() => toggleUser(user)}
+                      className="ml-1 text-navy-600 hover:text-navy-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
