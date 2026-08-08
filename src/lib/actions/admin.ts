@@ -50,6 +50,46 @@ export async function createSlot(formData: FormData) {
   revalidatePath("/calendario");
 }
 
+/** Modifica tutti i campi di uno slot esistente (ricorrente o evento). */
+export async function updateSlot(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const slotId = String(formData.get("slot_id"));
+  const kind = String(formData.get("kind") ?? "recurring");
+  const eventDate = String(formData.get("event_date") ?? "");
+  const startDate = String(formData.get("start_date") ?? "");
+  const endDate = String(formData.get("end_date") ?? "");
+
+  const seasonId = String(formData.get("season_id") ?? "");
+  if (!seasonId) backWithError("/admin/slot", "Seleziona una stagione");
+  if (kind === "recurring" && (!startDate || !endDate)) {
+    backWithError("/admin/slot", "Data inizio e data fine sono obbligatorie per gli slot ricorrenti");
+  }
+  if (kind === "recurring" && endDate <= startDate) {
+    backWithError("/admin/slot", "La data fine deve essere successiva alla data inizio");
+  }
+
+  const payload = {
+    title: String(formData.get("title") || "Allenamento"),
+    weekday: kind === "event" ? null : Number(formData.get("weekday")),
+    event_date: kind === "event" ? eventDate : null,
+    start_date: kind === "recurring" ? startDate : null,
+    end_date: kind === "recurring" ? endDate : null,
+    start_time: String(formData.get("start_time")),
+    end_time: String(formData.get("end_time")),
+    audience: String(formData.get("audience") ?? "misto"),
+    min_capacity: Number(formData.get("min_capacity") ?? 2),
+    max_capacity: Number(formData.get("max_capacity") ?? 12),
+    notes: String(formData.get("notes") ?? "") || null,
+    season_id: seasonId,
+  };
+
+  const { error } = await supabase.from("training_slots").update(payload).eq("id", slotId);
+  if (error) backWithError("/admin/slot", error.message);
+  revalidatePath("/admin/slot");
+  revalidatePath("/calendario");
+}
+
 /** Modifica data inizio/fine di uno slot ricorrente esistente. */
 export async function updateSlotDates(formData: FormData) {
   const supabase = await requireAdmin();

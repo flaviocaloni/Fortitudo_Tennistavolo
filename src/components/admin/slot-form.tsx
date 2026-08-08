@@ -1,21 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { WEEKDAYS, type Season } from "@/lib/types";
+import { WEEKDAYS, type Season, type TrainingSlot } from "@/lib/types";
 
 export default function SlotForm({
   action,
   seasons,
   currentSeasonId,
+  slot,
+  submitLabel,
 }: {
   action: (formData: FormData) => Promise<void>;
   seasons: Season[];
   currentSeasonId?: string;
+  slot?: TrainingSlot;
+  submitLabel?: string;
 }) {
-  const [kind, setKind] = useState<"recurring" | "event">("recurring");
+  const [kind, setKind] = useState<"recurring" | "event">(
+    slot?.event_date ? "event" : "recurring"
+  );
 
   return (
     <form action={action} className="card grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {slot && <input type="hidden" name="slot_id" value={slot.id} />}
+
       <div className="sm:col-span-2 lg:col-span-4">
         <label className="label">Tipo di slot</label>
         <div className="flex gap-2">
@@ -42,7 +50,7 @@ export default function SlotForm({
         <input
           name="title"
           className="input"
-          defaultValue={kind === "event" ? "Evento speciale" : "Allenamento"}
+          defaultValue={slot?.title ?? (kind === "event" ? "Evento speciale" : "Allenamento")}
         />
       </div>
 
@@ -50,7 +58,7 @@ export default function SlotForm({
         <>
           <div>
             <label className="label">Giorno della settimana</label>
-            <select name="weekday" className="input" defaultValue="1">
+            <select name="weekday" className="input" defaultValue={slot?.weekday ?? 1}>
               {WEEKDAYS.map((d, i) => (
                 <option key={i} value={i}>
                   {d}
@@ -60,32 +68,62 @@ export default function SlotForm({
           </div>
           <div>
             <label className="label">Data inizio</label>
-            <input name="start_date" type="date" required className="input" />
+            <input
+              name="start_date"
+              type="date"
+              defaultValue={slot?.start_date ?? ""}
+              required
+              className="input"
+            />
           </div>
           <div>
             <label className="label">Data fine</label>
-            <input name="end_date" type="date" required className="input" />
+            <input
+              name="end_date"
+              type="date"
+              defaultValue={slot?.end_date ?? ""}
+              required
+              className="input"
+            />
           </div>
         </>
       ) : (
         <div>
           <label className="label">Data evento</label>
-          <input name="event_date" type="date" required className="input" />
+          <input
+            name="event_date"
+            type="date"
+            defaultValue={slot?.event_date ?? ""}
+            required
+            className="input"
+          />
         </div>
       )}
 
       <div>
         <label className="label">Ora inizio</label>
-        <input name="start_time" type="time" required className="input" />
+        <input
+          name="start_time"
+          type="time"
+          defaultValue={slot?.start_time?.slice(0, 5) ?? ""}
+          required
+          className="input"
+        />
       </div>
       <div>
         <label className="label">Ora fine</label>
-        <input name="end_time" type="time" required className="input" />
+        <input
+          name="end_time"
+          type="time"
+          defaultValue={slot?.end_time?.slice(0, 5) ?? ""}
+          required
+          className="input"
+        />
       </div>
 
       <div>
         <label className="label">Destinatari</label>
-        <select name="audience" className="input" defaultValue="misto">
+        <select name="audience" className="input" defaultValue={slot?.audience ?? "misto"}>
           <option value="misto">Misto</option>
           <option value="agonisti">Agonisti</option>
           <option value="amatori">Amatori</option>
@@ -93,19 +131,31 @@ export default function SlotForm({
       </div>
       <div>
         <label className="label">Posti minimi</label>
-        <input name="min_capacity" type="number" min={0} defaultValue={2} className="input" />
+        <input
+          name="min_capacity"
+          type="number"
+          min={0}
+          defaultValue={slot?.min_capacity ?? 2}
+          className="input"
+        />
       </div>
       <div>
         <label className="label">Posti massimi</label>
-        <input name="max_capacity" type="number" min={1} defaultValue={12} className="input" />
+        <input
+          name="max_capacity"
+          type="number"
+          min={1}
+          defaultValue={slot?.max_capacity ?? 12}
+          className="input"
+        />
       </div>
       <div>
         <label className="label">Note (opzionale)</label>
-        <input name="notes" className="input" />
+        <input name="notes" defaultValue={slot?.notes ?? ""} className="input" />
       </div>
       <div>
         <label className="label">Stagione</label>
-        <select name="season_id" className="input" defaultValue={currentSeasonId}>
+        <select name="season_id" className="input" defaultValue={slot?.season_id ?? currentSeasonId}>
           {seasons.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -116,7 +166,7 @@ export default function SlotForm({
       </div>
 
       <div className="sm:col-span-2 lg:col-span-4">
-        <button className="btn-primary">Crea slot</button>
+        <button className="btn-primary">{submitLabel ?? "Crea slot"}</button>
       </div>
     </form>
   );
