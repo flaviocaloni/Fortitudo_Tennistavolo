@@ -183,6 +183,9 @@ export default async function CalendarioPage(
                           <p className="text-sm text-slate-600">
                             {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                           </p>
+                          {slot.event_date && slot.notes && (
+                            <p className="mt-1 text-xs text-slate-500">{slot.notes}</p>
+                          )}
                         </div>
                         <span
                           className={`badge ${
