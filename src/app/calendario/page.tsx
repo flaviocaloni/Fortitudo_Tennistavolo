@@ -218,7 +218,7 @@ export default async function CalendarioPage(
                           {count}/{slot.max_capacity} posti occupati
                         </span>
                         {minReached && (
-                          <span className="ml-2 text-sm text-green-600">✓</span>
+                          <span className="ml-2 text-sm text-green-600">✓ Confermato</span>
                         )}
                         {!minReached && (
                           <span className="ml-2 text-xs text-amber-600">
