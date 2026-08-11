@@ -42,6 +42,8 @@ export async function createSlot(formData: FormData) {
     max_capacity: Number(formData.get("max_capacity") ?? 12),
     notes: String(formData.get("notes") ?? "") || null,
     season_id: seasonId,
+    sede_evento: kind === "event" ? (String(formData.get("sede_evento") ?? "") || null) : null,
+    url: kind === "event" ? (String(formData.get("url") ?? "") || null) : null,
   };
 
   const { error } = await supabase.from("training_slots").insert(payload);
@@ -82,6 +84,8 @@ export async function updateSlot(formData: FormData) {
     max_capacity: Number(formData.get("max_capacity") ?? 12),
     notes: String(formData.get("notes") ?? "") || null,
     season_id: seasonId,
+    sede_evento: kind === "event" ? (String(formData.get("sede_evento") ?? "") || null) : null,
+    url: kind === "event" ? (String(formData.get("url") ?? "") || null) : null,
   };
 
   const { error } = await supabase.from("training_slots").update(payload).eq("id", slotId);

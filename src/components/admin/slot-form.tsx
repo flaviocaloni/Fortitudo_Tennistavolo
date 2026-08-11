@@ -88,16 +88,26 @@ export default function SlotForm({
           </div>
         </>
       ) : (
-        <div>
-          <label className="label">Data evento</label>
-          <input
-            name="event_date"
-            type="date"
-            defaultValue={slot?.event_date ?? ""}
-            required
-            className="input"
-          />
-        </div>
+        <>
+          <div>
+            <label className="label">Data evento</label>
+            <input
+              name="event_date"
+              type="date"
+              defaultValue={slot?.event_date ?? ""}
+              required
+              className="input"
+            />
+          </div>
+          <div className="sm:col-span-2 lg:col-span-4">
+            <label className="label">Sede evento (opzionale)</label>
+            <input name="sede_evento" defaultValue={slot?.sede_evento ?? ""} className="input" />
+          </div>
+          <div className="sm:col-span-2 lg:col-span-4">
+            <label className="label">URL (opzionale)</label>
+            <input name="url" defaultValue={slot?.url ?? ""} className="input" />
+          </div>
+        </>
       )}
 
       <div>

@@ -11,6 +11,7 @@ export interface Profile {
   medical_certificate_expiry: string | null;
   is_active: boolean;
   fitet_card_number: string | null;
+  squadra: string | null;
 }
 
 export interface TrainingSlot {
@@ -28,6 +29,8 @@ export interface TrainingSlot {
   season_id: string;
   start_date: string | null;
   end_date: string | null;
+  sede_evento: string | null;
+  url: string | null;
 }
 
 export interface Booking {

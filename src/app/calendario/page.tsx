@@ -100,11 +100,13 @@ export default async function CalendarioPage(
     mine.set(`${b.slot_id}|${b.session_date}`, b.id);
   }
 
-  const canJoin = (slot: TrainingSlot) =>
+  const canView = (slot: TrainingSlot) =>
     profile.role === "admin" ||
     slot.audience === "misto" ||
     (slot.audience === "agonisti" && profile.role === "agonista") ||
     (slot.audience === "amatori" && profile.role === "amatore");
+
+  const canJoin = canView;
 
   return (
     <div>
@@ -164,10 +166,11 @@ export default async function CalendarioPage(
                 {formatDateIT(date)}
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {daySlots.map((slot) => {
+                {daySlots.filter(canView).map((slot) => {
                   const count = booked.get(`${slot.id}|${date}`) ?? 0;
                   const myBookingId = mine.get(`${slot.id}|${date}`);
                   const full = count >= slot.max_capacity;
+                  const minReached = count >= slot.min_capacity;
                   return (
                     <div key={slot.id} className="card">
                       <div className="flex items-start justify-between">
@@ -185,6 +188,16 @@ export default async function CalendarioPage(
                           </p>
                           {slot.event_date && slot.notes && (
                             <p className="mt-1 text-xs text-slate-500">{slot.notes}</p>
+                          )}
+                          {slot.event_date && slot.sede_evento && (
+                            <p className="mt-1 text-xs text-slate-600">📍 {slot.sede_evento}</p>
+                          )}
+                          {slot.event_date && slot.url && (
+                            <p className="mt-1 text-xs">
+                              <a href={slot.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                Link evento
+                              </a>
+                            </p>
                           )}
                         </div>
                         <span
@@ -204,7 +217,10 @@ export default async function CalendarioPage(
                         <span className={full ? "font-semibold text-red-600" : ""}>
                           {count}/{slot.max_capacity} posti occupati
                         </span>
-                        {count < slot.min_capacity && (
+                        {minReached && (
+                          <span className="ml-2 text-sm text-green-600">✓</span>
+                        )}
+                        {!minReached && (
                           <span className="ml-2 text-xs text-amber-600">
                             (minimo {slot.min_capacity} per confermare)
                           </span>

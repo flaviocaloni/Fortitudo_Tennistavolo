@@ -233,15 +233,26 @@ export default function AdminUsersListClient({
                       />
                     </div>
                     {p.role === "agonista" && (
-                      <div>
-                        <label className="label">Tessera FITET</label>
-                        <input
-                          name="fitet_card_number"
-                          defaultValue={p.fitet_card_number ?? ""}
-                          placeholder="Numero tessera"
-                          className="input w-40"
-                        />
-                      </div>
+                      <>
+                        <div>
+                          <label className="label">Squadra</label>
+                          <input
+                            name="squadra"
+                            defaultValue={p.squadra ?? ""}
+                            placeholder="Nome squadra"
+                            className="input w-40"
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Tessera FITET</label>
+                          <input
+                            name="fitet_card_number"
+                            defaultValue={p.fitet_card_number ?? ""}
+                            placeholder="Numero tessera"
+                            className="input w-40"
+                          />
+                        </div>
+                      </>
                     )}
                     <button className="btn-navy">Salva</button>
                   </form>
