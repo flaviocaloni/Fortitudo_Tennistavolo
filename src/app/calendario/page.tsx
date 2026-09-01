@@ -241,7 +241,7 @@ export default async function CalendarioPage(
                             <input type="hidden" name="slot_id" value={slot.id} />
                             <input type="hidden" name="session_date" value={date} />
                             <button className="btn-navy w-full" disabled={full}>
-                              {full ? "Completo" : "Prenota"}
+                              {full ? "Completo" : slot.event_date ? "Partecipa" : "Prenota"}
                             </button>
                           </form>
                         ) : (
