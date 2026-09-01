@@ -35,18 +35,20 @@ begin
       raise exception 'Slot riservato agli amatori';
     end if;
 
-    -- limite settimanale: conta solo slot ricorrenti (event_date is null)
-    select count(*) into v_count
-    from public.bookings b
-    join public.training_slots ts on b.slot_id = ts.id
-    where b.user_id = new.user_id
-      and b.status = 'active'
-      and ts.event_date is null
-      and date_trunc('week', b.session_date) = date_trunc('week', new.session_date)
-      and b.id <> new.id;
+    -- limite settimanale: applica solo per slot ricorrenti, non per eventi
+    if v_slot.event_date is null then
+      select count(*) into v_count
+      from public.bookings b
+      join public.training_slots ts on b.slot_id = ts.id
+      where b.user_id = new.user_id
+        and b.status = 'active'
+        and ts.event_date is null
+        and date_trunc('week', b.session_date) = date_trunc('week', new.session_date)
+        and b.id <> new.id;
 
-    if v_count >= v_prof.weekly_limit then
-      raise exception 'Limite settimanale raggiunto (max % prenotazioni)', v_prof.weekly_limit;
+      if v_count >= v_prof.weekly_limit then
+        raise exception 'Limite settimanale raggiunto (max % prenotazioni)', v_prof.weekly_limit;
+      end if;
     end if;
   end if;
 
