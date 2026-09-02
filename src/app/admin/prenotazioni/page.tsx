@@ -19,7 +19,7 @@ export default async function AdminPrenotazioniPage(
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, session_date, status, profiles:user_id(full_name, role), training_slots(title, start_time, end_time)"
+        "id, session_date, created_at, status, profiles:user_id(full_name, role), training_slots(title, start_time, end_time)"
       )
       .eq("status", "active")
       .order("session_date", { ascending: false });

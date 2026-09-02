@@ -7,6 +7,7 @@ import { adminCancelBooking } from "@/lib/actions/admin";
 interface BookingRow {
   id: string;
   session_date: string;
+  created_at: string;
   training_slots?: { title: string; start_time: string; end_time: string }[] | null;
   profiles?: { full_name: string; role: string }[] | null;
 }
@@ -19,7 +20,7 @@ function getProfile(p: any) {
   return Array.isArray(p) ? p[0] : p;
 }
 
-type SortField = "date" | "slot" | "user" | "role";
+type SortField = "event_date" | "registration_date" | "slot" | "user" | "role";
 type SortOrder = "asc" | "desc";
 
 export default function BookingsTableClient({
@@ -27,13 +28,15 @@ export default function BookingsTableClient({
 }: {
   bookings: BookingRow[];
 }) {
-  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortField, setSortField] = useState<SortField>("event_date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
   const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set());
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [eventDateFrom, setEventDateFrom] = useState("");
+  const [eventDateTo, setEventDateTo] = useState("");
+  const [registrationDateFrom, setRegistrationDateFrom] = useState("");
+  const [registrationDateTo, setRegistrationDateTo] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -67,20 +70,25 @@ export default function BookingsTableClient({
       if (selectedSlots.size > 0 && !selectedSlots.has(slot?.title || "")) return false;
       if (selectedRoles.size > 0 && !selectedRoles.has(profile?.role || "")) return false;
       if (selectedUsers.size > 0 && !selectedUsers.has(profile?.full_name || "")) return false;
-      if (dateFrom && b.session_date < dateFrom) return false;
-      if (dateTo && b.session_date > dateTo) return false;
+      if (eventDateFrom && b.session_date < eventDateFrom) return false;
+      if (eventDateTo && b.session_date > eventDateTo) return false;
+      if (registrationDateFrom && b.created_at.split("T")[0] < registrationDateFrom) return false;
+      if (registrationDateTo && b.created_at.split("T")[0] > registrationDateTo) return false;
       return true;
     });
-  }, [initialBookings, selectedSlots, selectedRoles, selectedUsers, dateFrom, dateTo]);
+  }, [initialBookings, selectedSlots, selectedRoles, selectedUsers, eventDateFrom, eventDateTo, registrationDateFrom, registrationDateTo]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
     copy.sort((a, b) => {
       let aVal: any, bVal: any;
 
-      if (sortField === "date") {
+      if (sortField === "event_date") {
         aVal = a.session_date;
         bVal = b.session_date;
+      } else if (sortField === "registration_date") {
+        aVal = a.created_at;
+        bVal = b.created_at;
       } else if (sortField === "slot") {
         aVal = getTrainingSlot(a.training_slots)?.title || "";
         bVal = getTrainingSlot(b.training_slots)?.title || "";
@@ -158,8 +166,10 @@ export default function BookingsTableClient({
           <div className="text-sm font-semibold text-slate-700">Filtri</div>
           <button
             onClick={() => {
-              setDateFrom("");
-              setDateTo("");
+              setEventDateFrom("");
+              setEventDateTo("");
+              setRegistrationDateFrom("");
+              setRegistrationDateTo("");
               setSelectedSlots(new Set());
               setSelectedRoles(new Set());
               setSelectedUsers(new Set());
@@ -171,15 +181,15 @@ export default function BookingsTableClient({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <label className="label text-xs">Data</label>
+            <label className="label text-xs">Data evento</label>
             <div className="space-y-1">
               <div>
                 <input
                   type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
+                  value={eventDateFrom}
+                  onChange={(e) => setEventDateFrom(e.target.value)}
                   className="input w-full text-sm"
                   placeholder="Da"
                 />
@@ -187,8 +197,32 @@ export default function BookingsTableClient({
               <div>
                 <input
                   type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
+                  value={eventDateTo}
+                  onChange={(e) => setEventDateTo(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="A"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="label text-xs">Data registrazione</label>
+            <div className="space-y-1">
+              <div>
+                <input
+                  type="date"
+                  value={registrationDateFrom}
+                  onChange={(e) => setRegistrationDateFrom(e.target.value)}
+                  className="input w-full text-sm"
+                  placeholder="Da"
+                />
+              </div>
+              <div>
+                <input
+                  type="date"
+                  value={registrationDateTo}
+                  onChange={(e) => setRegistrationDateTo(e.target.value)}
                   className="input w-full text-sm"
                   placeholder="A"
                 />
@@ -298,7 +332,8 @@ export default function BookingsTableClient({
         <table className="w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
-              <SortHeader field="date" label="Data" />
+              <SortHeader field="event_date" label="Data evento" />
+              <SortHeader field="registration_date" label="Data registrazione" />
               <SortHeader field="slot" label="Slot" />
               <SortHeader field="user" label="Utente" />
               <SortHeader field="role" label="Ruolo" />
@@ -312,6 +347,7 @@ export default function BookingsTableClient({
               return (
                 <tr key={b.id} className="border-t border-slate-100">
                   <td className="px-3 py-2 capitalize">{formatDateIT(b.session_date)}</td>
+                  <td className="px-3 py-2 text-xs">{formatDateIT(b.created_at.split("T")[0])}</td>
                   <td className="px-3 py-2">
                     {slot?.title} ({formatTime(slot?.start_time ?? "")}–
                     {formatTime(slot?.end_time ?? "")})
