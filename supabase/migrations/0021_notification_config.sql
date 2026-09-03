@@ -50,7 +50,7 @@ create table public.notification_audit (
   id bigserial primary key,
   notification_config_id bigint not null references public.notification_configs(id) on delete cascade,
   change_type text not null check (change_type in ('created', 'updated', 'activated', 'deactivated')),
-  modified_by uuid not null references public.profiles(id) on delete set null,
+  modified_by uuid references public.profiles(id) on delete set null,
   previous_state jsonb,
   new_state jsonb,
   modified_at timestamptz not null default now()
@@ -129,16 +129,12 @@ create trigger trg_notification_config_updated
 create or replace function public.audit_notification_config_change()
 returns trigger
 language plpgsql security definer set search_path = public as $$
-declare
-  v_user_id uuid;
 begin
-  v_user_id := coalesce(auth.uid(), gen_random_uuid());
-
   if tg_op = 'INSERT' then
     insert into public.notification_audit (
       notification_config_id, change_type, modified_by, new_state
     ) values (
-      new.id, 'created', v_user_id, row_to_json(new)
+      new.id, 'created', auth.uid(), row_to_json(new)
     );
   elsif tg_op = 'UPDATE' then
     insert into public.notification_audit (
@@ -150,7 +146,7 @@ begin
           case when new.is_active then 'activated' else 'deactivated' end
         else 'updated'
       end,
-      v_user_id,
+      auth.uid(),
       row_to_json(old),
       row_to_json(new)
     );
