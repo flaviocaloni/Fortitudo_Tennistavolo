@@ -11,6 +11,7 @@ import {
   updateMatch,
   deleteMatch,
 } from "@/lib/actions/championships";
+import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -168,15 +169,7 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                 <td className="px-6 py-4 text-sm text-right space-x-2">
                   <form action={deleteTeam} className="inline">
                     <input type="hidden" name="team_id" value={team.id} />
-                    <button
-                      type="submit"
-                      className="text-red-600 hover:underline"
-                      onClick={(e) => {
-                        if (!confirm("Confermi l'eliminazione?")) e.preventDefault();
-                      }}
-                    >
-                      Elimina
-                    </button>
+                    <ConfirmDeleteButton />
                   </form>
                 </td>
               </tr>

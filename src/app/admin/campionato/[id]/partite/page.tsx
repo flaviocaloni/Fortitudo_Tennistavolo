@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import { createMatch, deleteMatch, updateMatch } from "@/lib/actions/championships";
+import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -251,15 +252,7 @@ export default async function AdminChampionatoMatchesPage({ params }: PageProps)
                   </a>
                   <form action={deleteMatch} className="inline">
                     <input type="hidden" name="match_id" value={match.id} />
-                    <button
-                      type="submit"
-                      className="text-red-600 hover:underline"
-                      onClick={(e) => {
-                        if (!confirm("Confermi l'eliminazione?")) e.preventDefault();
-                      }}
-                    >
-                      Elimina
-                    </button>
+                    <ConfirmDeleteButton />
                   </form>
                 </td>
               </tr>

@@ -6,6 +6,7 @@ import {
   updateChampionship,
   deleteChampionship,
 } from "@/lib/actions/championships";
+import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
 export default async function AdminChampionatoPage() {
   let error: string | null = null;
@@ -154,17 +155,9 @@ export default async function AdminChampionatoPage() {
                   >
                     Modifica
                   </a>
-                  <form
-                    action={deleteChampionship}
-                    className="inline"
-                    onSubmit={(e) => {
-                      if (!confirm("Confermi l'eliminazione?")) e.preventDefault();
-                    }}
-                  >
+                  <form action={deleteChampionship} className="inline">
                     <input type="hidden" name="championship_id" value={champ.id} />
-                    <button type="submit" className="text-red-600 hover:underline">
-                      Elimina
-                    </button>
+                    <ConfirmDeleteButton />
                   </form>
                 </td>
               </tr>
