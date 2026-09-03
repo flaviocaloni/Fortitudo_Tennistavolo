@@ -9,16 +9,16 @@ import {
 
 export default async function AdminChampionatoPage() {
   let error: string | null = null;
-  let seasons = [];
-  let allChampionships = [];
+  let seasons: any[] = [];
+  let allChampionships: any[] = [];
+
+  const { supabase, profile } = await getSessionProfile();
+
+  if (!profile || profile.role !== "admin") {
+    redirect("/campionato");
+  }
 
   try {
-    const { supabase, profile } = await getSessionProfile();
-
-    if (!profile || profile.role !== "admin") {
-      redirect("/campionato");
-    }
-
     // Recupera stagioni
     const seasonsResult = await supabase
       .from("seasons")
