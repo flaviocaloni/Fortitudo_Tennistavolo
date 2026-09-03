@@ -23,10 +23,13 @@ export default async function AdminChampionatoPage() {
   // Recupera campionati
   const { data: allChampionships } = await supabase
     .from("championships")
-    .select("*, seasons(name)")
+    .select("id, name, status, season_id, created_at")
     .order("created_at", { ascending: false });
 
   const error = null; // TODO: handle error from URL params
+
+  // Mappa stagioni per lookup
+  const seasonMap = new Map(seasons?.map((s: any) => [s.id, s.name]) || []);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -111,7 +114,7 @@ export default async function AdminChampionatoPage() {
                   {champ.name}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {champ.seasons?.name}
+                  {seasonMap.get(champ.season_id)}
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
