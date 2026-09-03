@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/redirect";
+import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import { updateAttendanceAsAdmin, updateMyAttendance } from "@/lib/actions/championships";

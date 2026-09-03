@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/redirect";
+import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { toISODate } from "@/lib/dates";
 import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";

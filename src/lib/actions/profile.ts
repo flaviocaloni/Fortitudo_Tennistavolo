@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/redirect";
+import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 
 /** L'utente aggiorna il proprio nome (ruolo e limite restano admin-only). */

@@ -1,4 +1,4 @@
-import { redirect } from "next/redirect";
+import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { startOfISOWeek, toISODate } from "@/lib/dates";
 import { getCurrentSeason } from "@/lib/settings";

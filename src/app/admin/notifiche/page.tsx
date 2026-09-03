@@ -1,4 +1,4 @@
-import { redirect } from "next/redirect";
+import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { getNotificationConfig, getNotificationAuditLog } from "@/lib/supabase/notifications";
 import ErrorBanner from "@/components/error-banner";
