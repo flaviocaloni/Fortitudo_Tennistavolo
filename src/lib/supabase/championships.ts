@@ -405,16 +405,15 @@ export async function getCountAttendanceByStatus(
 ) {
   const { data, error } = await supabase
     .from("championship_match_attendances")
-    .select("status, count(*)")
-    .eq("match_id", matchId)
-    .group_by("status");
+    .select("status")
+    .eq("match_id", matchId);
 
   if (error) return { present: 0, absent: 0 };
 
   const result = { present: 0, absent: 0 };
   data?.forEach((row: any) => {
-    if (row.status === "PRESENT") result.present = row.count;
-    if (row.status === "ABSENT") result.absent = row.count;
+    if (row.status === "PRESENT") result.present += 1;
+    if (row.status === "ABSENT") result.absent += 1;
   });
 
   return result;
