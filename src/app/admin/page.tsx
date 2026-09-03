@@ -27,6 +27,12 @@ export default function AdminDashboard() {
       title: "📊 Statistiche",
       description: "Report e analisi avanzate",
     },
+    {
+      href: "/admin/notifiche",
+      title: "📧 Notifiche",
+      description: "Configura notifiche email per eventi",
+      badge: "Beta",
+    },
   ];
 
   return (
@@ -34,13 +40,18 @@ export default function AdminDashboard() {
       <h1 className="mb-6 text-2xl font-bold">Amministrazione</h1>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {sections.map((section) => (
+        {sections.map((section: any) => (
           <Link
             key={section.href}
             href={section.href}
             className="card block transition-all hover:border-navy-400 hover:shadow-md"
           >
-            <h2 className="mb-2 font-semibold text-navy-800">{section.title}</h2>
+            <div className="mb-2 flex items-start justify-between">
+              <h2 className="font-semibold text-navy-800">{section.title}</h2>
+              {section.badge && (
+                <span className="badge bg-amber-100 text-amber-800 text-xs">{section.badge}</span>
+              )}
+            </div>
             <p className="text-sm text-slate-600">{section.description}</p>
           </Link>
         ))}
