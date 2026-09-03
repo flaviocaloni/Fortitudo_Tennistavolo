@@ -21,12 +21,12 @@ export default async function AdminChampionatoPage() {
     .order("start_date", { ascending: false });
 
   // Recupera campionati
-  const { data: allChampionships } = await supabase
+  const { data: allChampionships, error: champError } = await supabase
     .from("championships")
     .select("id, name, status, season_id, created_at")
     .order("created_at", { ascending: false });
 
-  const error = null; // TODO: handle error from URL params
+  const error = champError?.message || null;
 
   // Mappa stagioni per lookup
   const seasonMap = new Map(seasons?.map((s: any) => [s.id, s.name]) || []);
