@@ -11,8 +11,16 @@ export default async function AdminChampionatoPage() {
   let error: string | null = null;
   let seasons: any[] = [];
   let allChampionships: any[] = [];
+  let profile: any = null;
+  let supabase: any = null;
 
-  const { supabase, profile } = await getSessionProfile();
+  try {
+    const result = await getSessionProfile();
+    supabase = result.supabase;
+    profile = result.profile;
+  } catch (e: any) {
+    error = `Errore autenticazione: ${e?.message || "Errore sconosciuto"}`;
+  }
 
   if (!profile || profile.role !== "admin") {
     redirect("/campionato");
