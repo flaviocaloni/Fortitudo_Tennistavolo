@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/redirect";
 import type { Season } from "@/lib/types";
 
 export default function SeasonFilter({

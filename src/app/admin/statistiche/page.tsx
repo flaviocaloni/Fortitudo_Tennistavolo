@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/redirect";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { getCurrentSeason } from "@/lib/settings";
 import type { Booking, Profile, Season } from "@/lib/types";

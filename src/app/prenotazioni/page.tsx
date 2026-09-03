@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/redirect";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { cancelBooking } from "@/lib/actions/bookings";
 import { formatDateIT, formatTime, toISODate } from "@/lib/dates";

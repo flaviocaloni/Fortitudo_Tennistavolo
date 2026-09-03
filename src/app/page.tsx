@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/redirect";
 import Link from "next/link";
 import Image from "next/image";
 import { getSessionProfile } from "@/lib/supabase/server";

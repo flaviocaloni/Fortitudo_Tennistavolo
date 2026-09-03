@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/redirect";
 import { createClient } from "@/lib/supabase/client";
 
 /** Pagina di destinazione del link "reset password":

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect } from "next/redirect";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { bookSlot, cancelBooking } from "@/lib/actions/bookings";
 import {
