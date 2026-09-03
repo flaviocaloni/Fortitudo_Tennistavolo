@@ -13,6 +13,7 @@ import {
 } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
+import SlotParticipantsModal from "@/components/slot-participants-modal";
 import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -215,7 +216,12 @@ export default async function CalendarioPage(
 
                       <p className="mt-2 text-sm">
                         <span className={full ? "font-semibold text-red-600" : ""}>
-                          {count}/{slot.max_capacity} posti occupati
+                          <SlotParticipantsModal
+                            slotId={slot.id}
+                            sessionDate={date}
+                            maxCapacity={slot.max_capacity}
+                          />
+                          {" posti occupati"}
                         </span>
                         {minReached && (
                           <span className="ml-2 text-sm text-green-600">✓ Confermato</span>

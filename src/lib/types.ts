@@ -42,6 +42,7 @@ export interface Booking {
   created_at: string;
   cancelled_at: string | null;
   season_id: string | null;
+  is_overbooking: boolean;
 }
 
 export interface Season {

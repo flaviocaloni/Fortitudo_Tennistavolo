@@ -57,7 +57,7 @@ export default async function AdminStatistichePage(props: {
 
   let query = supabase
     .from("bookings")
-    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at, season_id")
+    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at, season_id, is_overbooking")
     .gte("session_date", minDate)
     .order("session_date", { ascending: false });
 
