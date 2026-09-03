@@ -1,26 +1,10 @@
 -- ============================================================
--- Notifiche per campionato: aggiungere CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED
+-- Notifiche per campionato: aggiungere enum per CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED
+-- Nota: la INSERT va in migration 0027 (requires separate transaction)
 -- ============================================================
 
 -- Aggiungere il nuovo codice notifica all'enum
 ALTER TYPE public.notification_code ADD VALUE IF NOT EXISTS 'CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED';
-
--- Inserire la configurazione notifica iniziale (disattivata)
--- Nota: usa DO block per evitare errore di enum non ancora committed
-DO $$
-BEGIN
-  INSERT INTO public.notification_configs (
-    notification_code,
-    is_active,
-    delivery_channel,
-    recipient_mode
-  ) VALUES (
-    'CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED'::public.notification_code,
-    false,
-    'EMAIL',
-    'ALL_ADMINS'::public.recipient_mode
-  ) ON CONFLICT (notification_code) DO NOTHING;
-END $$;
 
 -- Tabella per tracciare gli eventi di notifica (per idempotenza)
 CREATE TABLE IF NOT EXISTS public.championship_attendance_notification_events (
