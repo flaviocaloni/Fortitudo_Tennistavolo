@@ -244,6 +244,24 @@ export default function AdminUsersListClient({
                           />
                         </div>
                         <div>
+                          <label className="label">Girone</label>
+                          <input
+                            name="girone"
+                            defaultValue={p.girone ?? ""}
+                            placeholder="Es. A, B, C"
+                            className="input w-40"
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Serie</label>
+                          <input
+                            name="serie"
+                            defaultValue={p.serie ?? ""}
+                            placeholder="Es. A1, A2"
+                            className="input w-40"
+                          />
+                        </div>
+                        <div>
                           <label className="label">Tessera FITET</label>
                           <input
                             name="fitet_card_number"

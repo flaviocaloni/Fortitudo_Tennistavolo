@@ -12,6 +12,8 @@ export interface Profile {
   is_active: boolean;
   fitet_card_number: string | null;
   squadra: string | null;
+  girone: string | null;
+  serie: string | null;
 }
 
 export interface TrainingSlot {

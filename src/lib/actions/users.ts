@@ -64,6 +64,8 @@ export async function adminUpdateUser(formData: FormData) {
   const certExpiry = String(formData.get("medical_certificate_expiry") ?? "").trim();
   const fitetCard = String(formData.get("fitet_card_number") ?? "").trim();
   const squadra = String(formData.get("squadra") ?? "").trim();
+  const girone = String(formData.get("girone") ?? "").trim();
+  const serie = String(formData.get("serie") ?? "").trim();
 
   const { error: profErr } = await supabase
     .from("profiles")
@@ -74,6 +76,8 @@ export async function adminUpdateUser(formData: FormData) {
       medical_certificate_expiry: certExpiry || null,
       fitet_card_number: fitetCard || null,
       squadra: squadra || null,
+      girone: girone || null,
+      serie: serie || null,
     })
     .eq("id", userId);
   if (profErr) backWithError(profErr.message);

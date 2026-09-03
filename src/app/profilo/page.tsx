@@ -145,6 +145,26 @@ export default async function ProfiloPage(props: {
               <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
             )}
           </div>
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-sm text-slate-600">Girone:</span>
+            {profile.girone ? (
+              <span className="badge bg-blue-100 text-blue-800">
+                {profile.girone}
+              </span>
+            ) : (
+              <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
+            )}
+          </div>
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-sm text-slate-600">Serie:</span>
+            {profile.serie ? (
+              <span className="badge bg-blue-100 text-blue-800">
+                {profile.serie}
+              </span>
+            ) : (
+              <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
+            )}
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-600">Numero tessera FITET:</span>
             {profile.fitet_card_number ? (
@@ -156,7 +176,7 @@ export default async function ProfiloPage(props: {
             )}
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Squadra e numero tessera FITET sono gestiti dall&apos;amministratore: per
+            Squadra, Girone, Serie e numero tessera FITET sono gestiti dall&apos;amministratore: per
             aggiornarli contatta il club.
           </p>
         </div>
