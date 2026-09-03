@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { toISODate } from "@/lib/dates";
+import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";
+import { resolveNotificationRecipients, deduplicateRecipients } from "@/lib/services/recipients-resolver";
+import { getNotificationConfig } from "@/lib/supabase/notifications";
 
 function backWithError(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -21,16 +24,108 @@ export async function bookSlot(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { error } = await supabase.from("bookings").insert({
+  const { error, data: booking } = await supabase.from("bookings").insert({
     slot_id: slotId,
     user_id: user.id,
     session_date: sessionDate,
-  });
+  }).select("id").single();
 
   if (error) backWithError("/calendario", error.message);
+
+  // Trigger asincrono per inviare notifiche email (non blocca il redirect)
+  if (booking?.id) {
+    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, supabase).catch((err) => {
+      console.error("[bookSlot] Notification error (non-blocking):", err);
+    });
+  }
+
   revalidatePath("/calendario");
   revalidatePath("/prenotazioni");
   redirect("/calendario");
+}
+
+/** Invia notifiche email per una prenotazione (fire-and-forget) */
+async function sendNotificationForBooking(
+  bookingId: string,
+  slotId: string,
+  sessionDate: string,
+  userId: string,
+  supabase: any
+) {
+  try {
+    // Verifica se la notifica è attivata
+    const { data: config } = await getNotificationConfig(
+      supabase,
+      "EVENT_NON_RECURRING_BOOKING"
+    );
+
+    if (!config || !config.is_active) {
+      console.log("[sendNotificationForBooking] Notification inactive, skipping");
+      return;
+    }
+
+    // Verificare che lo slot sia non ricorrente (evento)
+    const { data: slot } = await supabase
+      .from("training_slots")
+      .select("event_date, title, start_time, end_time")
+      .eq("id", slotId)
+      .single();
+
+    if (!slot || !slot.event_date) {
+      console.log("[sendNotificationForBooking] Not an event slot, skipping");
+      return;
+    }
+
+    // Verifica l'utente che ha prenotato
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .single();
+
+    if (!profile) return;
+
+    // Risolvi destinatari
+    const recipients = await resolveNotificationRecipients(config.id, supabase);
+    const dedupRecipients = await deduplicateRecipients(recipients);
+
+    if (!dedupRecipients.length) {
+      console.log("[sendNotificationForBooking] No recipients resolved");
+      return;
+    }
+
+    // Costruisci email
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fortitudo-tennistavolo.vercel.app";
+    const { subject, html } = await buildBookingNotificationEmail(
+      {
+        slotTitle: slot.title,
+        sessionDate,
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+        userName: profile.full_name,
+      },
+      siteUrl
+    );
+
+    // Invia a tutti i destinatari (parallelo, fire-and-forget)
+    await Promise.allSettled(
+      dedupRecipients.map((recipient) =>
+        sendNotificationEmail(
+          {
+            to: recipient.email,
+            subject,
+            html,
+            bookingId,
+            recipientUserId: recipient.userId,
+          },
+          supabase
+        )
+      )
+    );
+  } catch (error) {
+    console.error("[sendNotificationForBooking] Error:", error);
+    // Non re-throw: la prenotazione è già confermata, l'errore non deve ripercuotersi
+  }
 }
 
 /** Cancella (stato -> cancelled) una propria prenotazione.

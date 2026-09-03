@@ -71,3 +71,44 @@ export const AUDIENCE_LABEL: Record<SlotAudience, string> = {
   amatori: "Amatori",
   misto: "Misto",
 };
+
+export type NotificationCode = "EVENT_NON_RECURRING_BOOKING";
+export type RecipientMode = "ALL_ADMINS" | "ALL_USERS" | "MANUAL";
+export type DeliveryStatus = "pending" | "sent" | "failed";
+
+export interface NotificationConfig {
+  id: number;
+  notification_code: NotificationCode;
+  is_active: boolean;
+  delivery_channel: string;
+  recipient_mode: RecipientMode;
+  manual_recipient_ids: string[] | null;
+  created_at: string;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface NotificationDelivery {
+  id: number;
+  notification_config_id: number;
+  booking_id: string;
+  recipient_user_id: string;
+  recipient_email: string;
+  status: DeliveryStatus;
+  error_code: string | null;
+  error_message: string | null;
+  provider_response: string | null;
+  delivery_idempotency_key: string;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationAudit {
+  id: number;
+  notification_config_id: number;
+  change_type: "created" | "updated" | "activated" | "deactivated";
+  modified_by: string;
+  previous_state: Record<string, any> | null;
+  new_state: Record<string, any> | null;
+  modified_at: string;
+}
