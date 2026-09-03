@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function getNotificationConfig(
   supabase: SupabaseClient,
-  notificationCode: "EVENT_NON_RECURRING_BOOKING"
+  notificationCode: "EVENT_NON_RECURRING_BOOKING" | "CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED"
 ) {
   return supabase
     .from("notification_configs")

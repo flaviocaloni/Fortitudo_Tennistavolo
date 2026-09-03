@@ -112,3 +112,98 @@ export interface NotificationAudit {
   new_state: Record<string, any> | null;
   modified_at: string;
 }
+
+// ============ CAMPIONATO ============
+export type ChampionshipSeries = "D3" | "D2" | "D1" | "C2" | "C1";
+export type ChampionshipStatus = "draft" | "active" | "completed" | "archived";
+export type LegType = "FIRST_LEG" | "RETURN_LEG" | "SINGLE";
+export type VenueType = "HOME" | "AWAY";
+export type MatchStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED" | "POSTPONED";
+export type AttendanceStatus = "PRESENT" | "ABSENT";
+export type AttendanceChangeSource = "DEFAULT_TEAM_ASSIGNMENT" | "PLAYER" | "ADMIN" | "SYSTEM";
+export type PlayerStatus = "active" | "left" | "transferred";
+
+export interface Championship {
+  id: string;
+  season_id: string;
+  name: string;
+  status: ChampionshipStatus;
+  created_at: string;
+  updated_at: string;
+  created_by_user_id: string | null;
+  updated_by_user_id: string | null;
+}
+
+export interface ChampionshipTeam {
+  id: string;
+  championship_id: string;
+  name: string;
+  series: ChampionshipSeries;
+  group_code: string;
+  status: "active" | "archived";
+  created_at: string;
+  updated_at: string;
+  created_by_user_id: string | null;
+  updated_by_user_id: string | null;
+}
+
+export interface ChampionshipTeamPlayer {
+  id: string;
+  team_id: string;
+  user_id: string;
+  joined_at: string;
+  left_at: string | null;
+  status: PlayerStatus;
+  created_at: string;
+  updated_at: string;
+  created_by_user_id: string | null;
+  updated_by_user_id: string | null;
+}
+
+export interface ChampionshipMatch {
+  id: string;
+  championship_id: string;
+  season_id: string;
+  team_id: string;
+  opponent_name: string;
+  opponent_club_name: string | null;
+  leg_type: LegType;
+  venue_type: VenueType;
+  scheduled_start_at: string;
+  timezone: string;
+  venue_name: string | null;
+  address: string | null;
+  status: MatchStatus;
+  notes: string | null;
+  result: string | null;
+  return_match_id: string | null;
+  calendar_event_id: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by_user_id: string | null;
+  updated_by_user_id: string | null;
+}
+
+export interface ChampionshipMatchAttendance {
+  id: string;
+  match_id: string;
+  user_id: string;
+  status: AttendanceStatus;
+  changed_by_user_id: string | null;
+  changed_at: string;
+  change_source: AttendanceChangeSource;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChampionshipAttendanceHistory {
+  id: string;
+  attendance_id: string;
+  match_id: string;
+  user_id: string;
+  previous_status: AttendanceStatus;
+  new_status: AttendanceStatus;
+  changed_by_user_id: string | null;
+  change_source: AttendanceChangeSource;
+  created_at: string;
+}
