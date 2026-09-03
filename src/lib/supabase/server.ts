@@ -30,22 +30,33 @@ export async function createClient() {
 
 /** Utente corrente + profilo (null se non autenticato). */
 export async function getSessionProfile() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, profile: null };
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+    console.log("[getSessionProfile] User:", user?.id || "no user");
 
-  if (error) {
-    console.error("Error fetching profile:", error);
-    return { supabase, user, profile: null };
+    if (!user) return { supabase, user: null, profile: null };
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    console.log("[getSessionProfile] Profile error:", error?.message || "none");
+    console.log("[getSessionProfile] Profile role:", profile?.role || "none");
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return { supabase, user, profile: null };
+    }
+
+    return { supabase, user, profile };
+  } catch (e: any) {
+    console.error("[getSessionProfile] Caught exception:", e);
+    throw e;
   }
-
-  return { supabase, user, profile };
 }
