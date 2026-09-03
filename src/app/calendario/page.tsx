@@ -220,6 +220,7 @@ export default async function CalendarioPage(
                             slotId={slot.id}
                             sessionDate={date}
                             maxCapacity={slot.max_capacity}
+                            occupiedSeats={count}
                           />
                           {" posti occupati"}
                         </span>

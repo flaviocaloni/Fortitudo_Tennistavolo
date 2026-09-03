@@ -13,10 +13,12 @@ export default function SlotParticipantsModal({
   slotId,
   sessionDate,
   maxCapacity,
+  occupiedSeats,
 }: {
   slotId: string;
   sessionDate: string;
   maxCapacity: number;
+  occupiedSeats: number;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -65,7 +67,7 @@ export default function SlotParticipantsModal({
         }}
         className="text-sm text-blue-600 hover:underline"
       >
-        {confirmed.length}/{maxCapacity}
+        {occupiedSeats}/{maxCapacity}
       </button>
 
       {isOpen && (
