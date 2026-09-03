@@ -8,28 +8,46 @@ import {
 } from "@/lib/actions/championships";
 
 export default async function AdminChampionatoPage() {
-  const { supabase, profile } = await getSessionProfile();
+  let error: string | null = null;
+  let seasons = [];
+  let allChampionships = [];
 
-  if (!profile || profile.role !== "admin") {
-    redirect("/campionato");
+  try {
+    const { supabase, profile } = await getSessionProfile();
+
+    if (!profile || profile.role !== "admin") {
+      redirect("/campionato");
+    }
+
+    // Recupera stagioni
+    const seasonsResult = await supabase
+      .from("seasons")
+      .select("id, name, is_current")
+      .order("start_date", { ascending: false });
+
+    if (seasonsResult.error) {
+      error = `Errore stagioni: ${seasonsResult.error.message}`;
+    } else {
+      seasons = seasonsResult.data || [];
+    }
+
+    // Recupera campionati
+    const champResult = await supabase
+      .from("championships")
+      .select("id, name, status, season_id, created_at")
+      .order("created_at", { ascending: false });
+
+    if (champResult.error) {
+      error = `Errore campionati: ${champResult.error.message}`;
+    } else {
+      allChampionships = champResult.data || [];
+    }
+  } catch (e: any) {
+    error = `Errore server: ${e?.message || "Errore sconosciuto"}`;
   }
 
-  // Recupera stagioni
-  const { data: seasons } = await supabase
-    .from("seasons")
-    .select("id, name, is_current")
-    .order("start_date", { ascending: false });
-
-  // Recupera campionati
-  const { data: allChampionships, error: champError } = await supabase
-    .from("championships")
-    .select("id, name, status, season_id, created_at")
-    .order("created_at", { ascending: false });
-
-  const error = champError?.message || null;
-
   // Mappa stagioni per lookup
-  const seasonMap = new Map(seasons?.map((s: any) => [s.id, s.name]) || []);
+  const seasonMap = new Map((seasons || []).map((s: any) => [s.id, s.name]));
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
