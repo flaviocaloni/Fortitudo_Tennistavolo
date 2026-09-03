@@ -25,10 +25,9 @@ export default function SlotParticipantsModal({
   const [loading, setLoading] = useState(false);
 
   const fetchParticipants = async () => {
-    if (isOpen) return;
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("bookings")
       .select("is_overbooking, profiles:user_id(full_name, role)")
       .eq("slot_id", slotId)
@@ -53,7 +52,7 @@ export default function SlotParticipantsModal({
     if (isOpen) {
       fetchParticipants();
     }
-  }, [isOpen]);
+  }, [isOpen, slotId, sessionDate]);
 
   const confirmed = participants.filter((p) => !p.is_overbooking);
   const waitlist = participants.filter((p) => p.is_overbooking);
