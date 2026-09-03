@@ -28,6 +28,7 @@ export default async function Navbar() {
     ? [
         { href: "/calendario", label: "Calendario" },
         { href: "/prenotazioni", label: "Le mie prenotazioni" },
+        { href: "/campionato", label: "Campionato" },
         { href: "/statistiche", label: "Statistiche" },
         ...(profile.role === "admin"
           ? [{ href: "/admin", label: "Admin", highlight: true }]
@@ -75,6 +76,9 @@ export default async function Navbar() {
               </Link>
               <Link href="/prenotazioni" className="hover:text-crimson-500">
                 Le mie prenotazioni
+              </Link>
+              <Link href="/campionato" className="hover:text-crimson-500">
+                Campionato
               </Link>
               <Link href="/statistiche" className="hover:text-crimson-500">
                 Statistiche
