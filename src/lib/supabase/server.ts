@@ -36,11 +36,16 @@ export async function getSessionProfile() {
   } = await supabase.auth.getUser();
   if (!user) return { supabase, user: null, profile: null };
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
+
+  if (error) {
+    console.error("Error fetching profile:", error);
+    return { supabase, user, profile: null };
+  }
 
   return { supabase, user, profile };
 }
