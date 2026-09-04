@@ -280,7 +280,9 @@ export async function removePlayerFromTeam(formData: FormData) {
 // ============ MATCHES ============
 
 export async function createMatch(formData: FormData) {
-  console.log("[createMatch] Starting...");
+  console.log("[createMatch] ========== START ==========");
+  console.log("[createMatch] FormData keys:", Array.from(formData.keys()));
+
   const supabase = await requireAdmin();
 
   const championshipId = String(formData.get("championship_id"));
@@ -290,46 +292,55 @@ export async function createMatch(formData: FormData) {
   const legTypeCombo = String(formData.get("leg_type") ?? "");
   const venueName = String(formData.get("venue_name") ?? "") || null;
   const notes = String(formData.get("notes") ?? "") || null;
+  const scheduledStartAt = String(formData.get("scheduled_start_at") ?? "");
+
+  console.log("[createMatch] Raw form values:");
+  console.log(`  championshipId: "${championshipId}"`);
+  console.log(`  teamId: "${teamId}"`);
+  console.log(`  opponentName: "${opponentName}"`);
+  console.log(`  legTypeCombo: "${legTypeCombo}"`);
+  console.log(`  venueName: "${venueName}"`);
+  console.log(`  scheduledStartAt: "${scheduledStartAt}"`);
 
   // Validate combo leg_type format (must be LEGTYPE_VENUETYPE)
   if (!legTypeCombo || !legTypeCombo.includes("_")) {
-    console.error("[createMatch] Invalid or missing leg_type combo");
+    console.error(`[createMatch] VALIDATION ERROR: Invalid leg_type combo: "${legTypeCombo}"`);
     backWithError("/admin/campionato", "Tipo di partita obbligatorio");
   }
 
   // Parse combo leg_type_venue to separate leg_type and venue_type
-  const [legType, venueType] = legTypeCombo.split("_");
+  const parts = legTypeCombo.split("_");
+  const legType = parts[0];
+  const venueType = parts[1];
+
+  console.log(`[createMatch] Parsed combo: legType="${legType}", venueType="${venueType}"`);
 
   if (!legType || !venueType) {
-    console.error("[createMatch] Invalid leg_type combo format");
+    console.error(`[createMatch] VALIDATION ERROR: Invalid split result - legType="${legType}", venueType="${venueType}"`);
     backWithError("/admin/campionato", "Tipo di partita non valido");
   }
 
-  console.log(
-    `[createMatch] Data: championshipId=${championshipId}, teamId=${teamId}, opponent=${opponentName}, startAt=${String(formData.get("scheduled_start_at"))}, legType=${legType}, venueType=${venueType}`
-  );
-
-  const scheduledStartAt = String(formData.get("scheduled_start_at") ?? "");
-
+  // Validate all required fields
   if (!championshipId || !teamId) {
-    console.error("[createMatch] Missing championship or team");
+    console.error("[createMatch] VALIDATION ERROR: Missing championship or team");
     backWithError("/admin/campionato", "Campionato e squadra obbligatori");
   }
   if (!opponentName || opponentName.trim().length === 0) {
-    console.error("[createMatch] Missing opponent name");
+    console.error("[createMatch] VALIDATION ERROR: Missing opponent name");
     backWithError("/admin/campionato", "Nome avversario obbligatorio");
   }
   if (!scheduledStartAt) {
-    console.error("[createMatch] Missing scheduled start time");
+    console.error("[createMatch] VALIDATION ERROR: Missing scheduled start time");
     backWithError("/admin/campionato", "Data e ora della partita obbligatorie");
   }
   if (!venueName || venueName.trim().length === 0) {
-    console.error("[createMatch] Missing venue name");
+    console.error("[createMatch] VALIDATION ERROR: Missing venue name");
     backWithError("/admin/campionato", "Indirizzo obbligatorio");
   }
 
+  console.log("[createMatch] All validations passed, fetching championship data...");
+
   // Fetch season_id from championship
-  console.log("[createMatch] Fetching championship data...");
   const { data: championship, error: champError } = await supabase
     .from("championships")
     .select("season_id")
@@ -337,17 +348,17 @@ export async function createMatch(formData: FormData) {
     .single();
 
   if (champError || !championship) {
-    console.error("[createMatch] Error fetching championship:", champError);
+    console.error("[createMatch] DATABASE ERROR fetching championship:", champError);
     backWithError("/admin/campionato", "Campionato non trovato");
   }
 
   const seasonId = championship.season_id;
+  console.log(`[createMatch] Championship found, seasonId: ${seasonId}`);
 
   const { data: { user } } = await supabase.auth.getUser();
   console.log(`[createMatch] Current user: ${user?.id}`);
 
-  console.log("[createMatch] Creating match...");
-  const { error: matchError } = await championships.createMatch(supabase, {
+  const matchPayload = {
     championship_id: championshipId,
     season_id: seasonId,
     team_id: teamId,
@@ -359,17 +370,25 @@ export async function createMatch(formData: FormData) {
     venue_name: venueName,
     notes: notes,
     created_by_user_id: user?.id,
-  });
+  };
+
+  console.log("[createMatch] Creating match with payload:", JSON.stringify(matchPayload, null, 2));
+
+  const { error: matchError, data: createdMatch } = await championships.createMatch(supabase, matchPayload);
 
   if (matchError) {
-    console.error("[createMatch] Error creating match:", matchError);
-    backWithError("/admin/campionato", matchError.message);
+    console.error("[createMatch] DATABASE ERROR creating match:", JSON.stringify(matchError, null, 2));
+    backWithError("/admin/campionato", `Errore creazione partita: ${matchError.message}`);
   }
 
-  console.log("[createMatch] Match created successfully");
+  console.log("[createMatch] Match created successfully:", createdMatch?.id);
+  console.log("[createMatch] Revalidating paths...");
+
   revalidatePath("/admin/campionato");
   revalidatePath("/admin/campionato/[id]");
   revalidatePath("/campionato");
+
+  console.log("[createMatch] ========== SUCCESS ==========");
 }
 
 export async function createReturnMatch(formData: FormData) {
