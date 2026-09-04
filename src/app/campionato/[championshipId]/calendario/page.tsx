@@ -65,6 +65,12 @@ export default async function CalendarioPage({ params }: PageProps) {
         </h1>
       </div>
 
+      <div className="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
+        <p className="text-sm text-blue-800">
+          💻 <strong>Miglior visualizzazione su desktop.</strong> Per una migliore esperienza di navigazione e visualizzazione dei dati, accedi da un computer.
+        </p>
+      </div>
+
       {matches && matches.length > 0 ? (
         <CalendarioFilters matches={matches} teamsData={teamsMap} />
       ) : (
