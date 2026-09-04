@@ -22,7 +22,6 @@ export default async function AdminLayout({
         <Link href="/admin/utenti" className="hover:text-navy-700">Utenti</Link>
         <Link href="/admin/statistiche" className="hover:text-navy-700">Statistiche</Link>
         <Link href="/admin/notifiche" className="hover:text-navy-700">📧 Notifiche</Link>
-        <Link href="/admin/campionato-notifiche" className="hover:text-navy-700">🏆 Notifiche Campionato</Link>
       </div>
       {children}
     </div>

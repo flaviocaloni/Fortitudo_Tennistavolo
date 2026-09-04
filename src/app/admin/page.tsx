@@ -28,6 +28,12 @@ export default function AdminDashboard() {
       description: "Report e analisi avanzate",
     },
     {
+      href: "/admin/campionato",
+      title: "🏆 Campionato",
+      description: "Gestisci campionati, squadre e partite",
+      badge: "Beta",
+    },
+    {
       href: "/admin/notifiche",
       title: "📧 Notifiche",
       description: "Configura notifiche email per eventi",
