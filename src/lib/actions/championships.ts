@@ -302,14 +302,14 @@ export async function createMatch(formData: FormData) {
   console.log(`  venueName: "${venueName}"`);
   console.log(`  scheduledStartAt: "${scheduledStartAt}"`);
 
-  // Validate combo leg_type format (must be LEGTYPE_VENUETYPE)
-  if (!legTypeCombo || !legTypeCombo.includes("_")) {
+  // Validate combo leg_type format (must be LEGTYPE-VENUETYPE)
+  if (!legTypeCombo || !legTypeCombo.includes("-")) {
     console.error(`[createMatch] VALIDATION ERROR: Invalid leg_type combo: "${legTypeCombo}"`);
     backWithError("/admin/campionato", "Tipo di partita obbligatorio");
   }
 
-  // Parse combo leg_type_venue to separate leg_type and venue_type
-  const parts = legTypeCombo.split("_");
+  // Parse combo leg_type-venue to separate leg_type and venue_type
+  const parts = legTypeCombo.split("-");
   const legType = parts[0];
   const venueType = parts[1];
 

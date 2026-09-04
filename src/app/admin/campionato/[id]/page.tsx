@@ -406,12 +406,12 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                       <option value="" disabled selected>
                         Scegli tipo...
                       </option>
-                      <option value="SINGLE_HOME">Gara singola - Casa</option>
-                      <option value="SINGLE_AWAY">Gara singola - Trasferta</option>
-                      <option value="FIRST_LEG_HOME">Andata - Casa</option>
-                      <option value="FIRST_LEG_AWAY">Andata - Trasferta</option>
-                      <option value="RETURN_LEG_HOME">Ritorno - Casa</option>
-                      <option value="RETURN_LEG_AWAY">Ritorno - Trasferta</option>
+                      <option value="SINGLE-HOME">Gara singola - Casa</option>
+                      <option value="SINGLE-AWAY">Gara singola - Trasferta</option>
+                      <option value="FIRST_LEG-HOME">Andata - Casa</option>
+                      <option value="FIRST_LEG-AWAY">Andata - Trasferta</option>
+                      <option value="RETURN_LEG-HOME">Ritorno - Casa</option>
+                      <option value="RETURN_LEG-AWAY">Ritorno - Trasferta</option>
                     </select>
                   </div>
                 </div>
