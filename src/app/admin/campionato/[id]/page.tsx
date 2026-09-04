@@ -200,12 +200,6 @@ export default async function AdminChampionatoDetailPage({ params, searchParams 
             Partite
           </a>
         </div>
-        <a
-          href={`/admin/campionato/${championshipId}/partite`}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-        >
-          + Aggiungi Partita
-        </a>
       </div>
 
       {/* CREATE TEAM FORM */}
