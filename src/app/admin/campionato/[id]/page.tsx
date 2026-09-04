@@ -59,10 +59,13 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
       const userIds = (players || []).map((p: any) => p.user_id);
       const profilesMap = new Map();
       if (userIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("id, full_name, role")
           .in("id", userIds);
+        if (profilesError) {
+          console.error(`Error fetching profiles for team ${team.id}:`, profilesError);
+        }
         (profiles || []).forEach((p: any) => profilesMap.set(p.id, p));
       }
 
@@ -73,6 +76,9 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
       }));
 
       teamPlayersMap.set(team.id, enrichedPlayers);
+      if (enrichedPlayers.length > 0) {
+        console.log(`Team ${team.id}: ${enrichedPlayers.length} players fetched`);
+      }
     }
   }
 
@@ -281,6 +287,12 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
 
             {/* PLAYERS LIST */}
             <div className="space-y-2">
+              {/* DEBUG: mostra il numero di giocatori */}
+              {process.env.NODE_ENV === "development" && (
+                <p className="text-xs text-gray-400">
+                  Debug: {teamPlayersMap.get(team.id)?.length ?? 0} giocatori
+                </p>
+              )}
               {teamPlayersMap.get(team.id)?.length > 0 ? (
                 teamPlayersMap.get(team.id).map((player: any) => (
                   <div
