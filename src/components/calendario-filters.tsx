@@ -16,6 +16,12 @@ interface Match {
   team_name?: string;
 }
 
+interface Player {
+  id: string;
+  full_name: string;
+  role?: string;
+}
+
 export default function CalendarioFilters({
   matches,
   teamsData,
@@ -32,6 +38,27 @@ export default function CalendarioFilters({
     series: "",
     girone: "",
   });
+
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [matchPlayers, setMatchPlayers] = useState<Player[]>([]);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
+
+  const openMatchDetails = async (match: Match) => {
+    setSelectedMatch(match);
+    setLoadingPlayers(true);
+    try {
+      const response = await fetch(`/api/matches/${match.id}/players`);
+      if (response.ok) {
+        const data = await response.json();
+        setMatchPlayers(data.players || []);
+      }
+    } catch (error) {
+      console.error("Error loading players:", error);
+      setMatchPlayers([]);
+    } finally {
+      setLoadingPlayers(false);
+    }
+  };
 
   // Arricchisci matches con dati squadra
   const enrichedMatches = useMemo(
@@ -214,14 +241,15 @@ export default function CalendarioFilters({
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Data</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Squadra</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Squadra</th>
                   <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Serie</th>
                   <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Girone</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Avversario</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Tipo</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Luogo</th>
                   <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Sede incontro</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Stato</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Stato</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,7 +258,7 @@ export default function CalendarioFilters({
                     <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
                       {formatDate(match.scheduled_start_at)}
                     </td>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{match.team_name}</td>
+                    <td className="hidden md:table-cell px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{match.team_name}</td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-600">{match.series}</td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-600">
                       {match.group_code === "—" ? "—" : `Girone ${match.group_code}`}
@@ -249,10 +277,18 @@ export default function CalendarioFilters({
                     <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-600">
                       {match.venue_name || "—"}
                     </td>
-                    <td className="px-4 py-4 text-sm">
+                    <td className="hidden md:table-cell px-4 py-4 text-sm">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(match.status)}`}>
                         {getStatusLabel(match.status)}
                       </span>
+                    </td>
+                    <td className="px-4 py-4 text-sm">
+                      <button
+                        onClick={() => openMatchDetails(match)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                      >
+                        Dettagli
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -263,6 +299,97 @@ export default function CalendarioFilters({
           <div className="px-6 py-8 text-center text-gray-500">Nessuna partita corrisponde ai filtri selezionati.</div>
         )}
       </div>
+
+      {/* MODAL - MATCH DETAILS */}
+      {selectedMatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Dettagli Partita</h2>
+                <p className="text-blue-100">
+                  {selectedMatch.team_name} vs {selectedMatch.opponent_name}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedMatch(null)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Match Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Data e Ora</label>
+                  <p className="text-gray-900">{formatDate(selectedMatch.scheduled_start_at)}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo</label>
+                  <p className="text-gray-900">
+                    {selectedMatch.leg_type === "SINGLE"
+                      ? "Gara Singola"
+                      : selectedMatch.leg_type === "FIRST_LEG"
+                        ? "Andata"
+                        : "Ritorno"}
+                    {selectedMatch.venue_type === "HOME" ? " - Casa" : " - Trasferta"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Avversario</label>
+                  <p className="text-gray-900">{selectedMatch.opponent_name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Stato</label>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedMatch.status)}`}>
+                    {getStatusLabel(selectedMatch.status)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Venue Info */}
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Sede Incontro</h3>
+                <p className="text-gray-600">
+                  {selectedMatch.venue_name || "Non specificato"}
+                </p>
+              </div>
+
+              {/* Players */}
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Giocatori Partecipanti</h3>
+                {loadingPlayers ? (
+                  <p className="text-gray-500 text-sm">Caricamento...</p>
+                ) : matchPlayers.length > 0 ? (
+                  <ul className="space-y-2">
+                    {matchPlayers.map((player) => (
+                      <li key={player.id} className="flex items-center p-2 bg-gray-50 rounded">
+                        <span className="text-gray-900">{player.full_name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 text-sm">Nessun giocatore assegnato</p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-gray-50 border-t p-4 flex justify-end">
+              <button
+                onClick={() => setSelectedMatch(null)}
+                className="px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400 transition font-medium"
+              >
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
