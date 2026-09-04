@@ -40,10 +40,14 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
     championshipId
   );
 
-  // Recupera giocatori per ogni squadra (con workaround RLS)
+  // Recupera giocatori e partite per ogni squadra (con workaround RLS)
   const teamPlayersMap = new Map();
+  const teamMatchesMap = new Map();
   if (teams?.length) {
     for (const team of teams) {
+      // Recupera partite della squadra
+      const { data: matches } = await championships.getMatchesByTeamId(supabase, team.id);
+      teamMatchesMap.set(team.id, matches || []);
       // Query 1: giocatori della squadra
       const { data: players, error: playersError } = await championships.getPlayersByTeamId(
         supabase,
@@ -418,9 +422,66 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
               </form>
 
               {/* MATCHES LIST */}
-              <div className="space-y-2">
-                <p className="text-gray-500 text-sm">Partite della squadra</p>
-                {/* TODO: Implementare visualizzazione partite */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Partite della squadra</h4>
+                {teamMatchesMap.get(team.id)?.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b">
+                          <th className="px-4 py-2 text-left font-semibold text-gray-700">Avversario</th>
+                          <th className="px-4 py-2 text-left font-semibold text-gray-700">Data</th>
+                          <th className="px-4 py-2 text-left font-semibold text-gray-700">Tipo</th>
+                          <th className="px-4 py-2 text-left font-semibold text-gray-700">Luogo</th>
+                          <th className="px-4 py-2 text-left font-semibold text-gray-700">Stato</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">Azioni</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teamMatchesMap.get(team.id)?.map((match: any) => (
+                          <tr key={match.id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-2 text-gray-900">{match.opponent_name}</td>
+                            <td className="px-4 py-2 text-gray-600">
+                              {new Date(match.scheduled_start_at).toLocaleDateString("it-IT")}
+                            </td>
+                            <td className="px-4 py-2 text-gray-600">{match.leg_type}</td>
+                            <td className="px-4 py-2 text-gray-600">
+                              {match.venue_type === "HOME" ? "Casa" : "Trasferta"}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                match.status === "SCHEDULED" ? "bg-blue-100 text-blue-800" :
+                                match.status === "PLAYED" ? "bg-green-100 text-green-800" :
+                                "bg-gray-100 text-gray-800"
+                              }`}>
+                                {match.status === "SCHEDULED" ? "Programmata" :
+                                 match.status === "PLAYED" ? "Giocata" : match.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-right space-x-2">
+                              <button
+                                type="button"
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                                onClick={() => {
+                                  // TODO: Implementare edit match
+                                  alert("Modifica partita - TODO");
+                                }}
+                              >
+                                ✏️
+                              </button>
+                              <form action={deleteMatch} className="inline">
+                                <input type="hidden" name="match_id" value={match.id} />
+                                <ConfirmDeleteButton message="Eliminare questa partita?" />
+                              </form>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">Nessuna partita programmata.</p>
+                )}
               </div>
             </div>
           </div>
