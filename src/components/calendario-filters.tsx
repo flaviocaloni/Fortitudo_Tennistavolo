@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { updateMyAttendance } from "@/lib/actions/championships";
 
 interface Match {
   id: string;
@@ -20,14 +21,18 @@ interface Player {
   id: string;
   full_name: string;
   role?: string;
+  status?: "PRESENT" | "ABSENT";
+  attendanceId?: string;
 }
 
 export default function CalendarioFilters({
   matches,
   teamsData,
+  currentUserId,
 }: {
   matches: Match[];
   teamsData: Map<string, { name: string; series: string; group_code: string }>;
+  currentUserId?: string;
 }) {
   const [filters, setFilters] = useState({
     team: "",
@@ -42,6 +47,7 @@ export default function CalendarioFilters({
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matchPlayers, setMatchPlayers] = useState<Player[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
+  const [updatingAttendance, setUpdatingAttendance] = useState<string | null>(null);
 
   const openMatchDetails = async (match: Match) => {
     setSelectedMatch(match);
@@ -57,6 +63,30 @@ export default function CalendarioFilters({
       setMatchPlayers([]);
     } finally {
       setLoadingPlayers(false);
+    }
+  };
+
+  const handleAttendanceChange = async (matchId: string, newStatus: "PRESENT" | "ABSENT") => {
+    if (!selectedMatch) return;
+
+    setUpdatingAttendance(matchId);
+    try {
+      const formData = new FormData();
+      formData.append("match_id", matchId);
+      formData.append("status", newStatus);
+
+      await updateMyAttendance(formData);
+
+      // Refresh players list
+      const response = await fetch(`/api/matches/${matchId}/players`);
+      if (response.ok) {
+        const data = await response.json();
+        setMatchPlayers(data.players || []);
+      }
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+    } finally {
+      setUpdatingAttendance(null);
     }
   };
 
@@ -376,11 +406,47 @@ export default function CalendarioFilters({
                   <p className="text-gray-500 text-sm">Caricamento...</p>
                 ) : matchPlayers.length > 0 ? (
                   <ul className="space-y-2">
-                    {matchPlayers.map((player) => (
-                      <li key={player.id} className="flex items-center p-2 bg-gray-50 rounded">
-                        <span className="text-gray-900">{player.full_name}</span>
-                      </li>
-                    ))}
+                    {matchPlayers.map((player) => {
+                      const isCurrentUser = player.id === currentUserId;
+                      const isPresentFlag = player.status === "PRESENT";
+
+                      return (
+                        <li key={player.id} className={`flex items-center justify-between p-3 rounded border ${
+                          isPresentFlag ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                        }`}>
+                          <div className="flex-1">
+                            <div className="text-gray-900">{player.full_name}</div>
+                            <div className={`text-xs font-semibold ${
+                              isPresentFlag ? "text-green-800" : "text-red-800"
+                            }`}>
+                              {isPresentFlag ? "✓ Presente" : "✕ Assente"}
+                            </div>
+                          </div>
+                          {isCurrentUser && (
+                            <button
+                              onClick={() =>
+                                handleAttendanceChange(
+                                  selectedMatch.id,
+                                  isPresentFlag ? "ABSENT" : "PRESENT"
+                                )
+                              }
+                              disabled={updatingAttendance === selectedMatch.id}
+                              className={`ml-3 px-3 py-1 rounded text-xs font-medium transition ${
+                                isPresentFlag
+                                  ? "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400"
+                                  : "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400"
+                              }`}
+                            >
+                              {updatingAttendance === selectedMatch.id
+                                ? "Aggiornamento..."
+                                : isPresentFlag
+                                  ? "Rinuncia"
+                                  : "Parteciperò"}
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="text-gray-500 text-sm">Nessun giocatore assegnato</p>

@@ -14,6 +14,7 @@ export default async function CalendarioPage({ params }: PageProps) {
     redirect("/login");
   }
 
+  const currentUserId = profile.id;
   const { championshipId } = await params;
 
   // Recupera campionato
@@ -72,7 +73,7 @@ export default async function CalendarioPage({ params }: PageProps) {
       </div>
 
       {matches && matches.length > 0 ? (
-        <CalendarioFilters matches={matches} teamsData={teamsMap} />
+        <CalendarioFilters matches={matches} teamsData={teamsMap} currentUserId={currentUserId} />
       ) : (
         <div className="bg-gray-50 rounded-lg p-8 text-center">
           <p className="text-gray-600">Nessuna partita programmata per questo campionato.</p>

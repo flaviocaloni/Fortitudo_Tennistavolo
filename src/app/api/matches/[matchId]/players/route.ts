@@ -30,30 +30,34 @@ export async function GET(
       );
     }
 
-    // Fetch players for this team
-    const { data: teamPlayers, error: playersError } = await supabase
-      .from("championship_team_players")
+    // Fetch players with attendance status
+    const { data: attendances, error: attendancesError } = await supabase
+      .from("championship_match_attendances")
       .select(
         `
+        id,
         user_id,
+        status,
         profiles!inner(id, full_name)
       `
       )
-      .eq("team_id", match.team_id)
-      .eq("status", "active");
+      .eq("match_id", matchId)
+      .order("profiles(full_name)", { ascending: true });
 
-    if (playersError) {
-      console.error("Error fetching players:", playersError);
+    if (attendancesError) {
+      console.error("Error fetching attendances:", attendancesError);
       return NextResponse.json(
-        { error: "Failed to fetch players" },
+        { error: "Failed to fetch attendances" },
         { status: 500 }
       );
     }
 
     // Transform response
-    const players = (teamPlayers || []).map((tp: any) => ({
-      id: tp.profiles.id,
-      full_name: tp.profiles.full_name,
+    const players = (attendances || []).map((a: any) => ({
+      id: a.profiles.id,
+      full_name: a.profiles.full_name,
+      attendanceId: a.id,
+      status: a.status,
     }));
 
     return NextResponse.json({ players }, { status: 200 });
