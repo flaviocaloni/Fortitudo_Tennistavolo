@@ -97,10 +97,16 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
     .order("full_name", { ascending: true });
 
   // Filtra escludendo chi è già assegnato a una squadra
-  const { data: assignedPlayers } = await supabase
+  const { data: assignedPlayers, error: assignedError } = await supabase
     .from("championship_team_players")
     .select("user_id")
     .eq("status", "active");
+
+  if (assignedError) {
+    console.error("Error fetching assigned players:", assignedError);
+  }
+
+  console.log(`Agonisti totali: ${allAgonisti?.length}, Assegnati: ${assignedPlayers?.length}`);
 
   const assignedPlayerIds = new Set((assignedPlayers || []).map((p: any) => p.user_id));
   const availableAgonisti = (allAgonisti || []).filter(
