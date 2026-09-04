@@ -233,8 +233,15 @@ export async function addPlayerToTeam(formData: FormData) {
 
   if (error) {
     console.error(`[addPlayerToTeam] Error detail:`, error);
-    if (error.message.includes("already")) {
-      backWithError("/admin/campionato", "Questo agonista appartiene già a una squadra");
+    if (
+      error.message.includes("already") ||
+      error.message.includes("unique_active_player_per_team") ||
+      error.message.includes("duplicate")
+    ) {
+      backWithError(
+        "/admin/campionato",
+        "Questo agonista è già assegnato a un'altra squadra. Rimuovilo da quella squadra prima di aggiungerlo qui."
+      );
     }
     if (error.message.includes("agonista")) {
       backWithError("/admin/campionato", "Solo agonisti possono essere assegnati");
