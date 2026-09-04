@@ -289,7 +289,8 @@ export async function createMatch(formData: FormData) {
   const teamId = String(formData.get("team_id"));
   const opponentName = String(formData.get("opponent_name") ?? "");
   const opponentClubName = String(formData.get("opponent_club_name") ?? "") || null;
-  const legTypeCombo = String(formData.get("leg_type") ?? "");
+  const legType = String(formData.get("leg_type") ?? "");
+  const venueType = String(formData.get("venue_type") ?? "");
   const venueName = String(formData.get("venue_name") ?? "") || null;
   const notes = String(formData.get("notes") ?? "") || null;
   const scheduledStartAt = String(formData.get("scheduled_start_at") ?? "");
@@ -298,26 +299,20 @@ export async function createMatch(formData: FormData) {
   console.log(`  championshipId: "${championshipId}"`);
   console.log(`  teamId: "${teamId}"`);
   console.log(`  opponentName: "${opponentName}"`);
-  console.log(`  legTypeCombo: "${legTypeCombo}"`);
+  console.log(`  legType: "${legType}"`);
+  console.log(`  venueType: "${venueType}"`);
   console.log(`  venueName: "${venueName}"`);
   console.log(`  scheduledStartAt: "${scheduledStartAt}"`);
 
-  // Validate combo leg_type format (must be LEGTYPE-VENUETYPE)
-  if (!legTypeCombo || !legTypeCombo.includes("-")) {
-    console.error(`[createMatch] VALIDATION ERROR: Invalid leg_type combo: "${legTypeCombo}"`);
-    backWithError(`/admin/campionato/${championshipId}/partite`, "Tipo di partita obbligatorio");
+  // Validate leg_type and venue_type
+  if (!legType || !["SINGLE", "FIRST_LEG", "RETURN_LEG"].includes(legType)) {
+    console.error(`[createMatch] VALIDATION ERROR: Invalid leg_type: "${legType}"`);
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Tipo di gara obbligatorio");
   }
 
-  // Parse combo leg_type-venue to separate leg_type and venue_type
-  const parts = legTypeCombo.split("-");
-  const legType = parts[0];
-  const venueType = parts[1];
-
-  console.log(`[createMatch] Parsed combo: legType="${legType}", venueType="${venueType}"`);
-
-  if (!legType || !venueType) {
-    console.error(`[createMatch] VALIDATION ERROR: Invalid split result - legType="${legType}", venueType="${venueType}"`);
-    backWithError(`/admin/campionato/${championshipId}/partite`, "Tipo di partita non valido");
+  if (!venueType || !["HOME", "AWAY"].includes(venueType)) {
+    console.error(`[createMatch] VALIDATION ERROR: Invalid venue_type: "${venueType}"`);
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Sede obbligatoria");
   }
 
   // Validate all required fields
