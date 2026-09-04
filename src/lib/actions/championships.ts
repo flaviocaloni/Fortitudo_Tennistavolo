@@ -624,3 +624,72 @@ export async function updateMyAttendance(formData: FormData) {
 
   revalidatePath("/campionato");
 }
+
+export async function updateAdminAttendance(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const matchId = String(formData.get("match_id"));
+  const userId = String(formData.get("user_id"));
+  const status = String(formData.get("status") ?? "PRESENT");
+
+  if (!matchId || !userId || !["PRESENT", "ABSENT"].includes(status)) {
+    backWithError("/admin/campionato", "Dati obbligatori non validi");
+  }
+
+  // Recupera partita
+  const { data: match, error: matchError } = await championships.getMatchById(
+    supabase,
+    matchId
+  );
+
+  if (matchError || !match) {
+    backWithError("/admin/campionato", "Partita non trovata");
+  }
+
+  // Recupera o crea attendance
+  const { data: attendance, error: attendanceError } =
+    await championships.getAttendanceByMatchAndUser(supabase, matchId, userId);
+
+  if (attendanceError) {
+    backWithError("/admin/campionato", "Errore nel recupero della presenza");
+  }
+
+  const { supabase: supabaseAuth } = await getSessionProfile();
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+
+  if (!attendance) {
+    // Crea nuova presenza
+    const { error: createError } = await supabase
+      .from("championship_match_attendances")
+      .insert([
+        {
+          match_id: matchId,
+          user_id: userId,
+          status: status,
+          changed_by_user_id: user?.id,
+          change_source: "ADMIN",
+        },
+      ]);
+
+    if (createError) {
+      backWithError("/admin/campionato", createError.message);
+    }
+  } else {
+    // Aggiorna presenza
+    const { error: updateError } = await championships.updateAttendance(
+      supabase,
+      attendance.id,
+      {
+        status,
+        changed_by_user_id: user?.id,
+        change_source: "ADMIN",
+      }
+    );
+
+    if (updateError) {
+      backWithError("/admin/campionato", updateError.message);
+    }
+  }
+
+  revalidatePath("/admin/campionato");
+}

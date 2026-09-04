@@ -248,7 +248,7 @@ export default async function AdminChampionatoMatchesPage({ params }: PageProps)
                     href={`/admin/campionato/${championshipId}/partite/${match.id}`}
                     className="text-blue-600 hover:underline"
                   >
-                    Dettagli
+                    Presenze
                   </a>
                   <form action={deleteMatch} className="inline">
                     <input type="hidden" name="match_id" value={match.id} />
