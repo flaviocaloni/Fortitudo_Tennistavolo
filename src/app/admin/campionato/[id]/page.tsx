@@ -213,63 +213,65 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
 
       {/* TEAMS TABLE */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Nome
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Serie
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Girone
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Giocatori
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                Calendario
-              </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">
-                Azioni
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {teams?.map((team: any) => (
-              <tr key={team.id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {team.name}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{team.series}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{team.group_code}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  <a
-                    href={`#team-${team.id}-players`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Gestisci
-                  </a>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  <a
-                    href={`#team-${team.id}-matches`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Gestisci
-                  </a>
-                </td>
-                <td className="px-6 py-4 text-sm text-right space-x-2">
-                  <form action={deleteTeam} className="inline">
-                    <input type="hidden" name="team_id" value={team.id} />
-                    <ConfirmDeleteButton />
-                  </form>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-max">
+            <thead>
+              <tr className="bg-gray-50 border-b">
+                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Nome
+                </th>
+                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Serie
+                </th>
+                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Girone
+                </th>
+                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Giocatori
+                </th>
+                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Calendario
+                </th>
+                <th className="px-3 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                  Azioni
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {teams?.map((team: any) => (
+                <tr key={team.id} className="border-b hover:bg-gray-50">
+                  <td className="px-3 md:px-6 py-4 text-xs md:text-sm font-medium text-gray-900 whitespace-nowrap">
+                    {team.name}
+                  </td>
+                  <td className="px-3 md:px-6 py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{team.series}</td>
+                  <td className="px-3 md:px-6 py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{team.group_code}</td>
+                  <td className="px-3 md:px-6 py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                    <a
+                      href={`#team-${team.id}-players`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Gestisci
+                    </a>
+                  </td>
+                  <td className="px-3 md:px-6 py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                    <a
+                      href={`#team-${team.id}-matches`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Gestisci
+                    </a>
+                  </td>
+                  <td className="px-3 md:px-6 py-4 text-xs md:text-sm text-right space-x-1 md:space-x-2">
+                    <form action={deleteTeam} className="inline">
+                      <input type="hidden" name="team_id" value={team.id} />
+                      <ConfirmDeleteButton />
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {!teams?.length && (
           <div className="p-6 text-center text-gray-500">
