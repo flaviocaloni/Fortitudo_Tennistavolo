@@ -31,7 +31,7 @@ export default async function SquadraDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Recupera giocatori della squadra con join su profiles
+  // Recupera giocatori della squadra con join su profiles (left join per evitare di scartare giocatori)
   const { data: enrichedPlayers, error: playersError } = await supabase
     .from("championship_team_players")
     .select(
@@ -41,7 +41,7 @@ export default async function SquadraDetailPage({ params }: PageProps) {
       team_id,
       status,
       joined_at,
-      profiles!inner(id, full_name, role)
+      profiles(id, full_name, role)
     `
     )
     .eq("team_id", teamId)
@@ -54,11 +54,8 @@ export default async function SquadraDetailPage({ params }: PageProps) {
 
   console.log(`DEBUG: Fetched ${enrichedPlayers?.length || 0} players with profiles`);
 
-  // Transform per mantenere la compatibilità con il template
-  const players = (enrichedPlayers || []).map((p: any) => ({
-    ...p,
-    profiles: p.profiles,
-  }));
+  // Usa enrichedPlayers direttamente
+  const players = enrichedPlayers || [];
 
   // Recupera partite della squadra
   const { data: matches } = await championships.getMatchesByTeamId(supabase, teamId);
