@@ -403,8 +403,8 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="SINGLE">Gara singola</option>
-                      <option value="ANDATA">Andata</option>
-                      <option value="RITORNO">Ritorno</option>
+                      <option value="FIRST_LEG">Andata</option>
+                      <option value="RETURN_LEG">Ritorno</option>
                     </select>
                   </div>
                 </div>
