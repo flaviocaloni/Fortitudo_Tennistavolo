@@ -150,7 +150,7 @@ export async function getPlayersByTeamId(
 ) {
   let query = supabase
     .from("championship_team_players")
-    .select("*, profiles(id, full_name, role)")
+    .select("*")
     .eq("team_id", teamId);
 
   if (!includeInactive) {
