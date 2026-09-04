@@ -140,15 +140,23 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
       </div>
 
       {/* TABS-LIKE NAVIGATION */}
-      <div className="flex gap-4 mb-8 border-b">
-        <button className="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold">
-          Squadre
-        </button>
+      <div className="flex justify-between items-center mb-8 border-b pb-4">
+        <div className="flex gap-4">
+          <button className="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold">
+            Squadre
+          </button>
+          <a
+            href={`/admin/campionato/${championshipId}/partite`}
+            className="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 transition"
+          >
+            Partite
+          </a>
+        </div>
         <a
           href={`/admin/campionato/${championshipId}/partite`}
-          className="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 transition"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
         >
-          Partite
+          + Aggiungi Partita
         </a>
       </div>
 
@@ -296,7 +304,7 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
             className="bg-white rounded-lg shadow-md p-6"
           >
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {team.name} — Giocatori
+              {team.name} — {team.series} — {team.group_code} — Giocatori
             </h3>
 
             {/* ADD PLAYER FORM */}
@@ -366,88 +374,11 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
 
             {/* MATCHES SECTION */}
             <div className="mt-8 pt-8 border-t">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                {team.name} — Calendario
-              </h3>
-
-              {/* ADD MATCH FORM */}
-              <form action={createMatch} className="mb-6 pb-6 border-b space-y-4">
-                <input type="hidden" name="championship_id" value={championshipId} />
-                <input type="hidden" name="team_id" value={team.id} />
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Avversario *
-                    </label>
-                    <input
-                      type="text"
-                      name="opponent_name"
-                      placeholder="es: Squadra XYZ"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Data e ora *
-                    </label>
-                    <input
-                      type="datetime-local"
-                      name="scheduled_start_at"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo *
-                    </label>
-                    <select
-                      name="leg_type"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="" disabled selected>
-                        Scegli tipo...
-                      </option>
-                      <option value="SINGLE-HOME">Gara singola - Casa</option>
-                      <option value="SINGLE-AWAY">Gara singola - Trasferta</option>
-                      <option value="FIRST_LEG-HOME">Andata - Casa</option>
-                      <option value="FIRST_LEG-AWAY">Andata - Trasferta</option>
-                      <option value="RETURN_LEG-HOME">Ritorno - Casa</option>
-                      <option value="RETURN_LEG-AWAY">Ritorno - Trasferta</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Indirizzo *
-                    </label>
-                    <input
-                      type="text"
-                      name="venue_name"
-                      placeholder="es: Busnago - Palestra Collegio S. Antonio"
-                      defaultValue="Busnago - Palestra Collegio S. Antonio"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex items-end">
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-                    >
-                      Aggiungi Partita
-                    </button>
-                  </div>
-                </div>
-              </form>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {team.name} — {team.series} — {team.group_code} — Calendario
+                </h3>
+              </div>
 
               {/* MATCHES LIST */}
               <div>
