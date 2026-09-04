@@ -287,16 +287,18 @@ export async function createMatch(formData: FormData) {
   const teamId = String(formData.get("team_id"));
   const opponentName = String(formData.get("opponent_name") ?? "");
   const opponentClubName = String(formData.get("opponent_club_name") ?? "") || null;
-  const legType = String(formData.get("leg_type") ?? "SINGLE");
-  const venueType = String(formData.get("venue_type") ?? "HOME");
-  const scheduledStartAt = String(formData.get("scheduled_start_at") ?? "");
+  const legTypeCombo = String(formData.get("leg_type") ?? "SINGLE_HOME");
   const venueName = String(formData.get("venue_name") ?? "") || null;
-  const address = String(formData.get("address") ?? "") || null;
   const notes = String(formData.get("notes") ?? "") || null;
 
+  // Parse combo leg_type_venue to separate leg_type and venue_type
+  const [legType, venueType] = legTypeCombo.split("_");
+
   console.log(
-    `[createMatch] Data: championshipId=${championshipId}, teamId=${teamId}, opponent=${opponentName}, startAt=${scheduledStartAt}`
+    `[createMatch] Data: championshipId=${championshipId}, teamId=${teamId}, opponent=${opponentName}, startAt=${String(formData.get("scheduled_start_at"))}, legType=${legType}, venueType=${venueType}`
   );
+
+  const scheduledStartAt = String(formData.get("scheduled_start_at") ?? "");
 
   if (!championshipId || !teamId) {
     console.error("[createMatch] Missing championship or team");
@@ -309,6 +311,10 @@ export async function createMatch(formData: FormData) {
   if (!scheduledStartAt) {
     console.error("[createMatch] Missing scheduled start time");
     backWithError("/admin/campionato", "Data e ora della partita obbligatorie");
+  }
+  if (!venueName || venueName.trim().length === 0) {
+    console.error("[createMatch] Missing venue name");
+    backWithError("/admin/campionato", "Indirizzo obbligatorio");
   }
 
   // Fetch season_id from championship

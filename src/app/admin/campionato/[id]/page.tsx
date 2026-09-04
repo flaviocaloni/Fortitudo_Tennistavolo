@@ -396,31 +396,38 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo gara
+                      Tipo *
                     </label>
                     <select
                       name="leg_type"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
                     >
-                      <option value="SINGLE">Gara singola</option>
-                      <option value="FIRST_LEG">Andata</option>
-                      <option value="RETURN_LEG">Ritorno</option>
+                      <option value="">Scegli tipo...</option>
+                      <option value="SINGLE_HOME">Gara singola - Casa</option>
+                      <option value="SINGLE_AWAY">Gara singola - Trasferta</option>
+                      <option value="FIRST_LEG_HOME">Andata - Casa</option>
+                      <option value="FIRST_LEG_AWAY">Andata - Trasferta</option>
+                      <option value="RETURN_LEG_HOME">Ritorno - Casa</option>
+                      <option value="RETURN_LEG_AWAY">Ritorno - Trasferta</option>
                     </select>
+                    <input type="hidden" name="venue_type" id="venue_type" value="HOME" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Luogo
+                      Indirizzo *
                     </label>
-                    <select
-                      name="venue_type"
+                    <input
+                      type="text"
+                      name="venue_name"
+                      placeholder="es: Busnago - Palestra Collegio S. Antonio"
+                      defaultValue="Busnago - Palestra Collegio S. Antonio"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="HOME">In casa</option>
-                      <option value="AWAY">Trasferta</option>
-                    </select>
+                      required
+                    />
                   </div>
 
                   <div className="flex items-end">
