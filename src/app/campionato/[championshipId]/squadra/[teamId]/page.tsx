@@ -31,38 +31,33 @@ export default async function SquadraDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Recupera giocatori della squadra (con workaround RLS per profiles join)
-  const { data: playersRaw, error: playersError } = await championships.getPlayersByTeamId(
-    supabase,
-    teamId
-  );
+  // Recupera giocatori della squadra con join su profiles
+  const { data: enrichedPlayers, error: playersError } = await supabase
+    .from("championship_team_players")
+    .select(
+      `
+      id,
+      user_id,
+      team_id,
+      status,
+      joined_at,
+      profiles!inner(id, full_name, role)
+    `
+    )
+    .eq("team_id", teamId)
+    .eq("status", "active")
+    .order("joined_at", { ascending: true });
 
-  const players = playersRaw || [];
   if (playersError) {
-    console.error("Error fetching players:", playersError);
+    console.error("Error fetching players with profiles:", playersError);
   }
 
-  // Query separate per i profili (workaround RLS)
-  const userIds = players.map((p: any) => p.user_id);
-  const profilesMap = new Map();
-  if (userIds.length > 0) {
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("id, full_name, role")
-      .in("id", userIds);
+  console.log(`DEBUG: Fetched ${enrichedPlayers?.length || 0} players with profiles`);
 
-    if (profilesError) {
-      console.error("Error fetching profiles:", profilesError);
-    }
-
-    console.log(`DEBUG: Fetched ${profiles?.length || 0} profiles for ${userIds.length} user IDs`);
-    (profiles || []).forEach((p: any) => profilesMap.set(p.id, p));
-  }
-
-  // Arricchisci giocatori con profili
-  const enrichedPlayers = players.map((p: any) => ({
+  // Transform per mantenere la compatibilità con il template
+  const players = (enrichedPlayers || []).map((p: any) => ({
     ...p,
-    profiles: profilesMap.get(p.user_id) || null,
+    profiles: p.profiles,
   }));
 
   // Recupera partite della squadra
