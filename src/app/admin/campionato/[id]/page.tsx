@@ -40,15 +40,39 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
     championshipId
   );
 
-  // Recupera giocatori per ogni squadra
+  // Recupera giocatori per ogni squadra (con workaround RLS)
   const teamPlayersMap = new Map();
   if (teams?.length) {
     for (const team of teams) {
-      const { data: players, error } = await championships.getPlayersByTeamId(supabase, team.id);
-      if (error) {
-        console.error(`Error fetching players for team ${team.id}:`, error);
+      // Query 1: giocatori della squadra
+      const { data: players, error: playersError } = await championships.getPlayersByTeamId(
+        supabase,
+        team.id
+      );
+      if (playersError) {
+        console.error(`Error fetching players for team ${team.id}:`, playersError);
+        teamPlayersMap.set(team.id, []);
+        continue;
       }
-      teamPlayersMap.set(team.id, players || []);
+
+      // Query 2: profili degli user_id (bypass RLS facendo query separata)
+      const userIds = (players || []).map((p: any) => p.user_id);
+      const profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, role")
+          .in("id", userIds);
+        (profiles || []).forEach((p: any) => profilesMap.set(p.id, p));
+      }
+
+      // Join manuale
+      const enrichedPlayers = (players || []).map((p: any) => ({
+        ...p,
+        profiles: profilesMap.get(p.user_id) || null,
+      }));
+
+      teamPlayersMap.set(team.id, enrichedPlayers);
     }
   }
 
