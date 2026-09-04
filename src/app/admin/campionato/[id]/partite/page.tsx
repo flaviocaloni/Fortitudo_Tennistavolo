@@ -252,6 +252,7 @@ export default async function AdminChampionatoMatchesPage({ params }: PageProps)
                   </a>
                   <form action={deleteMatch} className="inline">
                     <input type="hidden" name="match_id" value={match.id} />
+                    <input type="hidden" name="championship_id" value={championshipId} />
                     <ConfirmDeleteButton />
                   </form>
                 </td>

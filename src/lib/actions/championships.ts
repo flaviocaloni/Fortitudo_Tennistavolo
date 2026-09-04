@@ -495,15 +495,17 @@ export async function deleteMatch(formData: FormData) {
   const supabase = await requireAdmin();
 
   const matchId = String(formData.get("match_id"));
+  const championshipId = String(formData.get("championship_id"));
 
   const { error } = await championships.deleteMatch(supabase, matchId);
 
   if (error) {
-    backWithError("/admin/campionato", error.message);
+    backWithError(`/admin/campionato/${championshipId}/partite`, error.message);
   }
 
-  revalidatePath("/admin/campionato");
+  revalidatePath(`/admin/campionato/${championshipId}/partite`);
   revalidatePath("/campionato");
+  redirect(`/admin/campionato/${championshipId}/partite`);
 }
 
 // ============ ATTENDANCES ============
