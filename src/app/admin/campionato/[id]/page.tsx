@@ -44,7 +44,10 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
   const teamPlayersMap = new Map();
   if (teams?.length) {
     for (const team of teams) {
-      const { data: players } = await championships.getPlayersByTeamId(supabase, team.id);
+      const { data: players, error } = await championships.getPlayersByTeamId(supabase, team.id);
+      if (error) {
+        console.error(`Error fetching players for team ${team.id}:`, error);
+      }
       teamPlayersMap.set(team.id, players || []);
     }
   }
@@ -206,7 +209,7 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
 
       {/* TEAMS PLAYERS SECTION */}
       <div className="mt-12 space-y-8">
-        <h2 className="text-2xl font-bold text-gray-900">Gestione Giocatori</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Gestione Squadre</h2>
 
         {teams?.map((team: any) => (
           <div
