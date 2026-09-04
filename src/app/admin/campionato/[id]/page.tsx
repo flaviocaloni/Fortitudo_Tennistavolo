@@ -46,8 +46,21 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
   if (teams?.length) {
     for (const team of teams) {
       // Recupera partite della squadra
-      const { data: matches } = await championships.getMatchesByTeamId(supabase, team.id);
-      teamMatchesMap.set(team.id, matches || []);
+      try {
+        const { data: matches, error: matchesError } = await championships.getMatchesByTeamId(
+          supabase,
+          team.id
+        );
+        if (matchesError) {
+          console.error(`Error fetching matches for team ${team.id}:`, matchesError);
+          teamMatchesMap.set(team.id, []);
+        } else {
+          teamMatchesMap.set(team.id, matches || []);
+        }
+      } catch (err) {
+        console.error(`Exception fetching matches for team ${team.id}:`, err);
+        teamMatchesMap.set(team.id, []);
+      }
       // Query 1: giocatori della squadra
       const { data: players, error: playersError } = await championships.getPlayersByTeamId(
         supabase,
