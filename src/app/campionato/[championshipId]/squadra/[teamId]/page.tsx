@@ -46,10 +46,16 @@ export default async function SquadraDetailPage({ params }: PageProps) {
   const userIds = players.map((p: any) => p.user_id);
   const profilesMap = new Map();
   if (userIds.length > 0) {
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("id, full_name, role")
       .in("id", userIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+    }
+
+    console.log(`DEBUG: Fetched ${profiles?.length || 0} profiles for ${userIds.length} user IDs`);
     (profiles || []).forEach((p: any) => profilesMap.set(p.id, p));
   }
 
@@ -122,10 +128,10 @@ export default async function SquadraDetailPage({ params }: PageProps) {
                 {enrichedPlayers.map((player: any) => (
                   <tr key={player.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {player.profiles?.full_name || player.user_id}
+                      {player.profiles?.full_name || "Nome non disponibile"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {player.profiles?.role === "agonista" ? "Agonista" : "Amatore"}
+                      {player.profiles?.role === "agonista" ? "Agonista" : (player.profiles?.role || "Ruolo non disponibile")}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(player.joined_at).toLocaleDateString("it-IT")}
