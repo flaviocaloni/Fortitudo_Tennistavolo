@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
+import CalendarioFilters from "@/components/calendario-filters";
 
 interface PageProps {
   params: Promise<{ championshipId: string }>;
@@ -39,43 +40,19 @@ export default async function CalendarioPage({ params }: PageProps) {
     .eq("status", "active")
     .order("name");
 
-  const teamsMap = new Map(teams?.map((t: any) => [t.id, t.name]));
+  // Recupera dati completi delle squadre per i filtri
+  const { data: teamsFullData } = await supabase
+    .from("championship_teams")
+    .select("id, name, series, group_code")
+    .eq("championship_id", championshipId)
+    .eq("status", "active");
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("it-IT", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      SCHEDULED: "Programmata",
-      PLAYED: "Giocata",
-      POSTPONED: "Rinviata",
-      CANCELLED: "Annullata",
-    };
-    return labels[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "SCHEDULED":
-        return "bg-blue-100 text-blue-800";
-      case "PLAYED":
-        return "bg-green-100 text-green-800";
-      case "POSTPONED":
-        return "bg-amber-100 text-amber-800";
-      case "CANCELLED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const teamsMap = new Map(
+    teamsFullData?.map((t: any) => [
+      t.id,
+      { name: t.name, series: t.series, group_code: t.group_code },
+    ]) || []
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -89,62 +66,7 @@ export default async function CalendarioPage({ params }: PageProps) {
       </div>
 
       {matches && matches.length > 0 ? (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Data
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Squadra
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Avversario
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Luogo
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                  Stato
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {matches.map((match: any) => (
-                <tr key={match.id} className="border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                    {formatDate(match.scheduled_start_at)}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {teamsMap.get(match.team_id) || "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.opponent_name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.leg_type === "SINGLE"
-                      ? "Singola"
-                      : match.leg_type === "FIRST_LEG"
-                        ? "Andata"
-                        : "Ritorno"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.venue_type === "HOME" ? "Casa" : "Trasferta"}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(match.status)}`}>
-                      {getStatusLabel(match.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <CalendarioFilters matches={matches} teamsData={teamsMap} />
       ) : (
         <div className="bg-gray-50 rounded-lg p-8 text-center">
           <p className="text-gray-600">Nessuna partita programmata per questo campionato.</p>
