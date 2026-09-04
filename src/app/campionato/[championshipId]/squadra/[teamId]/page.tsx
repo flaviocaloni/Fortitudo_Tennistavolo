@@ -31,8 +31,33 @@ export default async function SquadraDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Recupera giocatori della squadra
-  const { data: players } = await championships.getPlayersByTeamId(supabase, teamId);
+  // Recupera giocatori della squadra (con workaround RLS per profiles join)
+  const { data: playersRaw, error: playersError } = await championships.getPlayersByTeamId(
+    supabase,
+    teamId
+  );
+
+  const players = playersRaw || [];
+  if (playersError) {
+    console.error("Error fetching players:", playersError);
+  }
+
+  // Query separate per i profili (workaround RLS)
+  const userIds = players.map((p: any) => p.user_id);
+  const profilesMap = new Map();
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .in("id", userIds);
+    (profiles || []).forEach((p: any) => profilesMap.set(p.id, p));
+  }
+
+  // Arricchisci giocatori con profili
+  const enrichedPlayers = players.map((p: any) => ({
+    ...p,
+    profiles: profilesMap.get(p.user_id) || null,
+  }));
 
   // Recupera partite della squadra
   const { data: matches } = await championships.getMatchesByTeamId(supabase, teamId);
@@ -77,7 +102,7 @@ export default async function SquadraDetailPage({ params }: PageProps) {
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Giocatori</h2>
 
-        {players && players.length > 0 ? (
+        {enrichedPlayers && enrichedPlayers.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -94,7 +119,7 @@ export default async function SquadraDetailPage({ params }: PageProps) {
                 </tr>
               </thead>
               <tbody>
-                {players.map((player: any) => (
+                {enrichedPlayers.map((player: any) => (
                   <tr key={player.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       {player.profiles?.full_name || player.user_id}
