@@ -65,7 +65,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <a href={`/campionato/${championshipId}`} className="text-blue-600 hover:underline">
+        <a href="/campionato" className="text-blue-600 hover:underline">
           ← Torna al campionato
         </a>
       </div>

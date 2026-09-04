@@ -82,7 +82,7 @@ export default async function MyMatchesPage({ params }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <a href={`/campionato/${championshipId}`} className="text-blue-600 hover:underline">
+      <a href="/campionato" className="text-blue-600 hover:underline">
         ← Torna a Campionato
       </a>
       <h1 className="text-3xl font-bold text-gray-900 mt-4 mb-8">Le mie partite</h1>
