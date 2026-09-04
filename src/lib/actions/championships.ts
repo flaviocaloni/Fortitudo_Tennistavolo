@@ -234,31 +234,8 @@ export async function addPlayerToTeam(formData: FormData) {
     backWithError("/admin/campionato", error.message);
   }
 
-  // Sync squadra/girone/serie to profiles (denormalization for UI)
-  const { data: team } = await supabase
-    .from("championship_teams")
-    .select("name, group_code, series")
-    .eq("id", teamId)
-    .single();
-
-  if (team) {
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        squadra: team.name,
-        girone: team.group_code,
-        serie: team.series,
-      })
-      .eq("id", userId);
-
-    if (updateError) {
-      console.error("Error syncing team data to profiles:", updateError);
-    }
-  }
-
   revalidatePath("/admin/campionato");
   revalidatePath("/admin/campionato/[id]");
-  revalidatePath("/admin/utenti");
   revalidatePath("/campionato");
 }
 
