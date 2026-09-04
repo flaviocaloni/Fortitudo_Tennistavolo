@@ -160,7 +160,7 @@ export default function AdminUsersListClient({
           </p>
 
           <div className="space-y-3">
-            {filtered.map(({ profile: p, info }) => (
+            {filtered.map(({ profile: p, info, assignedTeamId }) => (
               <div key={p.id} className="card">
                 <div className="mb-2 space-y-2">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -248,8 +248,8 @@ export default function AdminUsersListClient({
                     {p.role === "agonista" && (
                       <>
                         {(() => {
-                          const assignedTeam = p.assignedTeamId
-                            ? teams?.find((t) => t.id === p.assignedTeamId)
+                          const assignedTeam = assignedTeamId
+                            ? teams?.find((t) => t.id === assignedTeamId)
                             : null;
                           return (
                             <>
