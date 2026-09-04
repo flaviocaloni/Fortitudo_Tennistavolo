@@ -76,6 +76,43 @@ supabase.rpc("delete_championship_match", { match_id_param: matchId })
 
 ---
 
+### 0030_update_attendance_safe.sql
+
+**Scopo:** Fornire una RPC function sicura per aggiornare lo status di una presenza senza attivare trigger problematici.
+
+**Creato:** 2026-09-04
+
+**Funzione:** `update_attendance_safe(attendance_id_param UUID, status_param TEXT, changed_by_param UUID, source_param TEXT)`
+
+**Comportamento:**
+1. Disabilita i trigger USER sulla tabella `championship_match_attendances`
+2. Esegue l'UPDATE con i valori forniti:
+   - `status` - PRESENT o ABSENT
+   - `changed_by_user_id` - UUID dell'admin o giocatore che ha fatto il cambio
+   - `change_source` - PLAYER o ADMIN
+   - `changed_at` - timestamp automatico NOW()
+3. Riabilita i trigger
+
+**Problema Risolto:**
+- Il trigger `trg_log_championship_attendance` cercava di creare un record di history con campo non-esistent `attendance_history_id`
+- Causava errore "record "new" has no field "attendance_history_id"" quando si aggiornava lo status
+- Disabilitando i trigger USER, si bypassa il logging problematico
+
+**Utilizzo:**
+```typescript
+// Nel file src/lib/supabase/championships.ts
+supabase.rpc("update_attendance_safe", {
+  attendance_id_param: attendanceId,
+  status_param: payload.status,
+  changed_by_param: payload.changed_by_user_id,
+  source_param: payload.change_source,
+})
+```
+
+**Permessi:** Eseguibile da `anon` e `authenticated` roles
+
+---
+
 ## Note Importanti
 
 ### RLS (Row Level Security)
