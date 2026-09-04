@@ -31,31 +31,33 @@ export default async function SquadraDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Recupera giocatori della squadra con join su profiles (left join per evitare di scartare giocatori)
-  const { data: enrichedPlayers, error: playersError } = await supabase
-    .from("championship_team_players")
-    .select(
-      `
-      id,
-      user_id,
-      team_id,
-      status,
-      joined_at,
-      profiles(id, full_name, role)
-    `
-    )
-    .eq("team_id", teamId)
-    .eq("status", "active")
-    .order("joined_at", { ascending: true });
+  // Recupera giocatori della squadra con i loro profili via RPC
+  const { data: playersData, error: playersError } = await supabase.rpc(
+    "get_team_players_with_profiles",
+    { team_id_param: teamId }
+  );
 
   if (playersError) {
     console.error("Error fetching players with profiles:", playersError);
   }
 
-  console.log(`DEBUG: Fetched ${enrichedPlayers?.length || 0} players with profiles`);
+  // Trasforma il risultato RPC nel formato atteso dal template
+  const enrichedPlayers = (playersData || []).map((p: any) => ({
+    id: p.id,
+    user_id: p.user_id,
+    team_id: p.team_id,
+    status: p.status,
+    joined_at: p.joined_at,
+    profiles: {
+      id: p.profile_id,
+      full_name: p.full_name,
+      role: p.role,
+    },
+  }));
 
-  // Usa enrichedPlayers direttamente
-  const players = enrichedPlayers || [];
+  console.log(`DEBUG: Fetched ${enrichedPlayers.length} players with profiles via RPC`);
+
+  const players = enrichedPlayers;
 
   // Recupera partite della squadra
   const { data: matches } = await championships.getMatchesByTeamId(supabase, teamId);
