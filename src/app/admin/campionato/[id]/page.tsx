@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import {
@@ -17,7 +18,41 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function AdminChampionatoDetailPage({ params }: PageProps) {
+function SortableHeader({
+  label,
+  sortKey,
+  currentSort,
+  currentOrder,
+}: {
+  label: string;
+  sortKey: string;
+  currentSort: string;
+  currentOrder: string;
+}) {
+  const isActive = currentSort === sortKey;
+  const nextOrder = isActive && currentOrder === "asc" ? "desc" : "asc";
+  const params = new URLSearchParams();
+  params.set("sort", sortKey);
+  params.set("order", nextOrder);
+
+  return (
+    <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
+      <Link
+        href={`?${params.toString()}`}
+        className="flex items-center gap-1 hover:text-blue-600 cursor-pointer"
+      >
+        {label}
+        {isActive && (
+          <span className="text-xs">
+            {currentOrder === "asc" ? "↑" : "↓"}
+          </span>
+        )}
+      </Link>
+    </th>
+  );
+}
+
+export default async function AdminChampionatoDetailPage({ params, searchParams }: PageProps & { searchParams: Promise<Record<string, string>> }) {
   const { supabase, profile } = await getSessionProfile();
 
   if (!profile || profile.role !== "admin") {
@@ -25,6 +60,7 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
   }
 
   const { id: championshipId } = await params;
+  const { sort = "name", order = "asc" } = await searchParams;
 
   // Recupera campionato
   const { data: championship, error: champError } =
@@ -39,6 +75,18 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
     supabase,
     championshipId
   );
+
+  // Ordina squadre
+  let sortedTeams = teams || [];
+  sortedTeams = sortedTeams.sort((a: any, b: any) => {
+    let aVal: any = a[sort as keyof typeof a];
+    let bVal: any = b[sort as keyof typeof b];
+
+    if (typeof aVal === "string") {
+      return order === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    }
+    return order === "asc" ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
+  });
 
   // Recupera giocatori e partite per ogni squadra (con workaround RLS)
   const teamPlayersMap = new Map();
@@ -230,15 +278,24 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
           <table className="w-full min-w-max">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
-                  Nome
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
-                  Serie
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
-                  Girone
-                </th>
+                <SortableHeader
+                  label="Nome"
+                  sortKey="name"
+                  currentSort={sort}
+                  currentOrder={order}
+                />
+                <SortableHeader
+                  label="Serie"
+                  sortKey="series"
+                  currentSort={sort}
+                  currentOrder={order}
+                />
+                <SortableHeader
+                  label="Girone"
+                  sortKey="group_code"
+                  currentSort={sort}
+                  currentOrder={order}
+                />
                 <th className="px-3 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
                   Giocatori
                 </th>
@@ -251,7 +308,7 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
               </tr>
             </thead>
             <tbody>
-              {teams?.map((team: any) => (
+              {sortedTeams?.map((team: any) => (
                 <tr key={team.id} className="border-b hover:bg-gray-50">
                   <td className="px-3 md:px-6 py-4 text-xs md:text-sm font-medium text-gray-900 whitespace-nowrap">
                     {team.name}
