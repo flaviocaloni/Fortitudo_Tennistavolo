@@ -365,8 +365,6 @@ export async function updateAttendance(
     changed_by_param: payload.changed_by_user_id,
     source_param: payload.change_source,
   });
-    .select()
-    .single();
 }
 
 export async function getAttendanceHistory(
