@@ -39,56 +39,70 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
     .eq("id", match.team_id)
     .single();
 
-  // Recupera giocatori della squadra con presenze
+  // Recupera attendances (senza join complesso)
   const { data: attendances } = await supabase
     .from("championship_match_attendances")
-    .select(
-      `
-      id,
-      user_id,
-      status,
-      profiles(id, full_name)
-    `
-    )
+    .select("id, user_id, status")
     .eq("match_id", matchId)
     .order("created_at", { ascending: true });
 
-  // Se non ci sono attendances, recupera giocatori della squadra
+  // Recupera giocatori della squadra
+  const { data: teamPlayers } = await supabase
+    .from("championship_team_players")
+    .select("user_id")
+    .eq("team_id", match.team_id)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+
+  // Recupera profili di tutti gli user_id
+  const allUserIds = new Set([
+    ...(attendances || []).map((a: any) => a.user_id),
+    ...(teamPlayers || []).map((tp: any) => tp.user_id),
+  ]);
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", Array.from(allUserIds));
+
+  const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
+  const attendanceMap = new Map(attendances?.map((a: any) => [a.user_id, a]) || []);
+
+  // Combina dati: usa attendances se esistono, altrimenti usa teamPlayers
   let players: any[] = [];
+  const processedUserIds = new Set();
 
-  console.log(`DEBUG: Attendances for match ${matchId}:`, attendances);
+  // Prima aggiungi gli attendances
+  (attendances || []).forEach((att: any) => {
+    const profile = profileMap.get(att.user_id);
+    if (profile) {
+      players.push({
+        id: profile.id,
+        full_name: profile.full_name,
+        attendanceId: att.id,
+        status: att.status,
+      });
+      processedUserIds.add(att.user_id);
+    }
+  });
 
-  if (!attendances || attendances.length === 0) {
-    console.log(`DEBUG: No attendances found, fetching team players for team ${match.team_id}`);
+  // Poi aggiungi i giocatori della squadra che non hanno attendance
+  (teamPlayers || []).forEach((tp: any) => {
+    if (!processedUserIds.has(tp.user_id)) {
+      const profile = profileMap.get(tp.user_id);
+      if (profile) {
+        players.push({
+          id: profile.id,
+          full_name: profile.full_name,
+          attendanceId: null,
+          status: "PRESENT",
+        });
+        processedUserIds.add(tp.user_id);
+      }
+    }
+  });
 
-    const { data: teamPlayers, error: tpError } = await supabase
-      .from("championship_team_players")
-      .select(
-        `
-        user_id,
-        profiles(id, full_name)
-      `
-      )
-      .eq("team_id", match.team_id)
-      .eq("status", "active")
-      .order("created_at", { ascending: true });
-
-    console.log(`DEBUG: Team players result:`, { data: teamPlayers, error: tpError });
-
-    players = (teamPlayers || []).map((tp: any) => ({
-      id: tp.profiles.id,
-      full_name: tp.profiles.full_name,
-      attendanceId: null,
-      status: "PRESENT",
-    }));
-  } else {
-    players = (attendances || []).map((a: any) => ({
-      id: a.profiles.id,
-      full_name: a.profiles.full_name,
-      attendanceId: a.id,
-      status: a.status,
-    }));
-  }
+  console.log(`DEBUG: Match ${matchId} - Attendances: ${attendances?.length || 0}, Team Players: ${teamPlayers?.length || 0}, Final Players: ${players.length}`);
 
   const presentCount = players.filter((p) => p.status === "PRESENT").length;
   const absentCount = players.filter((p) => p.status === "ABSENT").length;
