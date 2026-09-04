@@ -211,6 +211,9 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                 Giocatori
               </th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                Calendario
+              </th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">
                 Azioni
               </th>
@@ -227,6 +230,14 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                 <td className="px-6 py-4 text-sm text-gray-600">
                   <a
                     href={`#team-${team.id}-players`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Gestisci
+                  </a>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  <a
+                    href={`#team-${team.id}-matches`}
                     className="text-blue-600 hover:underline"
                   >
                     Gestisci
@@ -327,6 +338,90 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
               ) : (
                 <p className="text-gray-500 text-sm">Nessun giocatore assegnato.</p>
               )}
+            </div>
+
+            {/* MATCHES SECTION */}
+            <div className="mt-8 pt-8 border-t">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                {team.name} — Calendario
+              </h3>
+
+              {/* ADD MATCH FORM */}
+              <form action={createMatch} className="mb-6 pb-6 border-b space-y-4">
+                <input type="hidden" name="championship_id" value={championshipId} />
+                <input type="hidden" name="team_id" value={team.id} />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Avversario *
+                    </label>
+                    <input
+                      type="text"
+                      name="opponent_name"
+                      placeholder="es: Squadra XYZ"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Data e ora *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="scheduled_start_at"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tipo gara
+                    </label>
+                    <select
+                      name="leg_type"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="SINGLE">Gara singola</option>
+                      <option value="ANDATA">Andata</option>
+                      <option value="RITORNO">Ritorno</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Luogo
+                    </label>
+                    <select
+                      name="venue_type"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="HOME">In casa</option>
+                      <option value="AWAY">Trasferta</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Aggiungi Partita
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* MATCHES LIST */}
+              <div className="space-y-2">
+                <p className="text-gray-500 text-sm">Partite della squadra</p>
+                {/* TODO: Implementare visualizzazione partite */}
+              </div>
             </div>
           </div>
         ))}
