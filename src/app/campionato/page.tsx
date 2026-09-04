@@ -142,6 +142,15 @@ export default async function CampionatoPage() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Navigazione</h3>
             <div className="space-y-3">
+              {profile.role === "agonista" && (
+                <a
+                  href={`/campionato/${currentChampionship.id}/le-mie-partite`}
+                  className="flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+                >
+                  <span className="mr-2">→</span>
+                  Le mie partite
+                </a>
+              )}
               <a
                 href={`/campionato/${currentChampionship.id}/squadre`}
                 className="flex items-center text-blue-600 hover:text-blue-800"
