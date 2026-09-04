@@ -13,10 +13,13 @@ CREATE OR REPLACE FUNCTION create_match_attendances()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Insert attendance records for all active players in the team
+  -- ON CONFLICT DO NOTHING: idempotent operation to prevent duplicate key violations
+  -- if trigger executes multiple times or form is submitted twice
   INSERT INTO championship_match_attendances (match_id, user_id, status, change_source, created_at)
   SELECT NEW.id, user_id, 'PRESENT', 'SYSTEM', NOW()
   FROM championship_team_players
-  WHERE team_id = NEW.team_id AND status = 'active';
+  WHERE team_id = NEW.team_id AND status = 'active'
+  ON CONFLICT (match_id, user_id) DO NOTHING;
 
   RETURN NEW;
 END;

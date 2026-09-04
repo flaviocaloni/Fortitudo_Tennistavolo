@@ -53,8 +53,11 @@ supabase.rpc("delete_championship_match", { match_id_param: matchId })
    - Inserisce un record in `championship_match_attendances`
    - Status iniziale: `PRESENT`
    - change_source: `SYSTEM` (per tracciare che è stato creato automaticamente)
-3. I giocatori possono successivamente aggiornare il loro status via `updateMyAttendance()`
-4. Gli admin possono forzare status via `updateAdminAttendance()`
+3. **Idempotent:** Usa `ON CONFLICT (match_id, user_id) DO NOTHING` per prevenire violazioni di vincolo UNIQUE se:
+   - Il trigger viene eseguito più volte
+   - Il form viene submitato due volte
+4. I giocatori possono successivamente aggiornare il loro status via `updateMyAttendance()`
+5. Gli admin possono forzare status via `updateAdminAttendance()`
 
 **Problema Risolto:**
 - Quando veniva creata una partita, i giocatori non apparivano automaticamente
