@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { matchId: string } }
+  { params }: { params: Promise<{ matchId: string }> }
 ) {
   try {
-    const { supabase } = await createClient();
-    const matchId = params.matchId;
+    const supabase = await createClient();
+    const { matchId } = await params;
 
     if (!matchId) {
       return NextResponse.json(
