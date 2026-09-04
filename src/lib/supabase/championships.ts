@@ -358,13 +358,13 @@ export async function updateAttendance(
     change_source?: string;
   }
 ) {
-  return supabase
-    .from("championship_match_attendances")
-    .update({
-      ...payload,
-      changed_at: new Date().toISOString(),
-    })
-    .eq("id", attendanceId)
+  // Use RPC to avoid trigger issues with log_championship_attendance_change
+  return supabase.rpc("update_attendance_safe", {
+    attendance_id_param: attendanceId,
+    status_param: payload.status,
+    changed_by_param: payload.changed_by_user_id,
+    source_param: payload.change_source,
+  });
     .select()
     .single();
 }
