@@ -31,7 +31,7 @@ export async function GET(
     }
 
     // Fetch players with attendance status
-    const { data: attendances, error: attendancesError } = await supabase
+    let { data: attendances, error: attendancesError } = await supabase
       .from("championship_match_attendances")
       .select(
         `
@@ -50,6 +50,38 @@ export async function GET(
         { error: "Failed to fetch attendances" },
         { status: 500 }
       );
+    }
+
+    // If no attendances exist, create them from team players
+    if (!attendances || attendances.length === 0) {
+      const { data: teamPlayers, error: playersError } = await supabase
+        .from("championship_team_players")
+        .select(
+          `
+          user_id,
+          profiles!inner(id, full_name)
+        `
+        )
+        .eq("team_id", match.team_id)
+        .eq("status", "active");
+
+      if (playersError) {
+        console.error("Error fetching team players:", playersError);
+        return NextResponse.json(
+          { error: "Failed to fetch players" },
+          { status: 500 }
+        );
+      }
+
+      // Transform team players as PRESENT
+      const players = (teamPlayers || []).map((tp: any) => ({
+        id: tp.profiles.id,
+        full_name: tp.profiles.full_name,
+        attendanceId: null,
+        status: "PRESENT",
+      }));
+
+      return NextResponse.json({ players }, { status: 200 });
     }
 
     // Transform response
