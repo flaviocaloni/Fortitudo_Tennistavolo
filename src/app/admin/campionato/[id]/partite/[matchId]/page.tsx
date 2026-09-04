@@ -56,18 +56,24 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
   // Se non ci sono attendances, recupera giocatori della squadra
   let players: any[] = [];
 
+  console.log(`DEBUG: Attendances for match ${matchId}:`, attendances);
+
   if (!attendances || attendances.length === 0) {
-    const { data: teamPlayers } = await supabase
+    console.log(`DEBUG: No attendances found, fetching team players for team ${match.team_id}`);
+
+    const { data: teamPlayers, error: tpError } = await supabase
       .from("championship_team_players")
       .select(
         `
         user_id,
-        profiles!inner(id, full_name)
+        profiles(id, full_name)
       `
       )
       .eq("team_id", match.team_id)
       .eq("status", "active")
-      .order("profiles(full_name)", { ascending: true });
+      .order("created_at", { ascending: true });
+
+    console.log(`DEBUG: Team players result:`, { data: teamPlayers, error: tpError });
 
     players = (teamPlayers || []).map((tp: any) => ({
       id: tp.profiles.id,
