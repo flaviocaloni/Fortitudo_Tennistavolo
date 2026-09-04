@@ -311,7 +311,6 @@ export default async function NotificheAdminPage(props: {
           </div>
         </div>
       )}
-      )}
     </div>
   );
 }
