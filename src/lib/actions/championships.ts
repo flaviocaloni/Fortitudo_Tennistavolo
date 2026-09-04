@@ -287,12 +287,23 @@ export async function createMatch(formData: FormData) {
   const teamId = String(formData.get("team_id"));
   const opponentName = String(formData.get("opponent_name") ?? "");
   const opponentClubName = String(formData.get("opponent_club_name") ?? "") || null;
-  const legTypeCombo = String(formData.get("leg_type") ?? "SINGLE_HOME");
+  const legTypeCombo = String(formData.get("leg_type") ?? "");
   const venueName = String(formData.get("venue_name") ?? "") || null;
   const notes = String(formData.get("notes") ?? "") || null;
 
+  // Validate combo leg_type format (must be LEGTYPE_VENUETYPE)
+  if (!legTypeCombo || !legTypeCombo.includes("_")) {
+    console.error("[createMatch] Invalid or missing leg_type combo");
+    backWithError("/admin/campionato", "Tipo di partita obbligatorio");
+  }
+
   // Parse combo leg_type_venue to separate leg_type and venue_type
   const [legType, venueType] = legTypeCombo.split("_");
+
+  if (!legType || !venueType) {
+    console.error("[createMatch] Invalid leg_type combo format");
+    backWithError("/admin/campionato", "Tipo di partita non valido");
+  }
 
   console.log(
     `[createMatch] Data: championshipId=${championshipId}, teamId=${teamId}, opponent=${opponentName}, startAt=${String(formData.get("scheduled_start_at"))}, legType=${legType}, venueType=${venueType}`

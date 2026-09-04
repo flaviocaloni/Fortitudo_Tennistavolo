@@ -403,7 +403,9 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
-                      <option value="">Scegli tipo...</option>
+                      <option value="" disabled selected>
+                        Scegli tipo...
+                      </option>
                       <option value="SINGLE_HOME">Gara singola - Casa</option>
                       <option value="SINGLE_AWAY">Gara singola - Trasferta</option>
                       <option value="FIRST_LEG_HOME">Andata - Casa</option>
@@ -411,7 +413,6 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                       <option value="RETURN_LEG_HOME">Ritorno - Casa</option>
                       <option value="RETURN_LEG_AWAY">Ritorno - Trasferta</option>
                     </select>
-                    <input type="hidden" name="venue_type" id="venue_type" value="HOME" />
                   </div>
                 </div>
 
