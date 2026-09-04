@@ -204,36 +204,50 @@ export async function deleteTeam(formData: FormData) {
 // ============ TEAM PLAYERS ============
 
 export async function addPlayerToTeam(formData: FormData) {
+  console.log("[addPlayerToTeam] Starting...");
+
   const supabase = await requireAdmin();
+  console.log("[addPlayerToTeam] Admin authorized");
 
   const teamId = String(formData.get("team_id"));
   const userId = String(formData.get("user_id"));
 
+  console.log(`[addPlayerToTeam] teamId=${teamId}, userId=${userId}`);
+
   if (!teamId || !userId) {
+    console.error("[addPlayerToTeam] Missing teamId or userId");
     backWithError("/admin/campionato", "Squadra e giocatore obbligatori");
   }
 
   const { data: { user } } = await supabase.auth.getUser();
+  console.log(`[addPlayerToTeam] Current user: ${user?.id}`);
 
-  const { error } = await championships.addPlayerToTeam(supabase, {
+  console.log("[addPlayerToTeam] Calling championships.addPlayerToTeam...");
+  const { error, data } = await championships.addPlayerToTeam(supabase, {
     team_id: teamId,
     user_id: userId,
     created_by_user_id: user?.id,
   });
 
+  console.log(`[addPlayerToTeam] Response - error=${error?.message}, data=${JSON.stringify(data)}`);
+
   if (error) {
+    console.error(`[addPlayerToTeam] Error detail:`, error);
     if (error.message.includes("already")) {
       backWithError("/admin/campionato", "Questo agonista appartiene già a una squadra");
     }
     if (error.message.includes("agonista")) {
       backWithError("/admin/campionato", "Solo agonisti possono essere assegnati");
     }
-    backWithError("/admin/campionato", error.message);
+    backWithError("/admin/campionato", `Errore: ${error.message}`);
   }
 
+  console.log("[addPlayerToTeam] Success! Revalidating paths...");
   revalidatePath("/admin/campionato");
   revalidatePath("/admin/campionato/[id]");
   revalidatePath("/campionato");
+
+  console.log("[addPlayerToTeam] Complete");
 }
 
 export async function removePlayerFromTeam(formData: FormData) {
