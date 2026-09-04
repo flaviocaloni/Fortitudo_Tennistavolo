@@ -9,6 +9,7 @@ interface Match {
   opponent_name: string;
   leg_type: string;
   venue_type: string;
+  venue_name?: string | null;
   status: string;
   series?: string;
   group_code?: string;
@@ -218,6 +219,7 @@ export default function CalendarioFilters({
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Avversario</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Luogo</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Sede incontro</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Stato</th>
               </tr>
             </thead>
@@ -242,6 +244,9 @@ export default function CalendarioFilters({
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {match.venue_type === "HOME" ? "Casa" : "Trasferta"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {match.venue_name || "—"}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(match.status)}`}>
