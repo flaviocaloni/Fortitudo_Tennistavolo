@@ -254,7 +254,7 @@ export default function AdminUsersListClient({
                           return (
                             <>
                               <div>
-                                <label className="label">Nome</label>
+                                <label className="label">Squadra - Campionato</label>
                                 <div className="input w-40 bg-slate-100 inline-flex items-center">
                                   {assignedTeam ? (
                                     <span className="text-gray-700">
