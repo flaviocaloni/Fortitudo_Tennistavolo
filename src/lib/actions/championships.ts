@@ -213,15 +213,12 @@ export async function addPlayerToTeam(formData: FormData) {
     backWithError("/admin/campionato", "Squadra e giocatore obbligatori");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .single();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { error } = await championships.addPlayerToTeam(supabase, {
     team_id: teamId,
     user_id: userId,
-    created_by_user_id: profile?.id,
+    created_by_user_id: user?.id,
   });
 
   if (error) {
