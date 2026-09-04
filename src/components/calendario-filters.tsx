@@ -122,6 +122,15 @@ export default function CalendarioFilters({
     });
   };
 
+  const formatDateCompact = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const month = date.toLocaleDateString("it-IT", { month: "short" });
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    return `${day} ${month} ${hour}:${minute}`;
+  };
+
   const uniqueSeriesValues = [...new Set(enrichedMatches.map((m) => m.series).filter((s) => s !== "—"))];
   const uniqueGironeValues = [...new Set(enrichedMatches.map((m) => m.group_code).filter((g) => g !== "—"))];
   const uniqueStatusValues = [...new Set(enrichedMatches.map((m) => m.status))];
@@ -256,7 +265,7 @@ export default function CalendarioFilters({
                 {filtered.map((match) => (
                   <tr key={match.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                      {formatDate(match.scheduled_start_at)}
+                      {formatDateCompact(match.scheduled_start_at)}
                     </td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{match.team_name}</td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-600">{match.series}</td>
