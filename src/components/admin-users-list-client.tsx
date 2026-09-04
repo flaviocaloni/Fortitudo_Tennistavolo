@@ -23,6 +23,15 @@ interface UserRow {
   info?: AuthInfo;
 }
 
+interface Team {
+  id: string;
+  name: string;
+  series: string;
+  group_code: string;
+  championship_id: string;
+  championshipName: string;
+}
+
 type RoleFilter = "all" | "admin" | "agonista" | "amatore";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -52,14 +61,17 @@ function getCertStatus(expiry: string | null) {
 export default function AdminUsersListClient({
   users,
   isAdmin,
+  teams = [],
 }: {
   users: UserRow[];
   isAdmin: boolean;
+  teams?: Team[];
 }) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
   const [confirmChecked, setConfirmChecked] = useState(false);
+  const [selectedTeamsByUser, setSelectedTeamsByUser] = useState<Record<string, string>>({});
 
   const counts = useMemo(
     () => ({
@@ -235,32 +247,49 @@ export default function AdminUsersListClient({
                     {p.role === "agonista" && (
                       <>
                         <div>
-                          <label className="label">Squadra</label>
-                          <input
+                          <label className="label">Nome</label>
+                          <select
                             name="squadra"
-                            defaultValue={p.squadra ?? ""}
-                            placeholder="Nome squadra"
+                            value={selectedTeamsByUser[p.id] ?? p.squadra ?? ""}
+                            onChange={(e) => setSelectedTeamsByUser({ ...selectedTeamsByUser, [p.id]: e.target.value })}
                             className="input w-40"
-                          />
+                          >
+                            <option value="">Nessuna squadra</option>
+                            {teams?.map((team) => (
+                              <option key={team.id} value={team.name}>
+                                {team.name} ({team.championshipName})
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                        <div>
-                          <label className="label">Girone</label>
-                          <input
-                            name="girone"
-                            defaultValue={p.girone ?? ""}
-                            placeholder="Es. A, B, C"
-                            className="input w-40"
-                          />
-                        </div>
-                        <div>
-                          <label className="label">Serie</label>
-                          <input
-                            name="serie"
-                            defaultValue={p.serie ?? ""}
-                            placeholder="Es. A1, A2"
-                            className="input w-40"
-                          />
-                        </div>
+                        {(() => {
+                          const selectedTeamName = selectedTeamsByUser[p.id] ?? p.squadra;
+                          const selectedTeam = teams?.find((t) => t.name === selectedTeamName);
+                          return (
+                            <>
+                              <div>
+                                <label className="label">Girone</label>
+                                <input
+                                  type="text"
+                                  name="girone"
+                                  value={selectedTeam?.group_code ?? ""}
+                                  readOnly
+                                  className="input w-40 bg-slate-100"
+                                />
+                              </div>
+                              <div>
+                                <label className="label">Serie</label>
+                                <input
+                                  type="text"
+                                  name="serie"
+                                  value={selectedTeam?.series ?? ""}
+                                  readOnly
+                                  className="input w-40 bg-slate-100"
+                                />
+                              </div>
+                            </>
+                          );
+                        })()}
                         <div>
                           <label className="label">Tessera FITET</label>
                           <input

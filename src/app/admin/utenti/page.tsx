@@ -4,6 +4,7 @@ import { adminCreateUser } from "@/lib/actions/users";
 import type { Profile } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
 import AdminUsersListClient from "@/components/admin-users-list-client";
+import * as championships from "@/lib/supabase/championships";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,24 @@ export default async function AdminUtentiPage(
   const users = (profiles ?? []).map((p: Profile) => ({
     profile: p,
     info: authInfo.get(p.id),
+  }));
+
+  // Fetch all teams from all championships for the dropdown
+  const { data: allTeams } = await supabase
+    .from("championship_teams")
+    .select("id, name, series, group_code, championship_id")
+    .eq("status", "active")
+    .order("name");
+
+  // Fetch championships to map IDs to names
+  const { data: championshipsData } = await supabase
+    .from("championships")
+    .select("id, name");
+
+  const championshipMap = new Map((championshipsData || []).map((c: any) => [c.id, c.name]));
+  const teamsWithChampionship = (allTeams || []).map((t: any) => ({
+    ...t,
+    championshipName: championshipMap.get(t.championship_id),
   }));
 
   return (
@@ -119,7 +138,7 @@ export default async function AdminUtentiPage(
         </details>
       )}
 
-      <AdminUsersListClient users={users} isAdmin={Boolean(admin)} />
+      <AdminUsersListClient users={users} isAdmin={Boolean(admin)} teams={teamsWithChampionship} />
     </div>
   );
 }
