@@ -235,6 +235,7 @@ export async function addPlayerToTeam(formData: FormData) {
   }
 
   revalidatePath("/admin/campionato");
+  revalidatePath("/admin/campionato/[id]");
   revalidatePath("/campionato");
 }
 
@@ -254,6 +255,7 @@ export async function removePlayerFromTeam(formData: FormData) {
   }
 
   revalidatePath("/admin/campionato");
+  revalidatePath("/admin/campionato/[id]");
   revalidatePath("/campionato");
 }
 

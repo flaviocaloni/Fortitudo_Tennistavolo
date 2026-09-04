@@ -40,12 +40,32 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
     championshipId
   );
 
-  // Recupera agonisti disponibili (non assegnati a questa squadra)
-  const { data: availableAgonisti } = await supabase
+  // Recupera giocatori per ogni squadra
+  const teamPlayersMap = new Map();
+  if (teams?.length) {
+    for (const team of teams) {
+      const { data: players } = await championships.getPlayersByTeamId(supabase, team.id);
+      teamPlayersMap.set(team.id, players || []);
+    }
+  }
+
+  // Recupera agonisti non assegnati a nessuna squadra
+  const { data: allAgonisti } = await supabase
     .from("profiles")
     .select("id, full_name")
     .eq("role", "agonista")
     .order("full_name", { ascending: true });
+
+  // Filtra escludendo chi è già assegnato a una squadra
+  const { data: assignedPlayers } = await supabase
+    .from("championship_team_players")
+    .select("user_id")
+    .eq("status", "active");
+
+  const assignedPlayerIds = new Set((assignedPlayers || []).map((p: any) => p.user_id));
+  const availableAgonisti = (allAgonisti || []).filter(
+    (a: any) => !assignedPlayerIds.has(a.id)
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -234,8 +254,27 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
 
             {/* PLAYERS LIST */}
             <div className="space-y-2">
-              {/* TODO: Fetch e visualizza giocatori della squadra */}
-              <p className="text-gray-500 text-sm">Nessun giocatore assegnato.</p>
+              {teamPlayersMap.get(team.id)?.length > 0 ? (
+                teamPlayersMap.get(team.id).map((player: any) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {player.profiles?.full_name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500">Dal {player.joined_at}</p>
+                    </div>
+                    <form action={removePlayerFromTeam} className="inline">
+                      <input type="hidden" name="player_id" value={player.id} />
+                      <ConfirmDeleteButton message="Rimuovere questo giocatore dalla squadra?" />
+                    </form>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">Nessun giocatore assegnato.</p>
+              )}
             </div>
           </div>
         ))}
