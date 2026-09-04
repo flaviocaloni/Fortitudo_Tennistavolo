@@ -346,7 +346,6 @@ export async function createMatch(formData: FormData) {
     venue_type: venueType,
     scheduled_start_at: scheduledStartAt,
     venue_name: venueName,
-    address: address,
     notes: notes,
     created_by_user_id: user?.id,
   });
