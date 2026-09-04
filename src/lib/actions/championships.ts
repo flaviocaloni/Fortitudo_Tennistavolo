@@ -280,10 +280,10 @@ export async function removePlayerFromTeam(formData: FormData) {
 // ============ MATCHES ============
 
 export async function createMatch(formData: FormData) {
+  console.log("[createMatch] Starting...");
   const supabase = await requireAdmin();
 
   const championshipId = String(formData.get("championship_id"));
-  const seasonId = String(formData.get("season_id"));
   const teamId = String(formData.get("team_id"));
   const opponentName = String(formData.get("opponent_name") ?? "");
   const opponentClubName = String(formData.get("opponent_club_name") ?? "") || null;
@@ -294,71 +294,65 @@ export async function createMatch(formData: FormData) {
   const address = String(formData.get("address") ?? "") || null;
   const notes = String(formData.get("notes") ?? "") || null;
 
-  if (!championshipId || !seasonId || !teamId) {
-    backWithError("/admin/campionato", "Campionato, stagione e squadra obbligatori");
+  console.log(
+    `[createMatch] Data: championshipId=${championshipId}, teamId=${teamId}, opponent=${opponentName}, startAt=${scheduledStartAt}`
+  );
+
+  if (!championshipId || !teamId) {
+    console.error("[createMatch] Missing championship or team");
+    backWithError("/admin/campionato", "Campionato e squadra obbligatori");
   }
   if (!opponentName || opponentName.trim().length === 0) {
+    console.error("[createMatch] Missing opponent name");
     backWithError("/admin/campionato", "Nome avversario obbligatorio");
   }
   if (!scheduledStartAt) {
+    console.error("[createMatch] Missing scheduled start time");
     backWithError("/admin/campionato", "Data e ora della partita obbligatorie");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
+  // Fetch season_id from championship
+  console.log("[createMatch] Fetching championship data...");
+  const { data: championship, error: champError } = await supabase
+    .from("championships")
+    .select("season_id")
+    .eq("id", championshipId)
     .single();
 
-  // Se andata/ritorno, create two matches
-  let matchIdFirst: string;
-
-  if (legType === "FIRST_LEG" || legType === "RETURN_LEG") {
-    // Crea prima partita
-    const { data: firstMatch, error: error1 } = await championships.createMatch(
-      supabase,
-      {
-        championship_id: championshipId,
-        season_id: seasonId,
-        team_id: teamId,
-        opponent_name: opponentName.trim(),
-        opponent_club_name: opponentClubName,
-        leg_type: legType,
-        venue_type: venueType,
-        scheduled_start_at: scheduledStartAt,
-        venue_name: venueName,
-        address: address,
-        notes: notes,
-        created_by_user_id: profile?.id,
-      }
-    );
-
-    if (error1) backWithError("/admin/campionato", error1.message);
-
-    matchIdFirst = firstMatch.data?.id || "";
-  } else {
-    // Crea singola partita
-    const { data: singleMatch, error: errorSingle } =
-      await championships.createMatch(supabase, {
-        championship_id: championshipId,
-        season_id: seasonId,
-        team_id: teamId,
-        opponent_name: opponentName.trim(),
-        opponent_club_name: opponentClubName,
-        leg_type: "SINGLE",
-        venue_type: venueType,
-        scheduled_start_at: scheduledStartAt,
-        venue_name: venueName,
-        address: address,
-        notes: notes,
-        created_by_user_id: profile?.id,
-      });
-
-    if (errorSingle) backWithError("/admin/campionato", errorSingle.message);
-
-    matchIdFirst = singleMatch.data?.id || "";
+  if (champError || !championship) {
+    console.error("[createMatch] Error fetching championship:", champError);
+    backWithError("/admin/campionato", "Campionato non trovato");
   }
 
+  const seasonId = championship.season_id;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  console.log(`[createMatch] Current user: ${user?.id}`);
+
+  console.log("[createMatch] Creating match...");
+  const { error: matchError } = await championships.createMatch(supabase, {
+    championship_id: championshipId,
+    season_id: seasonId,
+    team_id: teamId,
+    opponent_name: opponentName.trim(),
+    opponent_club_name: opponentClubName,
+    leg_type: legType,
+    venue_type: venueType,
+    scheduled_start_at: scheduledStartAt,
+    venue_name: venueName,
+    address: address,
+    notes: notes,
+    created_by_user_id: user?.id,
+  });
+
+  if (matchError) {
+    console.error("[createMatch] Error creating match:", matchError);
+    backWithError("/admin/campionato", matchError.message);
+  }
+
+  console.log("[createMatch] Match created successfully");
   revalidatePath("/admin/campionato");
+  revalidatePath("/admin/campionato/[id]");
   revalidatePath("/campionato");
 }
 
