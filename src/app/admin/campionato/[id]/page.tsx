@@ -55,6 +55,13 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
         continue;
       }
 
+      // DEBUG
+      if (players && players.length > 0) {
+        console.log(`Team ${team.id}: found ${players.length} players in DB`);
+      } else {
+        console.log(`Team ${team.id}: no players found (data=${JSON.stringify(players)})`);
+      }
+
       // Query 2: profili degli user_id (bypass RLS facendo query separata)
       const userIds = (players || []).map((p: any) => p.user_id);
       const profilesMap = new Map();

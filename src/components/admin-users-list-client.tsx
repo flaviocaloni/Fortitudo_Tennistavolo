@@ -267,11 +267,12 @@ export default function AdminUsersListClient({
                           const selectedTeam = teams?.find((t) => t.name === selectedTeamName);
                           return (
                             <>
+                              <input type="hidden" name="girone" value={selectedTeam?.group_code ?? ""} />
+                              <input type="hidden" name="serie" value={selectedTeam?.series ?? ""} />
                               <div>
                                 <label className="label">Girone</label>
                                 <input
                                   type="text"
-                                  name="girone"
                                   value={selectedTeam?.group_code ?? ""}
                                   readOnly
                                   className="input w-40 bg-slate-100"
@@ -281,7 +282,6 @@ export default function AdminUsersListClient({
                                 <label className="label">Serie</label>
                                 <input
                                   type="text"
-                                  name="serie"
                                   value={selectedTeam?.series ?? ""}
                                   readOnly
                                   className="input w-40 bg-slate-100"
