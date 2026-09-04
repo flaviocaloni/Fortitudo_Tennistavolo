@@ -209,54 +209,56 @@ export default function CalendarioFilters({
         </div>
 
         {filtered.length > 0 ? (
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Squadra</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Serie</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Girone</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Avversario</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Luogo</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Sede incontro</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((match) => (
-                <tr key={match.id} className="border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                    {formatDate(match.scheduled_start_at)}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{match.team_name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{match.series}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.group_code === "—" ? "—" : `Girone ${match.group_code}`}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{match.opponent_name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.leg_type === "SINGLE"
-                      ? "Singola"
-                      : match.leg_type === "FIRST_LEG"
-                        ? "Andata"
-                        : "Ritorno"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.venue_type === "HOME" ? "Casa" : "Trasferta"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {match.venue_name || "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(match.status)}`}>
-                      {getStatusLabel(match.status)}
-                    </span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-max">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Data</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Squadra</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Serie</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Girone</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Avversario</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Tipo</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Luogo</th>
+                  <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Sede incontro</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Stato</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((match) => (
+                  <tr key={match.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                      {formatDate(match.scheduled_start_at)}
+                    </td>
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{match.team_name}</td>
+                    <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-600">{match.series}</td>
+                    <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-600">
+                      {match.group_code === "—" ? "—" : `Girone ${match.group_code}`}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-600">{match.opponent_name}</td>
+                    <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                      {match.leg_type === "SINGLE"
+                        ? "Singola"
+                        : match.leg_type === "FIRST_LEG"
+                          ? "Andata"
+                          : "Ritorno"}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                      {match.venue_type === "HOME" ? "Casa" : "Trasferta"}
+                    </td>
+                    <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-600">
+                      {match.venue_name || "—"}
+                    </td>
+                    <td className="px-4 py-4 text-sm">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(match.status)}`}>
+                        {getStatusLabel(match.status)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="px-6 py-8 text-center text-gray-500">Nessuna partita corrisponde ai filtri selezionati.</div>
         )}
