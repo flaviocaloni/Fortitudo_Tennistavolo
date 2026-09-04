@@ -38,6 +38,36 @@ export default async function CampionatoPage() {
     userTeam = teams;
   }
 
+  // Conta squadre attive
+  let teamsCount = 0;
+  if (currentChampionship) {
+    const { count } = await supabase
+      .from("championship_teams")
+      .select("*", { count: "exact", head: true })
+      .eq("championship_id", currentChampionship.id)
+      .eq("status", "active");
+    teamsCount = count || 0;
+  }
+
+  // Conta partite programmate e completate
+  let scheduledCount = 0;
+  let completedCount = 0;
+  if (currentChampionship) {
+    const { count: scheduled } = await supabase
+      .from("championship_matches")
+      .select("*", { count: "exact", head: true })
+      .eq("championship_id", currentChampionship.id)
+      .eq("status", "SCHEDULED");
+    scheduledCount = scheduled || 0;
+
+    const { count: completed } = await supabase
+      .from("championship_matches")
+      .select("*", { count: "exact", head: true })
+      .eq("championship_id", currentChampionship.id)
+      .eq("status", "PLAYED");
+    completedCount = completed || 0;
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Campionato</h1>
@@ -85,8 +115,7 @@ export default async function CampionatoPage() {
                 Squadre
               </div>
               <div className="text-4xl font-bold text-gray-900 mt-2">
-                {/* TODO: count teams */}
-                -
+                {teamsCount}
               </div>
             </div>
 
@@ -95,8 +124,7 @@ export default async function CampionatoPage() {
                 Partite Programmate
               </div>
               <div className="text-4xl font-bold text-gray-900 mt-2">
-                {/* TODO: count matches */}
-                -
+                {scheduledCount}
               </div>
             </div>
 
@@ -105,8 +133,7 @@ export default async function CampionatoPage() {
                 Partite Completate
               </div>
               <div className="text-4xl font-bold text-gray-900 mt-2">
-                {/* TODO: count completed */}
-                -
+                {completedCount}
               </div>
             </div>
           </div>
