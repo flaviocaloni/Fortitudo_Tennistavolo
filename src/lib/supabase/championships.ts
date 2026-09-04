@@ -308,6 +308,17 @@ export async function deleteMatch(
   supabase: SupabaseClient,
   matchId: string
 ) {
+  // Delete attendances first (foreign key constraint)
+  const { error: attendanceError } = await supabase
+    .from("championship_match_attendances")
+    .delete()
+    .eq("match_id", matchId);
+
+  if (attendanceError) {
+    return { error: attendanceError };
+  }
+
+  // Then delete the match
   return supabase
     .from("championship_matches")
     .delete()
