@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getSessionProfile } from "@/lib/supabase/server";
+import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { updateOwnName } from "@/lib/actions/profile";
 import ErrorBanner from "@/components/error-banner";
 
@@ -16,8 +16,41 @@ export default async function ProfiloPage(props: {
   searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const { user, profile } = await getSessionProfile();
+  const { user, profile, supabase } = await getSessionProfile();
   if (!user || !profile) redirect("/login");
+
+  // Fetch team assignment for agonisti
+  let assignedTeam: any = null;
+  let championship: any = null;
+
+  if (profile.role === "agonista") {
+    const { data: teamAssignment } = await supabase
+      .from("championship_team_players")
+      .select("team_id")
+      .eq("user_id", profile.id)
+      .eq("status", "active")
+      .single();
+
+    if (teamAssignment) {
+      const { data: team } = await supabase
+        .from("championship_teams")
+        .select("id, name, series, group_code, championship_id")
+        .eq("id", teamAssignment.team_id)
+        .single();
+
+      assignedTeam = team;
+
+      if (team) {
+        const { data: champ } = await supabase
+          .from("championships")
+          .select("id, name")
+          .eq("id", team.championship_id)
+          .single();
+
+        championship = champ;
+      }
+    }
+  }
 
   const fmt = (d?: string | null) =>
     d
@@ -136,33 +169,33 @@ export default async function ProfiloPage(props: {
         <div className="card mb-4">
           <h2 className="mb-3 font-semibold text-navy-800">Dati agonista</h2>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm text-slate-600">Squadra:</span>
-            {profile.squadra ? (
+            <span className="text-sm text-slate-600">Campionato - Squadra:</span>
+            {assignedTeam && championship ? (
               <span className="badge bg-blue-100 text-blue-800">
-                {profile.squadra}
+                {championship.name} - {assignedTeam.name}
               </span>
             ) : (
-              <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
+              <span className="badge bg-slate-100 text-slate-800">Non assegnato</span>
             )}
           </div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm text-slate-600">Girone:</span>
-            {profile.girone ? (
+            {assignedTeam?.group_code ? (
               <span className="badge bg-blue-100 text-blue-800">
-                {profile.girone}
+                {assignedTeam.group_code}
               </span>
             ) : (
-              <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
+              <span className="badge bg-slate-100 text-slate-800">Non assegnato</span>
             )}
           </div>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm text-slate-600">Serie:</span>
-            {profile.serie ? (
+            {assignedTeam?.series ? (
               <span className="badge bg-blue-100 text-blue-800">
-                {profile.serie}
+                {assignedTeam.series}
               </span>
             ) : (
-              <span className="badge bg-slate-100 text-slate-800">Non inserito</span>
+              <span className="badge bg-slate-100 text-slate-800">Non assegnato</span>
             )}
           </div>
           <div className="flex items-center justify-between">
@@ -176,8 +209,8 @@ export default async function ProfiloPage(props: {
             )}
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Squadra, Girone, Serie e numero tessera FITET sono gestiti dall&apos;amministratore: per
-            aggiornarli contatta il club.
+            Campionato, Squadra, Girone e Serie sono assegnati dall&apos;amministratore in
+            Gestione Squadre. Numero tessera FITET è gestito da Gestione Utenti.
           </p>
         </div>
       )}
