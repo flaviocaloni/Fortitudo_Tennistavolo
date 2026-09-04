@@ -47,11 +47,11 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
       id,
       user_id,
       status,
-      profiles!inner(id, full_name)
+      profiles(id, full_name)
     `
     )
     .eq("match_id", matchId)
-    .order("profiles(full_name)", { ascending: true });
+    .order("created_at", { ascending: true });
 
   // Se non ci sono attendances, recupera giocatori della squadra
   let players: any[] = [];
@@ -138,6 +138,30 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
               {match.leg_type === "RETURN_LEG" && "Ritorno"}
               {match.venue_type === "HOME" ? " - Casa" : " - Trasferta"}
             </p>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Sede
+            </label>
+            <p className="text-gray-900">{match.venue_type === "HOME" ? "Casa" : "Trasferta"}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Luogo
+            </label>
+            <p className="text-gray-900">{match.venue_name || "-"}</p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Indirizzo
+            </label>
+            <p className="text-gray-900">{match.address || "-"}</p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Note
+            </label>
+            <p className="text-gray-900 whitespace-pre-wrap">{match.notes || "-"}</p>
           </div>
         </div>
 
