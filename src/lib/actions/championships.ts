@@ -305,7 +305,7 @@ export async function createMatch(formData: FormData) {
   // Validate combo leg_type format (must be LEGTYPE-VENUETYPE)
   if (!legTypeCombo || !legTypeCombo.includes("-")) {
     console.error(`[createMatch] VALIDATION ERROR: Invalid leg_type combo: "${legTypeCombo}"`);
-    backWithError("/admin/campionato", "Tipo di partita obbligatorio");
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Tipo di partita obbligatorio");
   }
 
   // Parse combo leg_type-venue to separate leg_type and venue_type
@@ -317,7 +317,7 @@ export async function createMatch(formData: FormData) {
 
   if (!legType || !venueType) {
     console.error(`[createMatch] VALIDATION ERROR: Invalid split result - legType="${legType}", venueType="${venueType}"`);
-    backWithError("/admin/campionato", "Tipo di partita non valido");
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Tipo di partita non valido");
   }
 
   // Validate all required fields
@@ -327,15 +327,15 @@ export async function createMatch(formData: FormData) {
   }
   if (!opponentName || opponentName.trim().length === 0) {
     console.error("[createMatch] VALIDATION ERROR: Missing opponent name");
-    backWithError("/admin/campionato", "Nome avversario obbligatorio");
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Nome avversario obbligatorio");
   }
   if (!scheduledStartAt) {
     console.error("[createMatch] VALIDATION ERROR: Missing scheduled start time");
-    backWithError("/admin/campionato", "Data e ora della partita obbligatorie");
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Data e ora della partita obbligatorie");
   }
   if (!venueName || venueName.trim().length === 0) {
     console.error("[createMatch] VALIDATION ERROR: Missing venue name");
-    backWithError("/admin/campionato", "Indirizzo obbligatorio");
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Indirizzo obbligatorio");
   }
 
   console.log("[createMatch] All validations passed, fetching championship data...");
@@ -349,7 +349,7 @@ export async function createMatch(formData: FormData) {
 
   if (champError || !championship) {
     console.error("[createMatch] DATABASE ERROR fetching championship:", champError);
-    backWithError("/admin/campionato", "Campionato non trovato");
+    backWithError(`/admin/campionato/${championshipId}/partite`, "Campionato non trovato");
   }
 
   const seasonId = championship.season_id;
@@ -378,7 +378,7 @@ export async function createMatch(formData: FormData) {
 
   if (matchError) {
     console.error("[createMatch] DATABASE ERROR creating match:", JSON.stringify(matchError, null, 2));
-    backWithError("/admin/campionato", `Errore creazione partita: ${matchError.message}`);
+    backWithError(`/admin/campionato/${championshipId}/partite`, `Errore creazione partita: ${matchError.message}`);
   }
 
   console.log("[createMatch] Match created successfully:", createdMatch?.id);
@@ -389,6 +389,7 @@ export async function createMatch(formData: FormData) {
   revalidatePath("/campionato");
 
   console.log("[createMatch] ========== SUCCESS ==========");
+  redirect(`/admin/campionato/${championshipId}/partite`);
 }
 
 export async function createReturnMatch(formData: FormData) {
