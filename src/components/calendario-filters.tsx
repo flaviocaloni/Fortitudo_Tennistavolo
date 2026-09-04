@@ -126,9 +126,10 @@ export default function CalendarioFilters({
     const date = new Date(dateStr);
     const day = date.getDate();
     const month = date.toLocaleDateString("it-IT", { month: "short" });
+    const year = date.getFullYear();
     const hour = String(date.getHours()).padStart(2, "0");
     const minute = String(date.getMinutes()).padStart(2, "0");
-    return `${day} ${month} ${hour}:${minute}`;
+    return `${day} ${month} ${year} ${hour}:${minute}`;
   };
 
   const uniqueSeriesValues = [...new Set(enrichedMatches.map((m) => m.series).filter((s) => s !== "—"))];
