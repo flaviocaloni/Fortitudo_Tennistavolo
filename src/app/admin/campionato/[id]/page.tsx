@@ -471,17 +471,7 @@ export default async function AdminChampionatoDetailPage({ params }: PageProps) 
                                  match.status === "PLAYED" ? "Giocata" : match.status}
                               </span>
                             </td>
-                            <td className="px-4 py-2 text-right space-x-2">
-                              <button
-                                type="button"
-                                className="text-blue-600 hover:text-blue-800 text-sm"
-                                onClick={() => {
-                                  // TODO: Implementare edit match
-                                  alert("Modifica partita - TODO");
-                                }}
-                              >
-                                ✏️
-                              </button>
+                            <td className="px-4 py-2 text-right">
                               <form action={deleteMatch} className="inline">
                                 <input type="hidden" name="match_id" value={match.id} />
                                 <ConfirmDeleteButton message="Eliminare questa partita?" />
