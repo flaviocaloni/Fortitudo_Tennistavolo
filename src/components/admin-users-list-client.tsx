@@ -21,6 +21,7 @@ interface AuthInfo {
 interface UserRow {
   profile: Profile;
   info?: AuthInfo;
+  assignedTeamId?: string;
 }
 
 interface Team {
@@ -246,34 +247,32 @@ export default function AdminUsersListClient({
                     </div>
                     {p.role === "agonista" && (
                       <>
-                        <div>
-                          <label className="label">Nome</label>
-                          <select
-                            name="squadra"
-                            value={selectedTeamsByUser[p.id] ?? p.squadra ?? ""}
-                            onChange={(e) => setSelectedTeamsByUser({ ...selectedTeamsByUser, [p.id]: e.target.value })}
-                            className="input w-40"
-                          >
-                            <option value="">Nessuna squadra</option>
-                            {teams?.map((team) => (
-                              <option key={team.id} value={team.name}>
-                                {team.name} ({team.championshipName})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
                         {(() => {
-                          const selectedTeamName = selectedTeamsByUser[p.id] ?? p.squadra;
-                          const selectedTeam = teams?.find((t) => t.name === selectedTeamName);
+                          const assignedTeam = p.assignedTeamId
+                            ? teams?.find((t) => t.id === p.assignedTeamId)
+                            : null;
                           return (
                             <>
-                              <input type="hidden" name="girone" value={selectedTeam?.group_code ?? ""} />
-                              <input type="hidden" name="serie" value={selectedTeam?.series ?? ""} />
+                              <div>
+                                <label className="label">Nome</label>
+                                <div className="input w-40 bg-slate-100 inline-flex items-center">
+                                  {assignedTeam ? (
+                                    <span className="text-gray-700">
+                                      {assignedTeam.name} ({assignedTeam.championshipName})
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-500">Nessuna squadra</span>
+                                  )}
+                                </div>
+                                <input type="hidden" name="squadra" value={assignedTeam?.name ?? ""} />
+                              </div>
+                              <input type="hidden" name="girone" value={assignedTeam?.group_code ?? ""} />
+                              <input type="hidden" name="serie" value={assignedTeam?.series ?? ""} />
                               <div>
                                 <label className="label">Girone</label>
                                 <input
                                   type="text"
-                                  value={selectedTeam?.group_code ?? ""}
+                                  value={assignedTeam?.group_code ?? ""}
                                   readOnly
                                   className="input w-40 bg-slate-100"
                                 />
@@ -282,7 +281,7 @@ export default function AdminUsersListClient({
                                 <label className="label">Serie</label>
                                 <input
                                   type="text"
-                                  value={selectedTeam?.series ?? ""}
+                                  value={assignedTeam?.series ?? ""}
                                   readOnly
                                   className="input w-40 bg-slate-100"
                                 />

@@ -16,6 +16,12 @@ interface AuthInfo {
   provider: string;
 }
 
+interface UserRowData {
+  profile: Profile;
+  info?: AuthInfo;
+  assignedTeamId?: string;
+}
+
 export default async function AdminUtentiPage(
   props: {
     searchParams: Promise<{ error?: string; ok?: string }>;
@@ -48,9 +54,20 @@ export default async function AdminUtentiPage(
     }
   }
 
+  // Fetch user team assignments from championship_team_players
+  const { data: userTeamAssignments } = await supabase
+    .from("championship_team_players")
+    .select("user_id, team_id")
+    .eq("status", "active");
+
+  const userTeamMap = new Map(
+    (userTeamAssignments || []).map((a: any) => [a.user_id, a.team_id])
+  );
+
   const users = (profiles ?? []).map((p: Profile) => ({
     profile: p,
     info: authInfo.get(p.id),
+    assignedTeamId: userTeamMap.get(p.id),
   }));
 
   // Fetch all teams from all championships for the dropdown
@@ -138,7 +155,7 @@ export default async function AdminUtentiPage(
         </details>
       )}
 
-      <AdminUsersListClient users={users} isAdmin={Boolean(admin)} teams={teamsWithChampionship} />
+      <AdminUsersListClient users={users as any} isAdmin={Boolean(admin)} teams={teamsWithChampionship} />
     </div>
   );
 }
