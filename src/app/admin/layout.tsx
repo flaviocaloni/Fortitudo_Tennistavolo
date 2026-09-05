@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 
 export default async function AdminLayout({
   children,
@@ -8,7 +9,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const { profile } = await getSessionProfile();
-  if (!profile || profile.role !== "admin") redirect("/calendario");
+  if (!profile || !isAdmin(profile.role)) redirect("/calendario");
 
   return (
     <div>
