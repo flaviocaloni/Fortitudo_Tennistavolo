@@ -1,12 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
-import {
-  createChampionship,
-  updateChampionship,
-  deleteChampionship,
-} from "@/lib/actions/championships";
-import ConfirmDeleteButton from "@/components/confirm-delete-button";
+import { createChampionship, updateChampionship } from "@/lib/actions/championships";
 
 export default async function AdminChampionatoPage() {
   let error: string | null = null;
@@ -148,17 +143,13 @@ export default async function AdminChampionatoPage() {
                     {champ.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-right space-x-2">
+                <td className="px-6 py-4 text-sm text-right">
                   <a
                     href={`/admin/campionato/${champ.id}`}
                     className="text-blue-600 hover:underline"
                   >
                     Modifica
                   </a>
-                  <form action={deleteChampionship} className="inline">
-                    <input type="hidden" name="championship_id" value={champ.id} />
-                    <ConfirmDeleteButton />
-                  </form>
                 </td>
               </tr>
             ))}
