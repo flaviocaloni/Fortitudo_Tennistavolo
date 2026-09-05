@@ -24,12 +24,27 @@ export default async function Navbar() {
     impersonatedName = data?.full_name ?? "Utente";
   }
 
+  // Check if user has auto-booking enabled
+  let autoBookingEnabled = false;
+  if (profile) {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("user_auto_booking_enabled")
+      .select("auto_booking_enabled")
+      .eq("user_id", profile.id)
+      .single();
+    autoBookingEnabled = data?.auto_booking_enabled ?? false;
+  }
+
   const links: NavLink[] = profile
     ? [
         { href: "/calendario", label: "Calendario" },
         { href: "/prenotazioni", label: "Le mie prenotazioni" },
         { href: "/campionato", label: "Campionato" },
         { href: "/statistiche", label: "Statistiche" },
+        ...(autoBookingEnabled
+          ? [{ href: "/calendario/auto-booking", label: "🤖 Auto-Booking" }]
+          : []),
         ...(profile.role === "admin"
           ? [{ href: "/admin", label: "Admin", highlight: true }]
           : []),
@@ -83,6 +98,11 @@ export default async function Navbar() {
               <Link href="/statistiche" className="hover:text-crimson-500">
                 Statistiche
               </Link>
+              {autoBookingEnabled && (
+                <Link href="/calendario/auto-booking" className="hover:text-yellow-300">
+                  🤖 Auto-Booking
+                </Link>
+              )}
               {profile.role === "admin" && (
                 <Link
                   href="/admin"

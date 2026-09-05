@@ -3,19 +3,19 @@ import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ championshipId: string }>;
 }
 
-export default async function AdminChampionatoClassificaPage({
+export default async function ChampionatoClassificaPage({
   params,
 }: PageProps) {
   const { supabase, profile } = await getSessionProfile();
 
-  if (!profile || profile.role !== "admin") {
-    redirect("/campionato");
+  if (!profile) {
+    redirect("/login");
   }
 
-  const { id: championshipId } = await params;
+  const { championshipId } = await params;
 
   // Recupera campionato
   const { data: championship, error: champError } =
@@ -39,22 +39,14 @@ export default async function AdminChampionatoClassificaPage({
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
         <a
-          href={`/admin/campionato/${championshipId}`}
+          href="/campionato"
           className="text-blue-600 hover:underline"
         >
-          ← Torna a {championship.name}
+          ← Torna ai campionati
         </a>
-        <div className="flex items-center justify-between mt-4">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Classifica e Risultati
-          </h1>
-          <a
-            href={`/admin/campionato/${championshipId}/partite`}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Gestisci Partite
-          </a>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mt-4">
+          {championship.name} - Classifica e Risultati
+        </h1>
       </div>
 
       {/* STANDINGS TABLE */}

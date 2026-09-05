@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { getSessionProfile } from "@/lib/supabase/server";
+import { isSuperAdmin } from "@/lib/utils/roles";
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  const { profile } = await getSessionProfile();
+
   const sections = [
     {
       href: "/admin/stagioni",
@@ -39,6 +43,15 @@ export default function AdminDashboard() {
       description: "Configura notifiche email per eventi",
       badge: "Beta",
     },
+    ...(isSuperAdmin(profile?.role)
+      ? [
+          {
+            href: "/admin/sys/auto-booking",
+            title: "🤖 Auto-Booking",
+            description: "Gestisci la feature auto-booking degli utenti",
+          },
+        ]
+      : []),
   ];
 
   return (
