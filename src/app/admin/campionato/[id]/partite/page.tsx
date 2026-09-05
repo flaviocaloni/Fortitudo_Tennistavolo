@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import { createMatch, deleteMatch, updateMatch } from "@/lib/actions/championships";
-import ConfirmDeleteButton from "@/components/confirm-delete-button";
+import ConfirmDeleteMatchButton from "@/components/confirm-delete-match-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -356,12 +356,12 @@ export default async function AdminChampionatoMatchesPage({ params, searchParams
                       href={`/admin/campionato/${championshipId}/partite/${match.id}`}
                       className="text-blue-600 hover:underline"
                     >
-                      Presenze
+                      Gestisci
                     </a>
                     <form action={deleteMatch} className="inline">
                       <input type="hidden" name="match_id" value={match.id} />
                       <input type="hidden" name="championship_id" value={championshipId} />
-                      <ConfirmDeleteButton />
+                      <ConfirmDeleteMatchButton />
                     </form>
                   </td>
                 </tr>
