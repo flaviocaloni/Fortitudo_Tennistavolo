@@ -27,20 +27,19 @@ export default function SlotParticipantsModal({
   const fetchParticipants = async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("is_overbooking, profiles:user_id(full_name, role)")
-      .eq("slot_id", slotId)
-      .eq("session_date", sessionDate)
-      .eq("status", "active")
-      .order("is_overbooking", { ascending: true })
-      .order("created_at", { ascending: true });
+    // SECURITY DEFINER RPC: the `bookings read` RLS restricts non-admins to their
+    // own rows, so a direct query showed only the logged-in user. The RPC returns
+    // the full participant list with names for any authenticated user.
+    const { data, error } = await supabase.rpc("get_slot_participants", {
+      slot_id_param: slotId,
+      session_date_param: sessionDate,
+    });
 
     if (data) {
       setParticipants(
-        data.map((b: any) => ({
-          full_name: b.profiles?.full_name || "—",
-          role: b.profiles?.role || "—",
+        (data as any[]).map((b: any) => ({
+          full_name: b.full_name || "—",
+          role: b.role || "—",
           is_overbooking: b.is_overbooking,
         }))
       );

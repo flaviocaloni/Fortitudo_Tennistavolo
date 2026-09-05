@@ -319,17 +319,18 @@ export async function getAttendancesByMatchId(
   supabase: SupabaseClient,
   matchId: string
 ) {
-  const res = await supabase
-    .from("championship_match_attendances")
-    .select("*, profiles(id, full_name, role)")
-    .eq("match_id", matchId)
-    .order("status", { ascending: true });
+  // Use SECURITY DEFINER RPC so non-admin players get every team player's name:
+  // the direct embedded `profiles(...)` join is filtered by the profiles RLS
+  // (a non-admin can only read their own profile), which hid the player names.
+  const res = await supabase.rpc("get_match_attendances_with_profiles", {
+    match_id_param: matchId,
+  });
 
   if (res.error) return res;
 
   return {
     ...res,
-    data: res.data?.map((att: any) => ({
+    data: (res.data as any[])?.map((att: any) => ({
       ...att,
       user: att.profiles,
     })),
