@@ -31,6 +31,11 @@ export default async function AdminUtentiPage(
   const supabase = await createClient();
   const admin = createAdminClient();
 
+  let adminError = "";
+  if (!admin) {
+    adminError = "⚠️ Service Role Key non configurata: Vercel non ha SUPABASE_SERVICE_ROLE_KEY impostata. Configurala nelle environment variables di Vercel per abilitare la gestione utenti.";
+  }
+
   const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
@@ -98,7 +103,12 @@ export default async function AdminUtentiPage(
         </div>
       )}
 
-      {!admin && (
+      {adminError && (
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
+          <b>Errore:</b> {adminError}
+        </div>
+      )}
+      {!admin && !adminError && (
         <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
           <b>Modalità ridotta.</b> Per vedere le email e usare creazione
           utenti, reset e impostazione password, aggiungi{" "}
