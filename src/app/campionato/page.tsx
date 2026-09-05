@@ -159,6 +159,13 @@ export default async function CampionatoPage() {
                 Visualizza tutte le squadre
               </a>
               <a
+                href={`/campionato/${currentChampionship.id}/classifica`}
+                className="flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+              >
+                <span className="mr-2">📊</span>
+                Classifica e Risultati
+              </a>
+              <a
                 href={`/campionato/${currentChampionship.id}/calendario`}
                 className="flex items-center text-blue-600 hover:text-blue-800"
               >
