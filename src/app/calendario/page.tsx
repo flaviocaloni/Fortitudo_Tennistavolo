@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { bookSlot, cancelBooking } from "@/lib/actions/bookings";
+import { isAdmin } from "@/lib/utils/roles";
 import {
   datesBetween,
   formatDateIT,
@@ -102,7 +103,7 @@ export default async function CalendarioPage(
   }
 
   const canView = (slot: TrainingSlot) =>
-    profile.role === "admin" ||
+    isAdmin(profile.role) ||
     slot.audience === "misto" ||
     (slot.audience === "agonisti" && profile.role === "agonista") ||
     (slot.audience === "amatori" && profile.role === "amatore");

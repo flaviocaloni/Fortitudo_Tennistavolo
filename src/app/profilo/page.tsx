@@ -1,12 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 import { updateOwnName } from "@/lib/actions/profile";
 import ErrorBanner from "@/components/error-banner";
 
 export const dynamic = "force-dynamic";
 
 const ROLE_LABEL: Record<string, string> = {
+  superadmin: "Super Admin",
   admin: "Amministratore",
   agonista: "Agonista",
   amatore: "Amatore",
@@ -95,7 +97,7 @@ export default async function ProfiloPage(props: {
             <dd>
               <span
                 className={`badge ${
-                  profile.role === "admin"
+                  isAdmin(profile.role)
                     ? "bg-amber-100 text-amber-800"
                     : profile.role === "agonista"
                       ? "bg-blue-100 text-blue-800"

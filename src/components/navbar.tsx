@@ -5,6 +5,7 @@ import { getSessionProfile } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/bookings";
 import { stopImpersonating } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 import MobileMenu, { type NavLink } from "@/components/mobile-menu";
 
 export default async function Navbar() {
@@ -14,7 +15,7 @@ export default async function Navbar() {
 
   // Se impersonifichiamo, leggi il nome dell'utente
   let impersonatedName = "";
-  if (impersonatingUserId && profile?.role === "admin") {
+  if (impersonatingUserId && isAdmin(profile?.role)) {
     const supabase = await createClient();
     const { data } = await supabase
       .from("profiles")
@@ -45,7 +46,7 @@ export default async function Navbar() {
         ...(autoBookingEnabled
           ? [{ href: "/calendario/auto-booking", label: "🤖 Auto-Booking" }]
           : []),
-        ...(profile.role === "admin"
+        ...(isAdmin(profile.role)
           ? [{ href: "/admin", label: "Admin", highlight: true }]
           : []),
         { href: "/profilo", label: "👤 Il mio profilo" },
@@ -54,7 +55,7 @@ export default async function Navbar() {
 
   return (
     <header>
-      {impersonatingUserId && profile?.role === "admin" && (
+      {impersonatingUserId && isAdmin(profile?.role) && (
         <div className="bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-900">
           📌 Stai visualizzando come <b>{impersonatedName}</b>
           <form action={stopImpersonating} className="mt-1">
@@ -103,7 +104,7 @@ export default async function Navbar() {
                   🤖 Auto-Booking
                 </Link>
               )}
-              {profile.role === "admin" && (
+              {isAdmin(profile.role) && (
                 <Link
                   href="/admin"
                   className="font-semibold text-amber-400 hover:text-amber-300"

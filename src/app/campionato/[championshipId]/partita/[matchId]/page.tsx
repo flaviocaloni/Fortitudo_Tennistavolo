@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 import * as championships from "@/lib/supabase/championships";
 import { updateAttendanceAsAdmin, updateMyAttendance } from "@/lib/actions/championships";
 
@@ -179,7 +180,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                   Stato
                 </th>
-                {profile.role === "admin" && (
+                {isAdmin(profile.role) && (
                   <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">
                     Azioni
                   </th>
@@ -189,7 +190,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
             <tbody>
               {attendances.map((att: any) => {
                 const isCurrentUser = att.user_id === profile.id;
-                const canModify = profile.role === "admin" || (isCurrentUser && !hasStarted);
+                const canModify = isAdmin(profile.role) || (isCurrentUser && !hasStarted);
 
                 return (
                   <tr
@@ -217,7 +218,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
                         {att.status === "PRESENT" ? "Presente" : "Assente"}
                       </span>
                     </td>
-                    {profile.role === "admin" && (
+                    {isAdmin(profile.role) && (
                       <td className="px-6 py-4 text-sm text-right">
                         <form
                           action={updateAttendanceAsAdmin}
