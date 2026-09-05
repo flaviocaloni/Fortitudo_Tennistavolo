@@ -523,6 +523,17 @@ export async function updateMatchResult(formData: FormData) {
     );
   }
 
+  const home = parseInt(homeScore, 10);
+  const away = parseInt(awayScore, 10);
+
+  // Valida che la somma sia 7 (regola ping pong)
+  if (home + away !== 7) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      `La somma dei punteggi deve essere 7 (attuale: ${home + away}). Risultato non valido.`
+    );
+  }
+
   const result = `${homeScore}-${awayScore}`;
 
   const { error } = await championships.updateMatch(supabase, matchId, {
