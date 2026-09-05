@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
-import { updateAdminAttendance } from "@/lib/actions/championships";
+import { updateAdminAttendance, updateMatchResult } from "@/lib/actions/championships";
 import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
 interface PageProps {
@@ -200,6 +200,70 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
             <div className="text-sm text-blue-600">Totale</div>
           </div>
         </div>
+
+        {/* RESULT FORM */}
+        {match.status === "SCHEDULED" && (
+          <div className="mt-6 pt-6 border-t">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Inserisci Risultato</h3>
+            <form action={updateMatchResult} className="flex gap-4 items-end">
+              <input type="hidden" name="match_id" value={matchId} />
+              <input type="hidden" name="championship_id" value={championshipId} />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nostre reti *
+                </label>
+                <select
+                  name="home_score"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Seleziona</option>
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <span className="text-lg font-bold text-gray-700">-</span>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Reti avversari *
+                </label>
+                <select
+                  name="away_score"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Seleziona</option>
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+              >
+                Salva Risultato
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* DISPLAY RESULT */}
+        {match.result && (
+          <div className="mt-6 pt-6 border-t bg-blue-50 rounded-lg p-4">
+            <div className="text-sm text-blue-600 font-medium mb-2">Risultato:</div>
+            <div className="text-2xl font-bold text-blue-900">{match.result}</div>
+          </div>
+        )}
       </div>
 
       {/* PLAYERS ATTENDANCE */}

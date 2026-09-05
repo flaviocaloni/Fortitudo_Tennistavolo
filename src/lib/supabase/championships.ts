@@ -416,3 +416,69 @@ export async function getCountAttendanceByStatus(
 
   return result;
 }
+
+// ============ STANDINGS & SCORING ============
+
+export async function getChampionshipStandings(
+  supabase: SupabaseClient,
+  championshipId: string
+) {
+  return supabase
+    .from("championship_standings")
+    .select(
+      `
+      id,
+      team_id,
+      matches_played,
+      wins,
+      losses,
+      points,
+      championship_teams:team_id(id, name, series, group_code)
+      `
+    )
+    .eq("championship_id", championshipId)
+    .order("points", { ascending: false })
+    .order("wins", { ascending: false });
+}
+
+export async function getMatchesWithScores(
+  supabase: SupabaseClient,
+  championshipId: string
+) {
+  const { data: matches, error } = await supabase
+    .from("championship_matches")
+    .select(
+      `
+      id,
+      team_id,
+      opponent_name,
+      scheduled_start_at,
+      status,
+      result,
+      leg_type,
+      venue_type,
+      championship_teams:team_id(id, name, series, group_code)
+      `
+    )
+    .eq("championship_id", championshipId)
+    .eq("status", "COMPLETED")
+    .order("scheduled_start_at", { ascending: false });
+
+  if (error) return { data: [], error };
+
+  // Calculate points for each match
+  const enriched = matches?.map((match: any) => {
+    let points = 0;
+    if (match.result) {
+      const [homeScore, awayScore] = match.result.split("-").map(Number);
+      if (!isNaN(homeScore) && !isNaN(awayScore) && homeScore > awayScore) {
+        if (homeScore >= 5) points = 3;
+        else if (homeScore === 4) points = 2;
+        else if (homeScore === 3) points = 1;
+      }
+    }
+    return { ...match, assigned_points: points };
+  });
+
+  return { data: enriched, error: null };
+}

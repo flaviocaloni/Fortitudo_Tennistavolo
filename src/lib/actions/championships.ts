@@ -508,6 +508,40 @@ export async function deleteMatch(formData: FormData) {
   redirect(`/admin/campionato/${championshipId}/partite`);
 }
 
+export async function updateMatchResult(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const matchId = String(formData.get("match_id"));
+  const championshipId = String(formData.get("championship_id"));
+  const homeScore = String(formData.get("home_score") ?? "");
+  const awayScore = String(formData.get("away_score") ?? "");
+
+  if (!homeScore || !awayScore) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      "Punteggi obbligatori"
+    );
+  }
+
+  const result = `${homeScore}-${awayScore}`;
+
+  const { error } = await championships.updateMatch(supabase, matchId, {
+    result: result,
+    status: "COMPLETED",
+  } as any);
+
+  if (error) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      error.message
+    );
+  }
+
+  revalidatePath(`/admin/campionato/${championshipId}/partite`);
+  revalidatePath(`/admin/campionato/${championshipId}/classifica`);
+  revalidatePath(`/campionato/${championshipId}`);
+}
+
 // ============ ATTENDANCES ============
 
 export async function updateAttendanceAsAdmin(formData: FormData) {
