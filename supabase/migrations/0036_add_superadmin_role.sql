@@ -9,13 +9,13 @@
 -- Add 'superadmin' to the user_role enum type
 ALTER TYPE public.user_role ADD VALUE 'superadmin' BEFORE 'admin';
 
--- Update the trigger that protects role field to allow superadmin assignment
--- (The existing trigger already checks for 'admin', so superadmin will work)
-
 -- Assign superadmin role to f.caloni01@teamsystem.com
+-- Email is stored in auth.users, not profiles, so we need to join
 UPDATE public.profiles
 SET role = 'superadmin'
-WHERE email = 'f.caloni01@teamsystem.com';
+WHERE id = (
+  SELECT id FROM auth.users WHERE email = 'f.caloni01@teamsystem.com'
+);
 
 -- Note: All RLS policies that check for admin role will also grant access to superadmin
 -- due to the pattern: `public.current_user_role() = 'admin'`
