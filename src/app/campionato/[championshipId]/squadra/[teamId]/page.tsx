@@ -32,7 +32,7 @@ export default async function SquadraDetailPage({ params }: PageProps) {
   }
 
   // Recupera giocatori della squadra con i loro profili via RPC
-  const { data: playersData, error: playersError } = await supabase.rpc(
+  const { data: playersJson, error: playersError } = await supabase.rpc(
     "get_team_players_with_profiles",
     { team_id_param: teamId }
   );
@@ -41,8 +41,19 @@ export default async function SquadraDetailPage({ params }: PageProps) {
     console.error("Error fetching players with profiles:", playersError);
   }
 
+  // Parsea il JSON ritornato dalla RPC function
+  let playersData: any[] = [];
+  if (playersJson) {
+    try {
+      playersData = Array.isArray(playersJson) ? playersJson : JSON.parse(playersJson);
+    } catch (e) {
+      console.error("Error parsing players JSON:", e);
+      playersData = [];
+    }
+  }
+
   // Trasforma il risultato RPC nel formato atteso dal template
-  const enrichedPlayers = (playersData || []).map((p: any) => ({
+  const enrichedPlayers = playersData.map((p: any) => ({
     id: p.id,
     user_id: p.user_id,
     team_id: p.team_id,

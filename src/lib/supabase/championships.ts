@@ -319,21 +319,21 @@ export async function getAttendancesByMatchId(
   supabase: SupabaseClient,
   matchId: string
 ) {
-  return supabase
+  const res = await supabase
     .from("championship_match_attendances")
     .select("*, profiles(id, full_name, role)")
     .eq("match_id", matchId)
-    .order("status", { ascending: true })
-    .then((res) => {
-      if (res.error) return res;
-      return {
-        ...res,
-        data: res.data?.map((att: any) => ({
-          ...att,
-          user: att.profiles,
-        })),
-      };
-    });
+    .order("status", { ascending: true });
+
+  if (res.error) return res;
+
+  return {
+    ...res,
+    data: res.data?.map((att: any) => ({
+      ...att,
+      user: att.profiles,
+    })),
+  };
 }
 
 export async function getAttendanceByMatchAndUser(
