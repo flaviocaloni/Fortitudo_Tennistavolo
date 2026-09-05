@@ -211,7 +211,7 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nostre reti *
+                  Punteggio nostro *
                 </label>
                 <select
                   name="home_score"
@@ -231,7 +231,7 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Reti avversari *
+                  Punteggio avversario *
                 </label>
                 <select
                   name="away_score"

@@ -6,6 +6,7 @@
 --   - RPC: refresh_championship_standings (recalculates points from completed matches)
 --   - Trigger: auto-refresh standings when match result is set
 --   - Scoring rules: win with 7,6,5 → 3pts; with 4 → 2pts; with 3 → 1pt; else → 0pts
+--   - Result format: "X-Y" where X is team score, Y is opponent score
 
 -- ============================================================
 -- Tabella: Championship Standings
