@@ -44,9 +44,17 @@ export default async function AdminChampionatoClassificaPage({
         >
           ← Torna a {championship.name}
         </a>
-        <h1 className="text-3xl font-bold text-gray-900 mt-4">
-          Classifica e Risultati
-        </h1>
+        <div className="flex items-center justify-between mt-4">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Classifica e Risultati
+          </h1>
+          <a
+            href={`/admin/campionato/${championshipId}/partite`}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Gestisci Partite
+          </a>
+        </div>
       </div>
 
       {/* STANDINGS TABLE */}

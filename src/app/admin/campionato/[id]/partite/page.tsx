@@ -101,7 +101,15 @@ export default async function AdminChampionatoMatchesPage({ params, searchParams
         <a href={`/admin/campionato/${championshipId}`} className="text-blue-600 hover:underline">
           ← Torna a {championship.name}
         </a>
-        <h1 className="text-3xl font-bold text-gray-900 mt-4">Partite del Campionato</h1>
+        <div className="flex items-center justify-between mt-4">
+          <h1 className="text-3xl font-bold text-gray-900">Partite del Campionato</h1>
+          <a
+            href={`/admin/campionato/${championshipId}/classifica`}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Visualizza Classifica
+          </a>
+        </div>
       </div>
 
       {/* CREATE MATCH FORM */}
