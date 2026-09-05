@@ -147,15 +147,15 @@ export default async function CampionatoPage() {
                   href={`/campionato/${currentChampionship.id}/le-mie-partite`}
                   className="flex items-center text-blue-600 hover:text-blue-800 font-semibold"
                 >
-                  <span className="mr-2">→</span>
+                  <span className="mr-2">📋</span>
                   Le mie partite
                 </a>
               )}
               <a
                 href={`/campionato/${currentChampionship.id}/squadre`}
-                className="flex items-center text-blue-600 hover:text-blue-800"
+                className="flex items-center text-blue-600 hover:text-blue-800 font-semibold"
               >
-                <span className="mr-2">→</span>
+                <span className="mr-2">👥</span>
                 Visualizza tutte le squadre
               </a>
               <a
@@ -167,9 +167,9 @@ export default async function CampionatoPage() {
               </a>
               <a
                 href={`/campionato/${currentChampionship.id}/calendario`}
-                className="flex items-center text-blue-600 hover:text-blue-800"
+                className="flex items-center text-blue-600 hover:text-blue-800 font-semibold"
               >
-                <span className="mr-2">→</span>
+                <span className="mr-2">📅</span>
                 Calendario partite
               </a>
             </div>
