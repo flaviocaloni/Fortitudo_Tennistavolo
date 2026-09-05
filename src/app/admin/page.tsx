@@ -1,9 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
-import { isSuperAdmin } from "@/lib/utils/roles";
+import { isAdmin, isSuperAdmin } from "@/lib/utils/roles";
 
 export default async function AdminDashboard() {
   const { profile } = await getSessionProfile();
+
+  if (!profile || !isAdmin(profile.role)) {
+    redirect("/calendario");
+  }
 
   const sections = [
     {
