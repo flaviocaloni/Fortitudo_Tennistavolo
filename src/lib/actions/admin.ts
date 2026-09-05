@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 
 async function requireAdmin() {
   const { supabase, profile } = await getSessionProfile();
-  if (!profile || profile.role !== "admin") redirect("/calendario");
+  if (!profile || !isAdmin(profile.role)) redirect("/calendario");
   return supabase;
 }
 

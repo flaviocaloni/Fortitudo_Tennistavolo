@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import * as notifications from "@/lib/supabase/notifications";
+import { isAdmin } from "@/lib/utils/roles";
 
 // ============ AUTHORIZATION ============
 
 async function requireAdmin() {
   const { supabase, profile } = await getSessionProfile();
-  if (!profile || profile.role !== "admin") redirect("/campionato");
+  if (!profile || !isAdmin(profile.role)) redirect("/campionato");
   return supabase;
 }
 

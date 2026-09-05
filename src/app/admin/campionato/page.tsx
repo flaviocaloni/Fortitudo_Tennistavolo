@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import { createChampionship, updateChampionship } from "@/lib/actions/championships";
+import { isAdmin } from "@/lib/utils/roles";
 
 export default async function AdminChampionatoPage() {
   let error: string | null = null;
@@ -18,7 +19,7 @@ export default async function AdminChampionatoPage() {
     error = `Errore autenticazione: ${e?.message || "Errore sconosciuto"}`;
   }
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !isAdmin(profile.role)) {
     redirect("/campionato");
   }
 

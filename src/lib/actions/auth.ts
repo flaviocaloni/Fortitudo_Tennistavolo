@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 
 /** Login via email/password lato server. */
 export async function loginWithEmail(formData: FormData) {
@@ -59,7 +60,7 @@ export async function impersonateUser(formData: FormData) {
   const userId = String(formData.get("user_id") ?? "");
   const { profile } = await getSessionProfile();
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !isAdmin(profile.role)) {
     redirect("/login");
   }
 
