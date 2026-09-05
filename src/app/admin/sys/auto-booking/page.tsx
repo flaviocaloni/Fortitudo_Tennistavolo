@@ -24,17 +24,16 @@ export default async function AdminAutoBookingPage() {
   }
 
   try {
-    // Get all users
-    const { data: allUsers, error: usersError } = await supabase.auth.admin.listUsers();
+    // Get all profiles from database
+    const { data: allProfiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .order("full_name");
 
-    if (usersError) {
-      error = `Errore lettura utenti: ${usersError.message}`;
-    } else if (allUsers?.users) {
-      const userIds = allUsers.users.map((u: any) => u.id);
-
-      // Get profiles for these users
-      const profiles = await getProfilesByIds(supabase, userIds);
-      const profileMap = new Map(profiles.map((p: any) => [p.id, p]));
+    if (profilesError) {
+      error = `Errore lettura profili: ${profilesError.message}`;
+    } else if (allProfiles && allProfiles.length > 0) {
+      const profileMap = new Map(allProfiles.map((p: any) => [p.id, p]));
 
       // Get auto-booking status for all users
       const { data: statuses, error: statusError } = await supabase
@@ -64,20 +63,18 @@ export default async function AdminAutoBookingPage() {
           });
 
           // Build user list with auto-booking info
-          users = allUsers.users
-            .map((authUser: any) => {
-              const prof = profileMap.get(authUser.id);
-              return {
-                id: authUser.id,
-                email: authUser.email,
-                name: prof?.full_name || "N/A",
-                enabled: statusMap.get(authUser.id) || false,
-                slotCount: countMap.get(authUser.id) || 0,
-              };
-            })
-            .sort((a: any, b: any) => a.email.localeCompare(b.email));
+          users = allProfiles.map((prof: any) => ({
+            id: prof.id,
+            email: prof.id.slice(0, 8) + "...",
+            name: prof.full_name || "N/A",
+            enabled: statusMap.get(prof.id) || false,
+            slotCount: countMap.get(prof.id) || 0,
+          }));
         }
       }
+    } else if (allProfiles?.length === 0) {
+      // No users found, but no error
+      users = [];
     }
   } catch (e: any) {
     error = `Errore server: ${e?.message || "Errore sconosciuto"}`;
