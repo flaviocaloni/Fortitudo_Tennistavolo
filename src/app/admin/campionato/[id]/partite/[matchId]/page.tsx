@@ -202,10 +202,12 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
         </div>
 
         {/* RESULT FORM */}
-        {match.status === "SCHEDULED" && (
+        {match.status !== "CANCELLED" && match.status !== "POSTPONED" && (
           <div className="mt-6 pt-6 border-t">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Inserisci Risultato</h3>
-            <form action={updateMatchResult} className="flex gap-4 items-end">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {match.result ? "Modifica Risultato" : "Inserisci Risultato"}
+            </h3>
+            <form action={updateMatchResult} className="flex gap-4 items-end flex-wrap">
               <input type="hidden" name="match_id" value={matchId} />
               <input type="hidden" name="championship_id" value={championshipId} />
 
@@ -216,6 +218,9 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                 <select
                   name="home_score"
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  defaultValue={
+                    match.result ? match.result.split("-")[0] : ""
+                  }
                   required
                 >
                   <option value="">Seleziona</option>
@@ -236,6 +241,9 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                 <select
                   name="away_score"
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  defaultValue={
+                    match.result ? match.result.split("-")[1] : ""
+                  }
                   required
                 >
                   <option value="">Seleziona</option>
@@ -251,17 +259,9 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                 type="submit"
                 className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
               >
-                Salva Risultato
+                {match.result ? "Aggiorna Risultato" : "Salva Risultato"}
               </button>
             </form>
-          </div>
-        )}
-
-        {/* DISPLAY RESULT */}
-        {match.result && (
-          <div className="mt-6 pt-6 border-t bg-blue-50 rounded-lg p-4">
-            <div className="text-sm text-blue-600 font-medium mb-2">Risultato:</div>
-            <div className="text-2xl font-bold text-blue-900">{match.result}</div>
           </div>
         )}
       </div>
