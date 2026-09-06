@@ -3,14 +3,16 @@ import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
+import { deactivateTeam, addPlayerToTeam, removePlayerFromTeam } from "@/lib/actions/teams";
 
 interface PageProps {
   params: Promise<{ id: string; teamId: string }>;
+  searchParams: Promise<{ error?: string; success?: string }>;
 }
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminSquadraDetailPage({ params }: PageProps) {
+export default async function AdminSquadraDetailPage({ params, searchParams }: PageProps) {
   const { supabase, profile } = await getSessionProfile();
 
   if (!profile || !isAdmin(profile.role)) {
@@ -18,6 +20,7 @@ export default async function AdminSquadraDetailPage({ params }: PageProps) {
   }
 
   const { id: championshipId, teamId } = await params;
+  const { error, success } = await searchParams;
 
   // Use admin client to bypass RLS
   const admin = createAdminClient();
@@ -55,6 +58,18 @@ export default async function AdminSquadraDetailPage({ params }: PageProps) {
     .eq("team_id", teamId)
     .order("joined_at", { ascending: false });
 
+  // Recupera agonisti non assegnati a questa squadra
+  const { data: availablePlayers } = await dbClient
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("role", "agonista")
+    .not(
+      "id",
+      "in",
+      `(${(players?.map((p: any) => `'${p.player_id}'`).join(",") || "").split("'").join("")})`
+    )
+    .order("full_name");
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-6">
@@ -68,9 +83,35 @@ export default async function AdminSquadraDetailPage({ params }: PageProps) {
         <p className="text-gray-600 mt-1">{team.name}</p>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          {success}
+        </div>
+      )}
+
       {/* TEAM INFO */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Informazioni Squadra</h2>
+        <div className="flex items-start justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">Informazioni Squadra</h2>
+          {team.status === "active" && (
+            <form action={deactivateTeam} className="inline">
+              <input type="hidden" name="teamId" value={teamId} />
+              <input type="hidden" name="championshipId" value={championshipId} />
+              <button
+                type="submit"
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm"
+              >
+                Disattiva Squadra
+              </button>
+            </form>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -95,6 +136,35 @@ export default async function AdminSquadraDetailPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* ADD PLAYER FORM */}
+      {availablePlayers && availablePlayers.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Aggiungi Giocatore</h2>
+          <form action={addPlayerToTeam} className="flex gap-4">
+            <input type="hidden" name="teamId" value={teamId} />
+            <input type="hidden" name="championshipId" value={championshipId} />
+            <select
+              name="playerId"
+              required
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Seleziona un agonista...</option>
+              {availablePlayers.map((player: any) => (
+                <option key={player.id} value={player.id}>
+                  {player.full_name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+            >
+              Aggiungi
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* PLAYERS LIST */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Giocatori ({players?.length || 0})</h2>
@@ -108,6 +178,7 @@ export default async function AdminSquadraDetailPage({ params }: PageProps) {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Profilo</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Data Iscrizione</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -132,6 +203,19 @@ export default async function AdminSquadraDetailPage({ params }: PageProps) {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(player.joined_at).toLocaleDateString("it-IT")}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm">
+                      <form action={removePlayerFromTeam} className="inline">
+                        <input type="hidden" name="teamId" value={teamId} />
+                        <input type="hidden" name="championshipId" value={championshipId} />
+                        <input type="hidden" name="playerId" value={player.player_id} />
+                        <button
+                          type="submit"
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Rimuovi
+                        </button>
+                      </form>
                     </td>
                   </tr>
                 ))}
