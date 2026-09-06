@@ -36,7 +36,10 @@ export default async function AdminUtentiPage(
     adminError = "⚠️ Service Role Key non configurata: Vercel non ha SUPABASE_SERVICE_ROLE_KEY impostata. Configurala nelle environment variables di Vercel per abilitare la gestione utenti.";
   }
 
-  const { data: profiles } = await supabase
+  // Use admin client to bypass RLS for data queries
+  const dbClient = admin || supabase;
+
+  const { data: profiles } = await dbClient
     .from("profiles")
     .select("*")
     .order("full_name");
@@ -60,7 +63,7 @@ export default async function AdminUtentiPage(
   }
 
   // Fetch user team assignments from championship_team_players
-  const { data: userTeamAssignments } = await supabase
+  const { data: userTeamAssignments } = await dbClient
     .from("championship_team_players")
     .select("user_id, team_id")
     .eq("status", "active");
@@ -76,14 +79,14 @@ export default async function AdminUtentiPage(
   }));
 
   // Fetch all teams from all championships for the dropdown
-  const { data: allTeams } = await supabase
+  const { data: allTeams } = await dbClient
     .from("championship_teams")
     .select("id, name, series, group_code, championship_id")
     .eq("status", "active")
     .order("name");
 
   // Fetch championships to map IDs to names
-  const { data: championshipsData } = await supabase
+  const { data: championshipsData } = await dbClient
     .from("championships")
     .select("id, name");
 

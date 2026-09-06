@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
 import { getCurrentSeason } from "@/lib/settings";
 import type { Booking, Profile, Season } from "@/lib/types";
@@ -45,18 +46,22 @@ export default async function AdminStatistichePage(props: {
   const { supabase, profile } = await getSessionProfile();
   if (!profile || !isAdmin(profile.role)) redirect("/calendario");
 
-  const { data: seasons } = await supabase
+  // Use admin client to bypass RLS for data queries
+  const admin = createAdminClient();
+  const dbClient = admin || supabase;
+
+  const { data: seasons } = await dbClient
     .from("seasons")
     .select("*")
     .order("start_date", { ascending: false });
-  const currentSeason = await getCurrentSeason(supabase);
+  const currentSeason = await getCurrentSeason(dbClient);
   const selectedSeasonId = searchParams.season || currentSeason?.id || "all";
 
   const twoYearsAgo = new Date();
   twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
   const minDate = twoYearsAgo.toISOString().split("T")[0];
 
-  let query = supabase
+  let query = dbClient
     .from("bookings")
     .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at, season_id, is_overbooking")
     .gte("session_date", minDate)

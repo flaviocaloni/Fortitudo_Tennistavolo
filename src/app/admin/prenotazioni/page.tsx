@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import ErrorBanner from "@/components/error-banner";
 import BookingsTableClient from "@/components/bookings-table-client";
 
@@ -11,12 +12,16 @@ export default async function AdminPrenotazioniPage(
 ) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
+  const admin = createAdminClient();
+
+  // Use admin client to bypass RLS for reading bookings
+  const dbClient = admin || supabase;
 
   let bookings: any[] = [];
   let errorMsg: string | null = null;
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await dbClient
       .from("bookings")
       .select(
         "id, session_date, created_at, status, profiles:user_id(full_name, role), training_slots(title, start_time, end_time)"
