@@ -210,26 +210,28 @@ export default async function AdminChampionatoMatchesPage({ params, searchParams
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Luogo
+                Luogo *
               </label>
               <input
                 type="text"
                 name="venue_name"
                 placeholder="es: Palestra X"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Indirizzo
+              Indirizzo *
             </label>
             <input
               type="text"
               name="address"
               placeholder="Indirizzo completo"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
 
