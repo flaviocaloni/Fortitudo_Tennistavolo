@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
-import { updateAdminAttendance, updateMatchResult } from "@/lib/actions/championships";
+import { updateAdminAttendance, updateMatchResult, updateMatchDetails } from "@/lib/actions/championships";
 import { isAdmin } from "@/lib/utils/roles";
 import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
@@ -44,6 +44,14 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
     .select("name")
     .eq("id", match.team_id)
     .single();
+
+  // Recupera tutte le squadre del campionato (per form di modifica)
+  const { data: allTeams } = await dbClient
+    .from("championship_teams")
+    .select("id, name")
+    .eq("championship_id", championshipId)
+    .eq("status", "active")
+    .order("name");
 
   // Recupera attendances (senza join complesso)
   const { data: attendances } = await dbClient
@@ -278,6 +286,149 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
             </form>
           </div>
         )}
+
+        {/* EDIT MATCH FORM */}
+        <div className="mt-6 pt-6 border-t">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Modifica Partita</h3>
+          <form action={updateMatchDetails} className="space-y-6">
+            <input type="hidden" name="match_id" value={matchId} />
+            <input type="hidden" name="championship_id" value={championshipId} />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Squadra *
+                </label>
+                <select
+                  name="team_id"
+                  defaultValue={match.team_id}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  {allTeams?.map((t: any) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Avversario *
+                </label>
+                <input
+                  type="text"
+                  name="opponent_name"
+                  defaultValue={match.opponent_name}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Società Avversaria
+                </label>
+                <input
+                  type="text"
+                  name="opponent_club_name"
+                  defaultValue={match.opponent_club_name || ""}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo Gara *
+                </label>
+                <select
+                  name="leg_type"
+                  defaultValue={match.leg_type}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="SINGLE">Singola</option>
+                  <option value="FIRST_LEG">Andata</option>
+                  <option value="RETURN_LEG">Ritorno</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sede *
+                </label>
+                <select
+                  name="venue_type"
+                  defaultValue={match.venue_type}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="HOME">Casa</option>
+                  <option value="AWAY">Trasferta</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data e Ora *
+                </label>
+                <input
+                  type="datetime-local"
+                  name="scheduled_start_at"
+                  defaultValue={match.scheduled_start_at?.slice(0, 16)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Luogo
+                </label>
+                <input
+                  type="text"
+                  name="venue_name"
+                  defaultValue={match.venue_name || ""}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Indirizzo
+              </label>
+              <input
+                type="text"
+                name="address"
+                defaultValue={match.address || ""}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Note
+              </label>
+              <textarea
+                name="notes"
+                defaultValue={match.notes || ""}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Salva Modifiche
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* PLAYERS ATTENDANCE */}

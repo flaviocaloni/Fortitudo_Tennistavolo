@@ -737,3 +737,59 @@ export async function updateAdminAttendance(formData: FormData) {
 
   revalidatePath("/admin/campionato");
 }
+
+export async function updateMatchDetails(formData: FormData) {
+  await requireAdmin();
+
+  const admin = createAdminClient();
+  const dbClient = admin || (await createClient()).default;
+
+  const matchId = String(formData.get("match_id"));
+  const championshipId = String(formData.get("championship_id"));
+  const teamId = String(formData.get("team_id") ?? "");
+  const opponentName = String(formData.get("opponent_name") ?? "");
+  const opponentClubName = String(formData.get("opponent_club_name") ?? "") || null;
+  const legType = String(formData.get("leg_type") ?? "");
+  const venueType = String(formData.get("venue_type") ?? "");
+  const venueName = String(formData.get("venue_name") ?? "") || null;
+  const address = String(formData.get("address") ?? "") || null;
+  const notes = String(formData.get("notes") ?? "") || null;
+  const scheduledStartAt = String(formData.get("scheduled_start_at") ?? "");
+
+  if (!matchId || !championshipId) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      "Dati mancanti"
+    );
+  }
+
+  if (!teamId || !opponentName || !legType || !venueType || !scheduledStartAt) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      "Campi obbligatori: Squadra, Avversario, Tipo Gara, Sede, Data e Ora"
+    );
+  }
+
+  const { error } = await championships.updateMatch(dbClient, matchId, {
+    team_id: teamId,
+    opponent_name: opponentName.trim(),
+    opponent_club_name: opponentClubName,
+    leg_type: legType as any,
+    venue_type: venueType as any,
+    venue_name: venueName,
+    address: address,
+    notes: notes,
+    scheduled_start_at: scheduledStartAt,
+  } as any);
+
+  if (error) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      error.message
+    );
+  }
+
+  revalidatePath(`/admin/campionato/${championshipId}/partite`);
+  revalidatePath(`/admin/campionato/${championshipId}/partite/${matchId}`);
+  redirect(`/admin/campionato/${championshipId}/partite/${matchId}?success=Partita modificata`);
+}
