@@ -48,26 +48,35 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
     notFound();
   }
 
-  // Recupera giocatori della squadra
-  const { data: players } = await dbClient
+  // Recupera giocatori della squadra con profili
+  const { data: playersData } = await dbClient
     .from("championship_team_players")
-    .select(`
-      *,
-      profiles:profiles(id, full_name, role)
-    `)
+    .select("*")
     .eq("team_id", teamId)
     .order("joined_at", { ascending: false });
 
+  // Arricchisci con i dati dei profili
+  let players: any[] = [];
+  if (playersData && playersData.length > 0) {
+    const playerIds = playersData.map((p) => p.player_id);
+    const { data: profilesData } = await dbClient
+      .from("profiles")
+      .select("id, full_name, role")
+      .in("id", playerIds);
+
+    players = playersData.map((p) => ({
+      ...p,
+      profiles: profilesData?.find((pr) => pr.id === p.player_id),
+    }));
+  }
+
   // Recupera agonisti non assegnati a questa squadra
+  const assignedPlayerIds = playersData?.map((p) => p.player_id) || [];
   const { data: availablePlayers } = await dbClient
     .from("profiles")
     .select("id, full_name, role")
     .eq("role", "agonista")
-    .not(
-      "id",
-      "in",
-      `(${(players?.map((p: any) => `'${p.player_id}'`).join(",") || "").split("'").join("")})`
-    )
+    .not("id", "in", assignedPlayerIds.length > 0 ? `(${assignedPlayerIds.map((id) => `'${id}'`).join(",")})` : "()")
     .order("full_name");
 
   return (
