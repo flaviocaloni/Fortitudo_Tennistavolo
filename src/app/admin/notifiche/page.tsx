@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
 import { getNotificationConfig, getNotificationAuditLog } from "@/lib/supabase/notifications";
 import { toggleNotification, updateRecipientMode } from "@/lib/actions/notifications";
@@ -18,25 +19,29 @@ export default async function NotificheAdminPage(props: {
     redirect("/calendario");
   }
 
+  // Use admin client to bypass RLS for data queries
+  const admin = createAdminClient();
+  const dbClient = admin || supabase;
+
   const currentTab = searchParams.tab || "prenotazioni";
 
   // Notifiche Prenotazioni
   const { data: bookingConfig, error: bookingConfigError } = await getNotificationConfig(
-    supabase,
+    dbClient,
     "EVENT_NON_RECURRING_BOOKING"
   );
 
   const { data: bookingAuditLog } = bookingConfig
-    ? await getNotificationAuditLog(supabase, bookingConfig.id)
+    ? await getNotificationAuditLog(dbClient, bookingConfig.id)
     : { data: null };
 
   // Notifiche Campionato
   const { data: attendanceRemovedConfig } = await getNotificationConfig(
-    supabase,
+    dbClient,
     "CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED"
   );
 
-  const { data: allUsers } = await supabase
+  const { data: allUsers } = await dbClient
     .from("profiles")
     .select("id, full_name, role")
     .order("full_name", { ascending: true });

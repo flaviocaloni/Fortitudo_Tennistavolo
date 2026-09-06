@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
 import * as notifications from "@/lib/supabase/notifications";
 import {
@@ -14,14 +15,18 @@ export default async function AdminChampionatoNotificheePage() {
     redirect("/campionato");
   }
 
+  // Use admin client to bypass RLS for data queries
+  const admin = createAdminClient();
+  const dbClient = admin || supabase;
+
   // Recupera configurazione notifiche campionato
   const { data: attendanceRemovedConfig } = await notifications.getNotificationConfig(
-    supabase,
+    dbClient,
     "CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED"
   );
 
   // Recupera utenti per destinatari manuali
-  const { data: allUsers } = await supabase
+  const { data: allUsers } = await dbClient
     .from("profiles")
     .select("id, full_name, role")
     .order("full_name", { ascending: true });

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
 import { createChampionship, updateChampionship } from "@/lib/actions/championships";
 import { isAdmin } from "@/lib/utils/roles";
@@ -23,9 +24,13 @@ export default async function AdminChampionatoPage() {
     redirect("/campionato");
   }
 
+  // Use admin client to bypass RLS for data queries
+  const admin = createAdminClient();
+  const dbClient = admin || supabase;
+
   try {
     // Recupera stagioni
-    const seasonsResult = await supabase
+    const seasonsResult = await dbClient
       .from("seasons")
       .select("id, name, is_current")
       .order("start_date", { ascending: false });
@@ -37,7 +42,7 @@ export default async function AdminChampionatoPage() {
     }
 
     // Recupera campionati
-    const champResult = await supabase
+    const champResult = await dbClient
       .from("championships")
       .select("id, name, status, season_id, created_at")
       .order("created_at", { ascending: false });
