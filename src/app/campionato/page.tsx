@@ -80,15 +80,49 @@ export default async function CampionatoPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* CHAMPIONSHIP HEADER */}
+        <div className="space-y-6">
+          {/* CHAMPIONSHIP HEADER WITH STATS */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {currentChampionship.name}
-            </h2>
-            <p className="text-gray-600 mt-2">
-              Stagione: {currentSeason?.name}
-            </p>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {currentChampionship.name}
+                </h2>
+                <p className="text-gray-600 mt-2">
+                  Stagione: {currentSeason?.name}
+                </p>
+              </div>
+
+              {/* CHAMPIONSHIP STATS - Inline */}
+              <div className="grid grid-cols-3 gap-4 md:gap-6">
+                <div className="text-center">
+                  <div className="text-gray-600 text-xs font-semibold uppercase">
+                    Squadre
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900 mt-1">
+                    {teamsCount}
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-gray-600 text-xs font-semibold uppercase">
+                    Programmate
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900 mt-1">
+                    {scheduledCount}
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-gray-600 text-xs font-semibold uppercase">
+                    Completate
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900 mt-1">
+                    {completedCount}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* USER TEAM INFO */}
@@ -107,36 +141,6 @@ export default async function CampionatoPage() {
               </a>
             </div>
           )}
-
-          {/* CHAMPIONSHIP STATS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-gray-600 text-sm font-semibold uppercase">
-                Squadre
-              </div>
-              <div className="text-4xl font-bold text-gray-900 mt-2">
-                {teamsCount}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-gray-600 text-sm font-semibold uppercase">
-                Partite Programmate
-              </div>
-              <div className="text-4xl font-bold text-gray-900 mt-2">
-                {scheduledCount}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-gray-600 text-sm font-semibold uppercase">
-                Partite Completate
-              </div>
-              <div className="text-4xl font-bold text-gray-900 mt-2">
-                {completedCount}
-              </div>
-            </div>
-          </div>
 
           {/* ACTIONS */}
           <div className="bg-white rounded-lg shadow-md p-6">
