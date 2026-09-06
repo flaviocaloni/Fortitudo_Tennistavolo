@@ -46,9 +46,9 @@ export async function addPlayerToTeam(formData: FormData) {
 
   const teamId = String(formData.get("teamId") ?? "");
   const championshipId = String(formData.get("championshipId") ?? "");
-  const playerId = String(formData.get("playerId") ?? "");
+  const userId = String(formData.get("playerId") ?? "");
 
-  if (!teamId || !championshipId || !playerId) {
+  if (!teamId || !championshipId || !userId) {
     redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=Dati mancanti`);
   }
 
@@ -64,7 +64,7 @@ export async function addPlayerToTeam(formData: FormData) {
     .insert([
       {
         team_id: teamId,
-        player_id: playerId,
+        user_id: userId,
         status: "active",
         joined_at: new Date().toISOString(),
       },
@@ -85,9 +85,9 @@ export async function removePlayerFromTeam(formData: FormData) {
 
   const teamId = String(formData.get("teamId") ?? "");
   const championshipId = String(formData.get("championshipId") ?? "");
-  const playerId = String(formData.get("playerId") ?? "");
+  const userId = String(formData.get("playerId") ?? "");
 
-  if (!teamId || !championshipId || !playerId) {
+  if (!teamId || !championshipId || !userId) {
     redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=Dati mancanti`);
   }
 
@@ -102,7 +102,7 @@ export async function removePlayerFromTeam(formData: FormData) {
     .from("championship_team_players")
     .delete()
     .eq("team_id", teamId)
-    .eq("player_id", playerId);
+    .eq("user_id", userId);
 
   if (error) {
     redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=${encodeURIComponent(error.message)}`);

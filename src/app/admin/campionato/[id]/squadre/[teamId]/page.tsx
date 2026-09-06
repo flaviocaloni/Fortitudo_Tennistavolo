@@ -59,14 +59,14 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
   // Arricchisci con i dati dei profili
   let players: any[] = [];
   if (playersData && playersData.length > 0) {
-    const playerIds = playersData.map((p) => p.player_id);
+    const userIds = playersData.map((p) => p.user_id);
     const { data: profilesData } = await dbClient
       .from("profiles")
       .select("id, full_name")
-      .in("id", playerIds);
+      .in("id", userIds);
 
     players = playersData.map((p) => {
-      const profile = profilesData?.find((pr) => pr.id === p.player_id);
+      const profile = profilesData?.find((pr) => pr.id === p.user_id);
       return {
         ...p,
         playerName: profile?.full_name || "—",
@@ -75,12 +75,12 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
   }
 
   // Recupera agonisti non assegnati a questa squadra
-  const assignedPlayerIds = playersData?.map((p) => p.player_id) || [];
+  const assignedUserIds = playersData?.map((p) => p.user_id) || [];
   const { data: availablePlayers } = await dbClient
     .from("profiles")
     .select("id, full_name, role")
     .eq("role", "agonista")
-    .not("id", "in", assignedPlayerIds.length > 0 ? `(${assignedPlayerIds.map((id) => `'${id}'`).join(",")})` : "()")
+    .not("id", "in", assignedUserIds.length > 0 ? `(${assignedUserIds.map((id) => `'${id}'`).join(",")})` : "()")
     .order("full_name");
 
   return (
@@ -188,6 +188,7 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Data Iscrizione</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Azioni</th>
                 </tr>
@@ -199,14 +200,8 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
                       {player.playerName}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          player.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {player.status}
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                        active
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
@@ -216,7 +211,7 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
                       <form action={removePlayerFromTeam} className="inline">
                         <input type="hidden" name="teamId" value={teamId} />
                         <input type="hidden" name="championshipId" value={championshipId} />
-                        <input type="hidden" name="playerId" value={player.player_id} />
+                        <input type="hidden" name="playerId" value={player.user_id} />
                         <button
                           type="submit"
                           className="text-red-600 hover:text-red-800"
