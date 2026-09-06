@@ -4,11 +4,19 @@ import { isSuperAdmin } from "@/lib/utils/roles";
 import { toggleUserAutoBooking } from "@/lib/actions/auto-booking";
 import { getProfilesByIds } from "@/lib/supabase/auto-booking";
 
-export default async function AdminAutoBookingPage() {
+interface PageProps {
+  searchParams: Promise<{ search?: string }>;
+}
+
+export default async function AdminAutoBookingPage(props: PageProps) {
+  const searchParams = await props.searchParams;
+  const searchTerm = (searchParams.search || "").toLowerCase().trim();
+
   let error: string | null = null;
   let profile: any = null;
   let supabase: any = null;
   let users: any[] = [];
+  let allUsers: any[] = [];
   let autoBookingStatus: any[] = [];
 
   try {
@@ -63,13 +71,23 @@ export default async function AdminAutoBookingPage() {
           });
 
           // Build user list with auto-booking info
-          users = allProfiles.map((prof: any) => ({
+          allUsers = allProfiles.map((prof: any) => ({
             id: prof.id,
             email: prof.id.slice(0, 8) + "...",
             name: prof.full_name || "N/A",
             enabled: statusMap.get(prof.id) || false,
             slotCount: countMap.get(prof.id) || 0,
           }));
+
+          // Filter by search term (name or partial id)
+          if (searchTerm) {
+            users = allUsers.filter((u: any) =>
+              u.name.toLowerCase().includes(searchTerm) ||
+              u.id.toLowerCase().includes(searchTerm)
+            );
+          } else {
+            users = allUsers;
+          }
         }
       }
     } else if (allProfiles?.length === 0) {
@@ -90,6 +108,26 @@ export default async function AdminAutoBookingPage() {
           {error}
         </div>
       )}
+
+      <div className="mb-6">
+        <form method="get" className="flex gap-2">
+          <input
+            type="text"
+            name="search"
+            placeholder="Cerca per nome o ID utente..."
+            defaultValue={searchTerm}
+            className="px-4 py-2 border border-gray-300 rounded-lg flex-1 text-sm"
+          />
+          <button type="submit" className="px-4 py-2 bg-navy-600 text-white rounded-lg font-semibold hover:bg-navy-700">
+            Cerca
+          </button>
+          {searchTerm && (
+            <a href="/admin/sys/auto-booking" className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400">
+              Cancella
+            </a>
+          )}
+        </form>
+      </div>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <table className="w-full">
@@ -137,8 +175,17 @@ export default async function AdminAutoBookingPage() {
         </table>
 
         {users.length === 0 && (
-          <div className="p-6 text-center text-gray-500">Nessun utente trovato</div>
+          <div className="p-6 text-center text-gray-500">
+            {searchTerm ? "Nessun utente corrisponde alla ricerca" : "Nessun utente trovato"}
+          </div>
         )}
+      </div>
+
+      {users.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+          Visualizzati {users.length} di {allUsers.length} utenti
+        </div>
+      )}
       </div>
 
       <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
