@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
-import { isAdmin } from "@/lib/utils/roles";
+import { isAdmin, isSuperAdmin } from "@/lib/utils/roles";
 
 export default async function AdminLayout({
   children,
@@ -23,6 +23,9 @@ export default async function AdminLayout({
         <Link href="/admin/statistiche" className="hover:text-navy-700">Statistiche</Link>
         <Link href="/admin/campionato" className="hover:text-navy-700">🏆 Campionato</Link>
         <Link href="/admin/notifiche" className="hover:text-navy-700">📧 Notifiche</Link>
+        {isSuperAdmin(profile?.role) && (
+          <Link href="/admin/sys" className="hover:text-red-700 font-semibold">🔧 SYS</Link>
+        )}
       </div>
       {children}
     </div>
