@@ -127,7 +127,7 @@ export default function AdminUsersListClient({
   );
 
   return (
-    <div>
+    <div suppressHydrationWarning>
       <div className="mb-6 grid grid-cols-3 gap-3">
         <StatCard label="Admin" value={counts.admin} filter="admin" color="text-amber-700" />
         <StatCard label="Agonisti" value={counts.agonista} filter="agonista" color="text-blue-700" />
