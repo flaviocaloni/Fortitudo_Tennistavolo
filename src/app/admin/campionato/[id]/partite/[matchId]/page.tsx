@@ -122,7 +122,15 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
         >
           ← Torna a partite
         </a>
-        <h1 className="text-3xl font-bold text-gray-900 mt-4">Presenze Partita</h1>
+        <div className="flex items-center justify-between mt-4">
+          <h1 className="text-3xl font-bold text-gray-900">Presenze Partita</h1>
+          <a
+            href={`/admin/campionato/${championshipId}/classifica`}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Visualizza Classifica
+          </a>
+        </div>
       </div>
 
       {/* MATCH INFO */}
@@ -274,14 +282,8 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
       {/* PLAYERS ATTENDANCE */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
+        <div className="px-6 py-4 border-b bg-gray-50">
           <h2 className="font-semibold text-gray-900">Gestione Presenze</h2>
-          <a
-            href={`/admin/campionato/${championshipId}/classifica`}
-            className="text-blue-600 hover:underline text-sm"
-          >
-            Visualizza Classifica →
-          </a>
         </div>
 
         {players.length > 0 ? (
