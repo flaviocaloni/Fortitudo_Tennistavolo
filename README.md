@@ -41,7 +41,6 @@
 ### 👤 Autenticazione e Profili
 
 - **Email + Password**: Registrazione self-service
-- **Google OAuth**: Login opzionale con Google
 - **Ruoli:**
   - **Agonista**: Giocatore agonista (federato FITET)
   - **Amatore**: Giocatore ricreativo
@@ -199,10 +198,6 @@
 
 1. Supabase Dashboard → **Authentication → Providers**
 2. **Email**: abilita (default)
-3. **Google OAuth** (opzionale):
-   - Crea credenziali su Google Cloud Console
-   - Copia Client ID e Client Secret
-   - Configura in Supabase Auth
 
 ### Passo 4: Configurare Variabili d'Ambiente
 

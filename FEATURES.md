@@ -27,7 +27,7 @@ Documento completo di tutte le funzionalità implementate con esempi e istruzion
 1. Email + Password
 2. Seleziona Ruolo: **Agonista** (federato) o **Amatore** (ricreativo)
 3. Compila nome, cognome, telefono
-4. Conferma email (opzionale se Google OAuth disabilitato)
+4. Conferma email
 5. Accesso automatico
 
 **Validazioni:**
@@ -39,7 +39,6 @@ Documento completo di tutte le funzionalità implementate con esempi e istruzion
 
 **Opzioni:**
 1. Email + Password (email verificata)
-2. Google OAuth (se abilitato da admin)
 
 **Note:**
 - Sessione persiste 7 giorni (default Supabase)
