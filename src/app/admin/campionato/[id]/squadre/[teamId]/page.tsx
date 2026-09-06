@@ -48,11 +48,12 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
     notFound();
   }
 
-  // Recupera giocatori della squadra con profili
+  // Recupera giocatori della squadra con profili (solo active)
   const { data: playersData } = await dbClient
     .from("championship_team_players")
     .select("*")
     .eq("team_id", teamId)
+    .eq("status", "active")
     .order("joined_at", { ascending: false });
 
   // Arricchisci con i dati dei profili
@@ -61,13 +62,16 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
     const playerIds = playersData.map((p) => p.player_id);
     const { data: profilesData } = await dbClient
       .from("profiles")
-      .select("id, full_name, role")
+      .select("id, full_name")
       .in("id", playerIds);
 
-    players = playersData.map((p) => ({
-      ...p,
-      profiles: profilesData?.find((pr) => pr.id === p.player_id),
-    }));
+    players = playersData.map((p) => {
+      const profile = profilesData?.find((pr) => pr.id === p.player_id);
+      return {
+        ...p,
+        playerName: profile?.full_name || "—",
+      };
+    });
   }
 
   // Recupera agonisti non assegnati a questa squadra
@@ -184,8 +188,6 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Profilo</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Data Iscrizione</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Azioni</th>
                 </tr>
@@ -194,10 +196,7 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
                 {players.map((player: any) => (
                   <tr key={player.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {player.profiles?.full_name || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {player.profiles?.role || "—"}
+                      {player.playerName}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
