@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
 import { updateAdminAttendance, updateMatchResult } from "@/lib/actions/championships";
 import { isAdmin } from "@/lib/utils/roles";
@@ -18,9 +19,13 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
   const { id: championshipId, matchId } = await params;
 
+  // Use admin client to bypass RLS
+  const admin = createAdminClient();
+  const dbClient = admin || supabase;
+
   // Recupera partita
   const { data: match, error: matchError } = await championships.getMatchById(
-    supabase,
+    dbClient,
     matchId
   );
 
@@ -34,21 +39,21 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
   }
 
   // Recupera nome squadra
-  const { data: team } = await supabase
+  const { data: team } = await dbClient
     .from("championship_teams")
     .select("name")
     .eq("id", match.team_id)
     .single();
 
   // Recupera attendances (senza join complesso)
-  const { data: attendances } = await supabase
+  const { data: attendances } = await dbClient
     .from("championship_match_attendances")
     .select("id, user_id, status")
     .eq("match_id", matchId)
     .order("created_at", { ascending: true });
 
   // Recupera giocatori della squadra
-  const { data: teamPlayers } = await supabase
+  const { data: teamPlayers } = await dbClient
     .from("championship_team_players")
     .select("user_id")
     .eq("team_id", match.team_id)
@@ -61,7 +66,7 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
     ...(teamPlayers || []).map((tp: any) => tp.user_id),
   ]);
 
-  const { data: profiles } = await supabase
+  const { data: profiles } = await dbClient
     .from("profiles")
     .select("id, full_name")
     .in("id", Array.from(allUserIds));
