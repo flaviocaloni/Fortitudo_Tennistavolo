@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 import * as notifications from "@/lib/supabase/notifications";
 import {
   toggleNotification,
@@ -9,7 +10,7 @@ import {
 export default async function AdminChampionatoNotificheePage() {
   const { supabase, profile } = await getSessionProfile();
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !isAdmin(profile.role)) {
     redirect("/campionato");
   }
 

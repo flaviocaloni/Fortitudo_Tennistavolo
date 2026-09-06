@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 import { getNotificationConfig, getNotificationAuditLog } from "@/lib/supabase/notifications";
 import { toggleNotification, updateRecipientMode } from "@/lib/actions/notifications";
 import ErrorBanner from "@/components/error-banner";
@@ -13,7 +14,7 @@ export default async function NotificheAdminPage(props: {
   const searchParams = await props.searchParams;
   const { supabase, user, profile } = await getSessionProfile();
 
-  if (!user || !profile || profile.role !== "admin") {
+  if (!user || !profile || !isAdmin(profile.role)) {
     redirect("/calendario");
   }
 

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/utils/roles";
 import { getCurrentSeason } from "@/lib/settings";
 import type { Booking, Profile, Season } from "@/lib/types";
 import AdminBookingsChart from "@/components/admin-bookings-chart";
@@ -42,7 +43,7 @@ export default async function AdminStatistichePage(props: {
 }) {
   const searchParams = await props.searchParams;
   const { supabase, profile } = await getSessionProfile();
-  if (!profile || profile.role !== "admin") redirect("/login");
+  if (!profile || !isAdmin(profile.role)) redirect("/calendario");
 
   const { data: seasons } = await supabase
     .from("seasons")
