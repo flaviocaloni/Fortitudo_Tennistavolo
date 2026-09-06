@@ -89,40 +89,6 @@ Superadmin abilita feature per utenti selezionati. Utente sceglie quali slot ric
 
 ---
 
-## 💭 Considerazioni Future — Versione 1.2.0+ (2027)
-
-### Mobile App Native
-- React Native / Flutter per iOS/Android
-- Sincronizzazione real-time calendari
-- Push notifications native
-
-### Integrazione Calendario Esterno
-- Google Calendar sync
-- Apple Calendar sync
-- iCal export
-
-### Payment Integration
-- Pagamenti tesseramento
-- Pagamenti prenotazioni corsi
-- Stripe/PayPal integration
-
-### Advanced Analytics
-- Heatmap presenze per orario
-- Predictive overbooking
-- Suggestion slot popolari
-
-### Team Management Avanzato
-- Assegnazioni automatic squadre per skill
-- Tournament bracket generation
-- Statistiche giocatore (media punti, vittorie, ecc)
-
-### Matching e Tornei
-- Auto-matching squadre per livello
-- Tournament bracket builder
-- Live scoring display
-
----
-
 ## 🔄 Maintenance & Bug Fixes
 
 - Weekly security updates per dipendenze

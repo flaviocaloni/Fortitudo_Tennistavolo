@@ -838,18 +838,6 @@ Per continuare:
 | UPDATE certificato | profiles | Admin | 02/09 10:00 | Scadenza: 15/12/2026 |
 | DELETE prenotazione | bookings | Admin | 03/09 15:00 | Motivo: User requested |
 
-### Visualizzazione (Future)
-
-**Pagina:** `/admin/audit-log`
-```
-[Filtri: Data, Utente, Tabella, Azione]
-
-| Timestamp | Utente | Azione | Tabella | Dettagli |
-|-----------|--------|--------|---------|----------|
-| 03/09 15:00 | Admin (Marco) | DELETE | bookings | booking_id=xyz |
-| 02/09 10:00 | Admin (Marco) | UPDATE | profiles | user=mario, field=cert_date |
-```
-
 ---
 
 ## Sicurezza e RLS
