@@ -1,26 +1,15 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import * as championships from "@/lib/supabase/championships";
+import { updateAdminAttendance, updateMatchResult } from "@/lib/actions/championships";
 import { isAdmin } from "@/lib/utils/roles";
+import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
 interface PageProps {
   params: Promise<{ id: string; matchId: string }>;
 }
 
-export const dynamic = "force-dynamic";
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("it-IT", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-export default async function AdminPartitaDetailPage({ params }: PageProps) {
+export default async function AdminMatchDetailsPage({ params }: PageProps) {
   const { supabase, profile } = await getSessionProfile();
 
   if (!profile || !isAdmin(profile.role)) {
@@ -29,120 +18,336 @@ export default async function AdminPartitaDetailPage({ params }: PageProps) {
 
   const { id: championshipId, matchId } = await params;
 
-  // Use admin client to bypass RLS
-  const admin = createAdminClient();
-  const dbClient = admin || supabase;
+  // Recupera partita
+  const { data: match, error: matchError } = await championships.getMatchById(
+    supabase,
+    matchId
+  );
 
-  // Recupera campionato
-  const { data: championship, error: champError } = await dbClient
-    .from("championships")
-    .select("*")
-    .eq("id", championshipId)
-    .single();
-
-  if (champError || !championship) {
+  if (matchError || !match) {
     notFound();
   }
 
-  // Recupera partita con dettagli squadre
-  const { data: match, error: matchError } = await dbClient
-    .from("championship_matches")
-    .select(`
-      *,
-      home_team:home_team_id(id, name, series),
-      away_team:away_team_id(id, name, series)
-    `)
-    .eq("id", matchId)
-    .single();
-
-  if (matchError || !match || match.championship_id !== championshipId) {
+  // Verifica che la partita appartenga al campionato
+  if (match.championship_id !== championshipId) {
     notFound();
   }
+
+  // Recupera nome squadra
+  const { data: team } = await supabase
+    .from("championship_teams")
+    .select("name")
+    .eq("id", match.team_id)
+    .single();
+
+  // Recupera attendances (senza join complesso)
+  const { data: attendances } = await supabase
+    .from("championship_match_attendances")
+    .select("id, user_id, status")
+    .eq("match_id", matchId)
+    .order("created_at", { ascending: true });
+
+  // Recupera giocatori della squadra
+  const { data: teamPlayers } = await supabase
+    .from("championship_team_players")
+    .select("user_id")
+    .eq("team_id", match.team_id)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+
+  // Recupera profili di tutti gli user_id
+  const allUserIds = new Set([
+    ...(attendances || []).map((a: any) => a.user_id),
+    ...(teamPlayers || []).map((tp: any) => tp.user_id),
+  ]);
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", Array.from(allUserIds));
+
+  const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
+  const attendanceMap = new Map(attendances?.map((a: any) => [a.user_id, a]) || []);
+
+  // Combina dati: usa attendances se esistono, altrimenti usa teamPlayers
+  let players: any[] = [];
+  const processedUserIds = new Set();
+
+  // Prima aggiungi gli attendances
+  (attendances || []).forEach((att: any) => {
+    const profile = profileMap.get(att.user_id);
+    if (profile) {
+      players.push({
+        id: profile.id,
+        full_name: profile.full_name,
+        attendanceId: att.id,
+        status: att.status,
+      });
+      processedUserIds.add(att.user_id);
+    }
+  });
+
+  // Poi aggiungi i giocatori della squadra che non hanno attendance
+  (teamPlayers || []).forEach((tp: any) => {
+    if (!processedUserIds.has(tp.user_id)) {
+      const profile = profileMap.get(tp.user_id);
+      if (profile) {
+        players.push({
+          id: profile.id,
+          full_name: profile.full_name,
+          attendanceId: null,
+          status: "PRESENT",
+        });
+        processedUserIds.add(tp.user_id);
+      }
+    }
+  });
+
+  console.log(`DEBUG: Match ${matchId} - Attendances: ${attendances?.length || 0}, Team Players: ${teamPlayers?.length || 0}, Final Players: ${players.length}`);
+
+  const presentCount = players.filter((p) => p.status === "PRESENT").length;
+  const absentCount = players.filter((p) => p.status === "ABSENT").length;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <a
           href={`/admin/campionato/${championshipId}/partite`}
           className="text-blue-600 hover:underline"
         >
-          ← Torna alla lista partite
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-900 mt-4">Dettagli Partita</h1>
+          ← Torna a partite
+        </a>
+        <h1 className="text-3xl font-bold text-gray-900 mt-4">Presenze Partita</h1>
       </div>
 
       {/* MATCH INFO */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">Informazioni Partita</h2>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data/Ora</label>
-            <p className="text-gray-900 font-medium">{formatDate(match.match_date)}</p>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Squadra
+            </label>
+            <p className="text-gray-900 font-medium">{team?.name}</p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Girone</label>
-            <p className="text-gray-900 font-medium">{match.group_code}</p>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Avversario
+            </label>
+            <p className="text-gray-900">{match.opponent_name}</p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Luogo</label>
-            <p className="text-gray-900 font-medium">{match.location || "—"}</p>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Data e Ora
+            </label>
+            <p className="text-gray-900">
+              {new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <p className="text-gray-900 font-medium">{match.status}</p>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Tipo
+            </label>
+            <p className="text-gray-900">
+              {match.leg_type === "SINGLE" && "Singola"}
+              {match.leg_type === "FIRST_LEG" && "Andata"}
+              {match.leg_type === "RETURN_LEG" && "Ritorno"}
+              {match.venue_type === "HOME" ? " - Casa" : " - Trasferta"}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Sede
+            </label>
+            <p className="text-gray-900">{match.venue_type === "HOME" ? "Casa" : "Trasferta"}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Luogo
+            </label>
+            <p className="text-gray-900">{match.venue_name || "-"}</p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Indirizzo
+            </label>
+            <p className="text-gray-900">{match.address || "-"}</p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Note
+            </label>
+            <p className="text-gray-900 whitespace-pre-wrap">{match.notes || "-"}</p>
           </div>
         </div>
 
-        {/* TEAMS AND SCORE */}
-        <div className="border-t pt-6">
-          <h3 className="font-semibold text-gray-800 mb-4">Squadre e Risultato</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg text-center">
-              <p className="text-sm font-medium text-gray-600 mb-2">Casa</p>
-              <p className="text-lg font-bold text-gray-900">{match.home_team?.name}</p>
-              <p className="text-xs text-gray-500 mt-1">{match.home_team?.series}</p>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg text-center">
-              <p className="text-sm font-medium text-gray-600 mb-2">Risultato</p>
-              {match.home_goals !== null && match.away_goals !== null ? (
-                <p className="text-3xl font-bold text-gray-900">
-                  {match.home_goals} - {match.away_goals}
-                </p>
-              ) : (
-                <p className="text-lg text-gray-400">—</p>
-              )}
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg text-center">
-              <p className="text-sm font-medium text-gray-600 mb-2">Trasferta</p>
-              <p className="text-lg font-bold text-gray-900">{match.away_team?.name}</p>
-              <p className="text-xs text-gray-500 mt-1">{match.away_team?.series}</p>
-            </div>
+        {/* STATS */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-green-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-green-700">{presentCount}</div>
+            <div className="text-sm text-green-600">Presenti</div>
+          </div>
+          <div className="bg-red-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-red-700">{absentCount}</div>
+            <div className="text-sm text-red-600">Assenti</div>
+          </div>
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-blue-700">{players.length}</div>
+            <div className="text-sm text-blue-600">Totale</div>
           </div>
         </div>
 
-        {/* ADDITIONAL INFO */}
-        {(match.notes || match.referee_notes) && (
-          <div className="border-t mt-6 pt-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Note</h3>
-            {match.notes && (
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-1">Partita</p>
-                <p className="text-gray-900">{match.notes}</p>
-              </div>
-            )}
-            {match.referee_notes && (
+        {/* RESULT FORM */}
+        {match.status !== "CANCELLED" && match.status !== "POSTPONED" && (
+          <div className="mt-6 pt-6 border-t">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {match.result ? "Modifica Risultato" : "Inserisci Risultato"}
+            </h3>
+            <form action={updateMatchResult} className="flex gap-4 items-end flex-wrap">
+              <input type="hidden" name="match_id" value={matchId} />
+              <input type="hidden" name="championship_id" value={championshipId} />
+
               <div>
-                <p className="text-sm text-gray-600 mb-1">Arbitro</p>
-                <p className="text-gray-900">{match.referee_notes}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Punteggio nostro *
+                </label>
+                <select
+                  name="home_score"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  defaultValue={
+                    match.result ? match.result.split("-")[0] : ""
+                  }
+                  required
+                >
+                  <option value="">Seleziona</option>
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+
+              <span className="text-lg font-bold text-gray-700">-</span>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Punteggio avversario *
+                </label>
+                <select
+                  name="away_score"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  defaultValue={
+                    match.result ? match.result.split("-")[1] : ""
+                  }
+                  required
+                >
+                  <option value="">Seleziona</option>
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+              >
+                {match.result ? "Aggiorna Risultato" : "Salva Risultato"}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {/* PLAYERS ATTENDANCE */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="px-6 py-4 border-b bg-gray-50">
+          <h2 className="font-semibold text-gray-900">Gestione Presenze</h2>
+        </div>
+
+        {players.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Giocatore
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Azione
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {players.map((player) => (
+                  <tr key={player.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                      {player.full_name}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          player.status === "PRESENT"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {player.status === "PRESENT" ? "✓ Presente" : "✕ Assente"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <form action={updateAdminAttendance} className="flex gap-2">
+                        <input
+                          type="hidden"
+                          name="match_id"
+                          value={matchId}
+                        />
+                        <input
+                          type="hidden"
+                          name="user_id"
+                          value={player.id}
+                        />
+                        {player.status !== "PRESENT" && (
+                          <button
+                            type="submit"
+                            name="status"
+                            value="PRESENT"
+                            className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition"
+                          >
+                            Presente
+                          </button>
+                        )}
+                        {player.status !== "ABSENT" && (
+                          <button
+                            type="submit"
+                            name="status"
+                            value="ABSENT"
+                            className="px-3 py-1 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition"
+                          >
+                            Assente
+                          </button>
+                        )}
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="px-6 py-8 text-center text-gray-500">
+            Nessun giocatore assegnato
           </div>
         )}
       </div>
