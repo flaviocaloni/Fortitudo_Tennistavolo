@@ -48,6 +48,22 @@ export default async function AutoBookingPage(props: PageProps) {
     } else if (allProfiles && allProfiles.length > 0) {
       const profileMap = new Map(allProfiles.map((p: any) => [p.id, p]));
 
+      // Get emails from auth API if admin client is available
+      const emailMap = new Map<string, string>();
+      if (adminClient) {
+        try {
+          const { data: authUsers } = await adminClient.auth.admin.listUsers({
+            page: 1,
+            perPage: 1000,
+          });
+          for (const u of authUsers?.users ?? []) {
+            emailMap.set(u.id, u.email ?? "—");
+          }
+        } catch (e) {
+          // Silently fail - will fallback to ID display
+        }
+      }
+
       // Get auto-booking status for all users
       const { data: statuses, error: statusError } = await dbClient
         .from("user_auto_booking_enabled")
@@ -78,7 +94,7 @@ export default async function AutoBookingPage(props: PageProps) {
           // Build user list with auto-booking info
           allUsers = allProfiles.map((prof: any) => ({
             id: prof.id,
-            email: prof.id.slice(0, 8) + "...",
+            email: emailMap.get(prof.id) || prof.id.slice(0, 8) + "...",
             name: prof.full_name || "N/A",
             enabled: statusMap.get(prof.id) || false,
             slotCount: countMap.get(prof.id) || 0,
