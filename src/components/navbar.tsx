@@ -5,7 +5,7 @@ import { getSessionProfile } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/bookings";
 import { stopImpersonating } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isAdmin } from "@/lib/utils/roles";
+import { isAdmin, isSuperAdmin } from "@/lib/utils/roles";
 import MobileMenu, { type NavLink } from "@/components/mobile-menu";
 
 export default async function Navbar() {
@@ -110,6 +110,15 @@ export default async function Navbar() {
                   className="font-semibold text-amber-400 hover:text-amber-300"
                 >
                   Admin
+                </Link>
+              )}
+              {isSuperAdmin(profile.role) && (
+                <Link
+                  href="/sys"
+                  className="font-semibold text-red-400 hover:text-red-300"
+                  title="System Admin"
+                >
+                  🔧 SYS
                 </Link>
               )}
               <Link

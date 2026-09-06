@@ -8,7 +8,7 @@ interface PageProps {
   searchParams: Promise<{ search?: string }>;
 }
 
-export default async function AdminAutoBookingPage(props: PageProps) {
+export default async function AutoBookingPage(props: PageProps) {
   const searchParams = await props.searchParams;
   const searchTerm = (searchParams.search || "").toLowerCase().trim();
 
@@ -122,7 +122,7 @@ export default async function AdminAutoBookingPage(props: PageProps) {
             Cerca
           </button>
           {searchTerm && (
-            <a href="/admin/sys/auto-booking" className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400">
+            <a href="/sys/auto-booking" className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400">
               Cancella
             </a>
           )}

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function SysDashboard() {
   const sections = [
     {
-      href: "/admin/sys/auto-booking",
+      href: "/sys/auto-booking",
       title: "🤖 Auto-Booking",
       description: "Gestisci la feature auto-booking degli utenti",
     },

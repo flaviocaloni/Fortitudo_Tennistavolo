@@ -22,7 +22,7 @@ export async function toggleUserAutoBooking(formData: FormData) {
   const enabled = String(formData.get("enabled") ?? "false") === "true";
 
   if (!userId) {
-    backWithError("/admin/sys/auto-booking", "User ID is required");
+    backWithError("/sys/auto-booking", "User ID is required");
   }
 
   // First, check if record exists
@@ -50,12 +50,12 @@ export async function toggleUserAutoBooking(formData: FormData) {
   }
 
   if (error) {
-    backWithError("/admin/sys/auto-booking", error.message);
+    backWithError("/sys/auto-booking", error.message);
   }
 
   // Revalidate after update
   const { revalidatePath } = await import("next/cache");
-  revalidatePath("/admin/sys/auto-booking");
+  revalidatePath("/sys/auto-booking");
 }
 
 /** User toggles auto-booking for a specific slot */
