@@ -6,12 +6,14 @@ import { toggleUserAutoBooking } from "@/lib/actions/auto-booking";
 import { getProfilesByIds } from "@/lib/supabase/auto-booking";
 
 interface PageProps {
-  searchParams: Promise<{ search?: string }>;
+  searchParams: Promise<{ search?: string; sort?: string; order?: string }>;
 }
 
 export default async function AutoBookingPage(props: PageProps) {
   const searchParams = await props.searchParams;
   const searchTerm = (searchParams.search || "").toLowerCase().trim();
+  const sortBy = (searchParams.sort || "nome") as string;
+  const sortOrder = (searchParams.order || "asc") as "asc" | "desc";
 
   let error: string | null = null;
   let profile: any = null;
@@ -109,6 +111,37 @@ export default async function AutoBookingPage(props: PageProps) {
           } else {
             users = allUsers;
           }
+
+          // Sort by column
+          users.sort((a: any, b: any) => {
+            let aVal: any, bVal: any;
+
+            switch (sortBy) {
+              case "email":
+                aVal = a.email.toLowerCase();
+                bVal = b.email.toLowerCase();
+                break;
+              case "nome":
+                aVal = a.name.toLowerCase();
+                bVal = b.name.toLowerCase();
+                break;
+              case "slot":
+                aVal = a.slotCount;
+                bVal = b.slotCount;
+                break;
+              case "autobooking":
+                aVal = a.enabled ? 1 : 0;
+                bVal = b.enabled ? 1 : 0;
+                break;
+              default:
+                aVal = a.name.toLowerCase();
+                bVal = b.name.toLowerCase();
+            }
+
+            if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+            if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+          });
         }
       }
     } else if (allProfiles?.length === 0) {
@@ -118,6 +151,31 @@ export default async function AutoBookingPage(props: PageProps) {
   } catch (e: any) {
     error = `Errore server: ${e?.message || "Errore sconosciuto"}`;
   }
+
+  // Helper function to generate sort URL
+  const getSortUrl = (column: string) => {
+    const newOrder = sortBy === column && sortOrder === "asc" ? "desc" : "asc";
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("search", searchTerm);
+    params.set("sort", column);
+    params.set("order", newOrder);
+    return `/sys/auto-booking?${params.toString()}`;
+  };
+
+  // Helper to render sortable header
+  const SortableHeader = ({ column, label }: { column: string; label: string }) => {
+    const isActive = sortBy === column;
+    const arrow = isActive ? (sortOrder === "asc" ? " ↑" : " ↓") : " ⇅";
+    return (
+      <a
+        href={getSortUrl(column)}
+        className={`cursor-pointer hover:text-navy-700 font-semibold ${isActive ? "text-navy-700" : ""}`}
+      >
+        {label}
+        {arrow}
+      </a>
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -154,13 +212,17 @@ export default async function AutoBookingPage(props: PageProps) {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b">
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
-                Slot Abilitati
+              <th className="px-6 py-3 text-left text-sm text-gray-700">
+                <SortableHeader column="email" label="Email" />
               </th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
-                Auto-Booking
+              <th className="px-6 py-3 text-left text-sm text-gray-700">
+                <SortableHeader column="nome" label="Nome" />
+              </th>
+              <th className="px-6 py-3 text-center text-sm text-gray-700">
+                <SortableHeader column="slot" label="Slot Abilitati" />
+              </th>
+              <th className="px-6 py-3 text-center text-sm text-gray-700">
+                <SortableHeader column="autobooking" label="Auto-Booking" />
               </th>
             </tr>
           </thead>
