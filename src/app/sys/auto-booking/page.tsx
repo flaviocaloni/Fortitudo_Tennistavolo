@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isSuperAdmin } from "@/lib/utils/roles";
 import { toggleUserAutoBooking } from "@/lib/actions/auto-booking";
 import { getProfilesByIds } from "@/lib/supabase/auto-booking";
@@ -32,8 +33,12 @@ export default async function AutoBookingPage(props: PageProps) {
   }
 
   try {
+    // Use admin client to bypass RLS and read all profiles
+    const adminClient = createAdminClient();
+    const dbClient = adminClient || supabase; // Fallback to regular client if admin key not configured
+
     // Get all profiles from database
-    const { data: allProfiles, error: profilesError } = await supabase
+    const { data: allProfiles, error: profilesError } = await dbClient
       .from("profiles")
       .select("id, full_name")
       .order("full_name");
@@ -44,7 +49,7 @@ export default async function AutoBookingPage(props: PageProps) {
       const profileMap = new Map(allProfiles.map((p: any) => [p.id, p]));
 
       // Get auto-booking status for all users
-      const { data: statuses, error: statusError } = await supabase
+      const { data: statuses, error: statusError } = await dbClient
         .from("user_auto_booking_enabled")
         .select("user_id, auto_booking_enabled");
 
@@ -56,7 +61,7 @@ export default async function AutoBookingPage(props: PageProps) {
         );
 
         // Get slot counts per user
-        const { data: slotData, error: slotError } = await supabase
+        const { data: slotData, error: slotError } = await dbClient
           .from("user_slot_auto_booking")
           .select("user_id, id");
 
