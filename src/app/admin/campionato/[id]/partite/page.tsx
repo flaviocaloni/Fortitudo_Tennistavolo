@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
 import { createMatch, deleteMatch, updateMatch } from "@/lib/actions/championships";
+import { isAdmin } from "@/lib/utils/roles";
 import ConfirmDeleteMatchButton from "@/components/confirm-delete-match-button";
 
 interface PageProps {
@@ -48,7 +49,7 @@ function SortableHeader({
 export default async function AdminChampionatoMatchesPage({ params, searchParams }: PageProps & { searchParams: Promise<Record<string, string>> }) {
   const { supabase, profile } = await getSessionProfile();
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !isAdmin(profile.role)) {
     redirect("/campionato");
   }
 
