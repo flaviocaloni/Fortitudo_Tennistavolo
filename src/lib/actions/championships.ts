@@ -329,10 +329,6 @@ export async function createMatch(formData: FormData) {
     console.error("[createMatch] VALIDATION ERROR: Missing scheduled start time");
     backWithError(`/admin/campionato/${championshipId}/partite`, "Data e ora della partita obbligatorie");
   }
-  if (!venueName || venueName.trim().length === 0) {
-    console.error("[createMatch] VALIDATION ERROR: Missing venue name");
-    backWithError(`/admin/campionato/${championshipId}/partite`, "Indirizzo obbligatorio");
-  }
 
   console.log("[createMatch] All validations passed, fetching championship data...");
 
