@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isSuperAdmin } from "@/lib/utils/roles";
 
 async function requireSuperAdmin() {
@@ -16,7 +17,7 @@ function backWithError(path: string, message: string): never {
 
 /** Superadmin toggles auto-booking feature for a user */
 export async function toggleUserAutoBooking(formData: FormData) {
-  const { supabase } = await requireSuperAdmin();
+  await requireSuperAdmin();
 
   const userId = String(formData.get("user_id") ?? "");
   const enabled = String(formData.get("enabled") ?? "false") === "true";
@@ -25,8 +26,14 @@ export async function toggleUserAutoBooking(formData: FormData) {
     backWithError("/sys/auto-booking", "User ID is required");
   }
 
+  // Use admin client to bypass RLS
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    backWithError("/sys/auto-booking", "Service Role Key non configurata");
+  }
+
   // First, check if record exists
-  const { data: existing } = await supabase
+  const { data: existing } = await adminClient
     .from("user_auto_booking_enabled")
     .select("id")
     .eq("user_id", userId)
@@ -36,14 +43,14 @@ export async function toggleUserAutoBooking(formData: FormData) {
 
   if (existing) {
     // Update existing record
-    const result = await supabase
+    const result = await adminClient
       .from("user_auto_booking_enabled")
       .update({ auto_booking_enabled: enabled, updated_at: new Date().toISOString() })
       .eq("user_id", userId);
     error = result.error;
   } else {
     // Create new record
-    const result = await supabase
+    const result = await adminClient
       .from("user_auto_booking_enabled")
       .insert({ user_id: userId, auto_booking_enabled: enabled });
     error = result.error;
