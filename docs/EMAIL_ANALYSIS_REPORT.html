@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Notification System — Analysis & Implementation Plan</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background: #ffffff;
+      padding: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+        font-size: 14px;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      body { padding: 20px; }
+      page-break-after: always;
+      page-break-inside: avoid;
+      h1 { page-break-after: avoid; }
+      h2 { page-break-after: avoid; margin-top: 30px; }
+      table { page-break-inside: avoid; }
+      .page-break { page-break-after: always; }
+    }
+
+    header {
+      border-bottom: 3px solid #0EA5E9;
+      padding-bottom: 30px;
+      margin-bottom: 40px;
+    }
+
+    .header-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: #0EA5E9;
+      margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+      font-size: 18px;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .header-meta {
+      font-size: 13px;
+      color: #9ca3af;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      gap: 8px;
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0EA5E9;
+      margin: 40px 0 20px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 30px 0 15px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      margin: 20px 0 10px;
+    }
+
+    p {
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-left: 30px;
+      margin-bottom: 15px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    table thead {
+      background-color: #0EA5E9;
+      color: white;
+    }
+
+    table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border: none;
+    }
+
+    table td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    table tbody tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    table tbody tr:hover {
+      background-color: #f3f4f6;
+    }
+
+    .comparison-table td:nth-child(2),
+    .comparison-table td:nth-child(3),
+    .comparison-table td:nth-child(4),
+    .comparison-table td:nth-child(5) {
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-recommended {
+      background-color: #DBEAFE;
+      color: #0c4a6e;
+    }
+
+    .badge-good {
+      background-color: #DCFCE7;
+      color: #166534;
+    }
+
+    .badge-warning {
+      background-color: #FEF08A;
+      color: #78350f;
+    }
+
+    .badge-neutral {
+      background-color: #E5E7EB;
+      color: #374151;
+    }
+
+    .highlight-box {
+      background-color: #DBEAFE;
+      border-left: 4px solid #0EA5E9;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .highlight-box.success {
+      background-color: #DCFCE7;
+      border-left-color: #10B981;
+    }
+
+    .highlight-box.warning {
+      background-color: #FEF08A;
+      border-left-color: #F59E0B;
+    }
+
+    .highlight-box.danger {
+      background-color: #FEE2E2;
+      border-left-color: #EF4444;
+    }
+
+    .highlight-box h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      .pros-cons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pros, .cons {
+      border-radius: 4px;
+      padding: 15px;
+    }
+
+    .pros {
+      background-color: #DCFCE7;
+      border: 1px solid #10B981;
+    }
+
+    .pros h4 {
+      color: #166534;
+      margin-bottom: 10px;
+    }
+
+    .pros ul {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .pros li:before {
+      content: "✅ ";
+      color: #10B981;
+      font-weight: bold;
+    }
+
+    .cons {
+      background-color: #FEE2E2;
+      border: 1px solid #EF4444;
+    }
+
+    .cons h4 {
+      color: #7f1d1d;
+      margin-bottom: 10px;
+    }
+
+    .cons ul {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .cons li:before {
+      content: "❌ ";
+      color: #EF4444;
+      font-weight: bold;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 40px;
+      margin: 30px 0;
+    }
+
+    .timeline-item {
+      margin-bottom: 20px;
+      position: relative;
+      padding-left: 30px;
+    }
+
+    .timeline-item:before {
+      content: "";
+      position: absolute;
+      left: -40px;
+      top: 5px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #0EA5E9;
+      border: 3px solid white;
+      box-shadow: 0 0 0 3px #0EA5E9;
+    }
+
+    .timeline-item:after {
+      content: "";
+      position: absolute;
+      left: -32px;
+      top: 28px;
+      width: 2px;
+      height: calc(100% + 10px);
+      background-color: #e5e7eb;
+    }
+
+    .timeline-item:last-child:after {
+      content: none;
+    }
+
+    .timeline-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 5px;
+    }
+
+    .timeline-duration {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .timeline-description {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .recommendation {
+      background: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 8px;
+      margin: 30px 0;
+    }
+
+    .recommendation h3 {
+      color: white;
+      margin-top: 0;
+    }
+
+    .recommendation-reason {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .recommendation-reason li {
+      margin-bottom: 5px;
+    }
+
+    code {
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      color: #dc2626;
+    }
+
+    pre {
+      background-color: #1f2937;
+      color: #f3f4f6;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 15px 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #f3f4f6;
+    }
+
+    .toc {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 20px;
+      margin: 30px 0;
+    }
+
+    .toc h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    .toc ul {
+      list-style: none;
+      margin: 0;
+    }
+
+    .toc li {
+      margin-bottom: 10px;
+    }
+
+    .toc a {
+      color: #0EA5E9;
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      text-decoration: underline;
+    }
+
+    .toc-level-2 {
+      margin-left: 20px;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .print-instruction {
+      background-color: #FEF08A;
+      border: 1px solid #F59E0B;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 30px;
+      font-size: 13px;
+    }
+
+    .print-instruction strong {
+      color: #92400e;
+    }
+
+    .stars {
+      color: #F59E0B;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .feature-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 15px;
+      border-left: 4px solid #0EA5E9;
+    }
+
+    .feature-card h4 {
+      margin-top: 0;
+      color: #0EA5E9;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="print-instruction">
+  <strong>📄 Stampa Istruzioni:</strong> Usa Ctrl+P (Windows) o Cmd+P (Mac) → Scegli "Salva come PDF" per salvare il report completo.
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-title">📧 Email Notification System</div>
+  <div class="header-subtitle">Analisi Modalità di Invio e Piano di Implementazione</div>
+  <div class="header-meta">
+    <div class="meta-item">
+      <span class="meta-label">Progetto:</span>
+      <span>Fortitudo Tennistavolo</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Data:</span>
+      <span>2026-09-06</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Versione:</span>
+      <span>1.0.0 (Stabile)</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Target:</span>
+      <span>v1.1.0 (In Sviluppo)</span>
+    </div>
+  </div>
+</header>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h3>📑 Indice</h3>
+  <ul>
+    <li><a href="#exec-summary">Executive Summary</a></li>
+    <li><a href="#modalita">Modalità di Invio Email</a></li>
+    <li><a href="#confronto">Confronto Servizi</a></li>
+    <li><a href="#raccomandazione">Raccomandazione</a></li>
+    <li><a href="#template">Template System</a></li>
+    <li><a href="#database">Database Schema</a></li>
+    <li><a href="#admin-ui">Admin UI Design</a></li>
+    <li><a href="#implementazione">Piano Implementazione</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+    <li><a href="#security">Security</a></li>
+  </ul>
+</div>
+
+<!-- EXECUTIVE SUMMARY -->
+<section class="section" id="exec-summary">
+  <h1>📊 Executive Summary</h1>
+
+  <p>Questo documento analizza le diverse modalità per implementare un sistema di email notifications per Fortitudo Tennistavolo, senza un dominio proprietario (casella email personale @gmail.com o simile).</p>
+
+  <div class="highlight-box success">
+    <h4>✅ Obiettivi Raggiunti</h4>
+    <ul>
+      <li>Analizzate 6 provider email professionali</li>
+      <li>Database schema completo per tracciamento email</li>
+      <li>Admin UI design per gestione template HTML</li>
+      <li>Piano implementazione fase per fase (~4-5 settimane)</li>
+      <li>4 template production-ready (booking, reminder, match, waiting list)</li>
+      <li>Responsive email design coerente con app</li>
+    </ul>
+  </div>
+
+  <h2>🎯 Key Findings</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metrica</th>
+        <th>Valore</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Provider Analizzati</td>
+        <td>6 (Gmail SMTP, SendGrid, AWS SES, Resend, Mailgun, Brevo)</td>
+      </tr>
+      <tr>
+        <td>Consigliato per Fortitudo</td>
+        <td><strong>Resend</strong> (free 100/giorno, $20/mese paid)</td>
+      </tr>
+      <tr>
+        <td>Tempo Implementazione</td>
+        <td>~4-5 settimane (8 fasi)</td>
+      </tr>
+      <tr>
+        <td>Costo Iniziale (Free Tier)</td>
+        <td>€0 (setup provider)</td>
+      </tr>
+      <tr>
+        <td>Costo Produzione</td>
+        <td>€20/mese (Resend) per 50k email/mese</td>
+      </tr>
+      <tr>
+        <td>Tabelle Database Richieste</td>
+        <td>4 (templates, sent_emails, template_versions, email_events)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- MODALITA DI INVIO -->
+<section class="section" id="modalita">
+  <h1>📬 Modalità di Invio Email</h1>
+
+  <p>Per un club senza dominio proprietario, la soluzione più pratica è usare un <strong>provider email professionista</strong> con API o SMTP integration.</p>
+
+  <h2>Opzione 1️⃣: Gmail SMTP (App Password)</h2>
+
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>Pro</h4>
+      <ul>
+        <li>Nessuna registrazione esterna</li>
+        <li>Gratis (500 email/giorno)</li>
+        <li>Setup semplice (10 min)</li>
+        <li>Nodemailer standard</li>
+        <li>Controllo completo</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Contro</h4>
+      <ul>
+        <li>Limite 500 email/giorno</li>
+        <li>Rischio account bloccato</li>
+        <li>Email può finire in spam</li>
+        <li>No bounce tracking</li>
+        <li>Headers Gmail visibili</li>
+      </ul>
+    </div>
+  </div>
+
+  <p><strong>Affidabilità:</strong> <span class="stars">⭐⭐⭐</span> Bassa (solo testing)</p>
+
+  <h2>Opzione 2️⃣: SendGrid</h2>
+
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>Pro</h4>
+      <ul>
+        <li>Free: 100 email/giorno</li>
+        <li>Paid: $30/mese (10k)</li>
+        <li>Dashboard stats completo</li>
+        <li>Webhook events</li>
+        <li>Template system built-in</li>
+        <li>Reputazione eccellente</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Contro</h4>
+      <ul>
+        <li>Richiede verifica dominio</li>
+        <li>Free tier limitato</li>
+        <li>Costo crescente con volume</li>
+      </ul>
+    </div>
+  </div>
+
+  <p><strong>Affidabilità:</strong> <span class="stars">⭐⭐⭐⭐⭐</span> Eccellente</p>
+
+  <h2>Opzione 3️⃣: AWS SES</h2>
+
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>Pro</h4>
+      <ul>
+        <li>Free: 200 email/giorno (anno 1)</li>
+        <li>Dopo: $0.10/1000</li>
+        <li>Webhook events</li>
+        <li>Altamente scalabile</li>
+        <li>Buona reputazione</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Contro</h4>
+      <ul>
+        <li>Setup AWS complesso</li>
+        <li>Richiede verifica dominio</li>
+        <li>Free solo primo anno</li>
+      </ul>
+    </div>
+  </div>
+
+  <p><strong>Affidabilità:</strong> <span class="stars">⭐⭐⭐⭐⭐</span> Eccellente</p>
+
+  <h2>Opzione 4️⃣: Resend (🟢 CONSIGLIATO)</h2>
+
+  <div class="highlight-box">
+    <h4>🎯 Consigliato per Fortitudo Tennistavolo</h4>
+    <p>Resend è il provider ideale per un'app Next.js/Vercel con focus su developer experience.</p>
+  </div>
+
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>Pro</h4>
+      <ul>
+        <li>Free: 100 email/giorno</li>
+        <li>Paid: $20/mese (50k)</li>
+        <li>Next.js nativo</li>
+        <li>Setup facile (10 min)</li>
+        <li>Dashboard intuitivo</li>
+        <li>React template system</li>
+        <li>Webhook events</li>
+        <li>Support eccellente</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Contro</h4>
+      <ul>
+        <li>Servizio più nuovo</li>
+        <li>Richiede verifica dominio</li>
+        <li>Free tier 100/giorno</li>
+      </ul>
+    </div>
+  </div>
+
+  <p><strong>Affidabilità:</strong> <span class="stars">⭐⭐⭐⭐</span> Molto buono</p>
+
+  <h2>Opzione 5️⃣: Mailgun</h2>
+
+  <p><strong>Free:</strong> 100/giorno | <strong>Paid:</strong> $35/mese | <strong>Affidabilità:</strong> <span class="stars">⭐⭐⭐⭐⭐</span></p>
+  <p>Enterprise-grade, API sofisticata, documentazione completa.</p>
+
+  <h2>Opzione 6️⃣: Brevo (ex-Sendinblue)</h2>
+
+  <p><strong>Free:</strong> 300/giorno | <strong>Paid:</strong> $20/mese | <strong>Affidabilità:</strong> <span class="stars">⭐⭐⭐⭐</span></p>
+  <p>Free tier più generoso, automazione marketing, builder drag-and-drop.</p>
+</section>
+
+<!-- CONFRONTO SERVIZI -->
+<section class="section" id="confronto">
+  <h1>📊 Confronto Servizi</h1>
+
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Servizio</th>
+        <th>Free Tier</th>
+        <th>Paid</th>
+        <th>Setup</th>
+        <th>Affidabilità</th>
+        <th>Migliore Per</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Gmail SMTP</strong></td>
+        <td>500/giorno</td>
+        <td>N/A</td>
+        <td>⭐</td>
+        <td>⭐⭐⭐</td>
+        <td>Testing</td>
+      </tr>
+      <tr>
+        <td><strong>SendGrid</strong></td>
+        <td>100/giorno</td>
+        <td>$30/mese</td>
+        <td>⭐⭐</td>
+        <td>⭐⭐⭐⭐⭐</td>
+        <td>Produzione</td>
+      </tr>
+      <tr>
+        <td><strong>AWS SES</strong></td>
+        <td>200/giorno*</td>
+        <td>$0.10/1000</td>
+        <td>⭐⭐⭐</td>
+        <td>⭐⭐⭐⭐⭐</td>
+        <td>Volume alto</td>
+      </tr>
+      <tr>
+        <td><strong style="color: #0EA5E9;">Resend</strong> <span class="badge badge-recommended">CONSIGLIATO</span></td>
+        <td>100/giorno</td>
+        <td>$20/mese</td>
+        <td>⭐</td>
+        <td>⭐⭐⭐⭐</td>
+        <td><strong>Next.js</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Mailgun</strong></td>
+        <td>100/giorno</td>
+        <td>$35/mese</td>
+        <td>⭐⭐</td>
+        <td>⭐⭐⭐⭐⭐</td>
+        <td>Advanced</td>
+      </tr>
+      <tr>
+        <td><strong>Brevo</strong></td>
+        <td>300/giorno</td>
+        <td>$20/mese</td>
+        <td>⭐⭐</td>
+        <td>⭐⭐⭐⭐</td>
+        <td>Free generoso</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box success">
+    <h4>💡 Per Fortitudo (50-100 utenti)</h4>
+    <p><strong>Resend free tier (100 email/giorno) è sufficiente</strong> per allenamenti + campionati. Se cresce → upgrade $20/mese per 50k email/mese.</p>
+  </div>
+</section>
+
+<!-- RACCOMANDAZIONE -->
+<section class="section" id="raccomandazione">
+  <h1>🎯 Raccomandazione</h1>
+
+  <div class="recommendation">
+    <h3>✅ Provider Scelto: Resend</h3>
+    <div class="recommendation-reason">
+      <h4>Motivi Principali:</h4>
+      <ul>
+        <li>✅ Nativo Next.js/Vercel → integrazione perfetta</li>
+        <li>✅ Setup facile → 10 minuti vs 30+ per altri</li>
+        <li>✅ Free tier 100/giorno → sufficiente per club piccolo</li>
+        <li>✅ Paid tier $20/mese → scalabile se cresce</li>
+        <li>✅ Dashboard intuitivo → admin non ha problemi</li>
+        <li>✅ Template system React → perfetto per app</li>
+        <li>✅ Webhook events → tracking email completo</li>
+        <li>✅ Support eccellente → meno problemi</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Alternative Valide</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>SendGrid</h4>
+      <p>Se hai bisogno di features avanzate e stabilità enterprise. Dashboard più completo.</p>
+    </div>
+    <div class="feature-card">
+      <h4>AWS SES</h4>
+      <p>Se scalabilità massima è prioritaria e sei già in AWS ecosystem.</p>
+    </div>
+    <div class="feature-card">
+      <h4>Brevo</h4>
+      <p>Se vuoi il free tier più generoso (300/giorno) con automazione marketing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TEMPLATE SYSTEM -->
+<section class="section" id="template">
+  <h1>📧 Template System</h1>
+
+  <h2>Design Principi</h2>
+
+  <ul>
+    <li><strong>Responsive:</strong> Mobile-first (320px → 800px)</li>
+    <li><strong>Inline CSS:</strong> Tutti email client supportano</li>
+    <li><strong>Table Layout:</strong> Compatibilità Outlook massima</li>
+    <li><strong>Variabili:</strong> {{user_name}}, {{slot_date}}, ecc</li>
+    <li><strong>Tracking:</strong> Open rate + click tracking via pixel</li>
+    <li><strong>Brand Consistent:</strong> Colori Tailwind app</li>
+  </ul>
+
+  <h2>4 Template Produzione</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Template</th>
+        <th>Trigger</th>
+        <th>Recipient</th>
+        <th>Urgency</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Booking Confirmation</strong></td>
+        <td>Dopo prenotazione</td>
+        <td>Utente prenotato</td>
+        <td>Standard</td>
+      </tr>
+      <tr>
+        <td><strong>Reminder 24h</strong></td>
+        <td>Cron daily 09:00</td>
+        <td>Chi ha slot domani</td>
+        <td>Soft</td>
+      </tr>
+      <tr>
+        <td><strong>Match Attendance</strong></td>
+        <td>Cambio presenze admin</td>
+        <td>Giocatori squadra</td>
+        <td>Standard</td>
+      </tr>
+      <tr>
+        <td><strong>Waiting List Promotion</strong></td>
+        <td>Auto-promotion</td>
+        <td>First in WL</td>
+        <td><strong>🔴 Alta (24h expiry)</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Template Base (Boilerplate)</h2>
+
+  <p>Ogni template usa una struttura standard:</p>
+
+  <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width"&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;!-- Header (Logo + Title) --&gt;
+    &lt;!-- Content (Body) --&gt;
+    &lt;!-- CTA Button (Optional) --&gt;
+    &lt;!-- Footer (Unsubscribe) --&gt;
+    &lt;!-- Tracking Pixel --&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h2>Colori Coerenti con App</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Elemento</th>
+        <th>Colore</th>
+        <th>Uso</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Primary</td>
+        <td style="background-color: #0EA5E9; color: white; padding: 5px;">🟦 #0EA5E9</td>
+        <td>CTA buttons, header</td>
+      </tr>
+      <tr>
+        <td>Success</td>
+        <td style="background-color: #10B981; color: white; padding: 5px;">🟩 #10B981</td>
+        <td>Confirmations</td>
+      </tr>
+      <tr>
+        <td>Warning</td>
+        <td style="background-color: #F59E0B; color: white; padding: 5px;">🟨 #F59E0B</td>
+        <td>Alerts, 24h expiry</td>
+      </tr>
+      <tr>
+        <td>Danger</td>
+        <td style="background-color: #EF4444; color: white; padding: 5px;">🔴 #EF4444</td>
+        <td>Errors</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- DATABASE SCHEMA -->
+<section class="section" id="database">
+  <h1>🗄️ Database Schema</h1>
+
+  <p>4 tabelle richieste per tracciare email, template, versioni e events.</p>
+
+  <h2>1. email_templates</h2>
+
+  <pre><code>id UUID PRIMARY KEY
+name VARCHAR(100) UNIQUE        -- "booking_confirmation"
+subject VARCHAR(255)            -- "Conferma Prenotazione {{slot_name}}"
+html_body TEXT                  -- HTML completo
+variables JSONB                 -- ["user_name", "slot_name", "slot_date"]
+created_by UUID FK profiles
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+version INT DEFAULT 1           -- Storico versioni
+active BOOLEAN DEFAULT true</code></pre>
+
+  <h2>2. email_template_versions</h2>
+
+  <p>Storico di tutte le versioni template per rollback.</p>
+
+  <pre><code>id UUID PRIMARY KEY
+template_id UUID FK email_templates
+version INT
+subject VARCHAR(255)
+html_body TEXT
+changed_by UUID FK profiles
+changed_at TIMESTAMPTZ</code></pre>
+
+  <h2>3. sent_emails</h2>
+
+  <p>Log di tutte le email inviate.</p>
+
+  <pre><code>id UUID PRIMARY KEY
+recipient_email VARCHAR(255)
+recipient_user_id UUID FK profiles (nullable)
+template_name VARCHAR(100)
+subject VARCHAR(255)
+sent_at TIMESTAMPTZ
+status VARCHAR(50)              -- "sent", "delivered", "bounced", "opened"
+provider VARCHAR(50)            -- "resend", "sendgrid"
+provider_message_id VARCHAR(255) -- Per tracking
+error_message TEXT (nullable)
+variables JSONB                 -- Variables usati
+created_at TIMESTAMPTZ</code></pre>
+
+  <h2>4. email_events</h2>
+
+  <p>Timeline di delivery/open/click events.</p>
+
+  <pre><code>id UUID PRIMARY KEY
+sent_email_id UUID FK sent_emails
+event_type VARCHAR(50)          -- "opened", "clicked", "bounced"
+event_timestamp TIMESTAMPTZ
+event_data JSONB                -- Raw data from provider
+created_at TIMESTAMPTZ</code></pre>
+
+  <div class="highlight-box success">
+    <h4>✅ RLS Policies</h4>
+    <ul>
+      <li>Admin/Superadmin: CRUD completo template</li>
+      <li>Superadmin: View all stats + bounce analysis</li>
+      <li>Utenti normali: Nessun accesso</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ADMIN UI -->
+<section class="section" id="admin-ui">
+  <h1>👨‍💼 Admin UI Design</h1>
+
+  <p>4 pagine amministrative per gestire template, visualizzare cronologia e statistics.</p>
+
+  <h2>Pagina 1: Template Management</h2>
+
+  <p><strong>Path:</strong> <code>/admin/notifiche/template</code></p>
+
+  <p>Tabella con lista template, possibilità di:</p>
+  <ul>
+    <li>✏️ Modifica template</li>
+    <li>👁️ Anteprima</li>
+    <li>📋 Storico versioni</li>
+    <li>✅ Attiva/Disattiva</li>
+    <li>🧪 Test send email</li>
+  </ul>
+
+  <h2>Pagina 2: Template Editor</h2>
+
+  <p><strong>Path:</strong> <code>/admin/notifiche/template/[templateId]</code></p>
+
+  <p>Form per editare template con:</p>
+  <ul>
+    <li>Nome template (read-only se v > 1)</li>
+    <li>HTML editor con syntax highlighting</li>
+    <li>Variable picker (dropdown)</li>
+    <li>Mobile preview (real-time)</li>
+    <li>Test data per preview</li>
+    <li>Salva come draft/active</li>
+  </ul>
+
+  <h2>Pagina 3: Email History</h2>
+
+  <p><strong>Path:</strong> <code>/admin/notifiche/cronologia</code></p>
+
+  <p>Tabella cronologia email con:</p>
+  <ul>
+    <li>Filtri: Data, Utente, Template, Status</li>
+    <li>Status icons (sent, delivered, opened, bounced)</li>
+    <li>Click per visualizzare HTML inviato</li>
+    <li>Timeline events (delivery → open → click)</li>
+  </ul>
+
+  <h2>Pagina 4: Statistics</h2>
+
+  <p><strong>Path:</strong> <code>/admin/notifiche/statistiche</code></p>
+
+  <p>Dashboard con KPI:</p>
+  <ul>
+    <li>Total sent, delivered %, open rate, bounce rate</li>
+    <li>Stats per template (confronto)</li>
+    <li>Trend mensile (grafico)</li>
+    <li>Bounce analysis (hard/soft/complained)</li>
+  </ul>
+</section>
+
+<!-- IMPLEMENTAZIONE -->
+<section class="section" id="implementazione">
+  <h1>🚀 Piano Implementazione</h1>
+
+  <h2>Panoramica (8 Fasi)</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 1: Setup Provider</div>
+      <div class="timeline-duration">1-2 giorni</div>
+      <div class="timeline-description">Registra account Resend, genera API key, test send email manuale.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 2: Database Schema</div>
+      <div class="timeline-duration">2-3 giorni</div>
+      <div class="timeline-description">Migration 0038: 4 tabelle + RLS policies + template base inserts.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 3: Backend Service</div>
+      <div class="timeline-duration">4-5 giorni</div>
+      <div class="timeline-description">Email service, webhook listener, bounce handling, logging.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 4: Admin Templates</div>
+      <div class="timeline-duration">5-6 giorni</div>
+      <div class="timeline-description">Editor HTML + preview, CRUD template, test send.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 5: Admin Statistics</div>
+      <div class="timeline-duration">4-5 giorni</div>
+      <div class="timeline-description">Cronologia email, KPI dashboard, bounce analysis.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 6: Email Triggers</div>
+      <div class="timeline-duration">6-7 giorni</div>
+      <div class="timeline-description">Integrazione booking, reminder 24h, match attendance, waiting list.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Fase 7: Testing & QA</div>
+      <div class="timeline-duration">3-4 giorni</div>
+      <div class="timeline-description">Integration test, spam check, mobile rendering, documentation.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="section" id="timeline">
+  <h1>📅 Timeline Dettagliata</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Fase</th>
+        <th>Task Principali</th>
+        <th>Timeline</th>
+        <th>Deliverable</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1. Setup Provider</td>
+        <td>Account Resend, API key, test email</td>
+        <td>1-2 gg</td>
+        <td>✅ Account attivo</td>
+      </tr>
+      <tr>
+        <td>2. DB Schema</td>
+        <td>Migration 4 tabelle, RLS, template base</td>
+        <td>2-3 gg</td>
+        <td>✅ Schema in produzione</td>
+      </tr>
+      <tr>
+        <td>3. Backend</td>
+        <td>Email service, webhook, bounce handling</td>
+        <td>4-5 gg</td>
+        <td>✅ Logging funzionante</td>
+      </tr>
+      <tr>
+        <td>4. Admin Templates</td>
+        <td>Editor, preview, CRUD, test send</td>
+        <td>5-6 gg</td>
+        <td>✅ Template editable da admin</td>
+      </tr>
+      <tr>
+        <td>5. Admin Stats</td>
+        <td>Cronologia, KPI, grafico, bounce</td>
+        <td>4-5 gg</td>
+        <td>✅ Dashboard completo</td>
+      </tr>
+      <tr>
+        <td>6. Triggers</td>
+        <td>Integrazione 4 trigger (booking, reminder, match, waiting list)</td>
+        <td>6-7 gg</td>
+        <td>✅ Email automatiche funzionanti</td>
+      </tr>
+      <tr>
+        <td>7. Testing</td>
+        <td>QA, spam check, mobile, documentazione</td>
+        <td>3-4 gg</td>
+        <td>✅ Production ready</td>
+      </tr>
+      <tr>
+        <td><strong>TOTAL</strong></td>
+        <td></td>
+        <td><strong>~4-5 settimane</strong></td>
+        <td><strong>✅ v1.1.0 Ready</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box warning">
+    <h4>⏰ Nota Timeline</h4>
+    <p>Stima based on dedicated developer. Parallelizzare fasi quando possibile (es: Fase 4-5 backend + admin contemporaneamente).</p>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section class="section" id="security">
+  <h1>🔐 Security & Compliance</h1>
+
+  <h2>SMTP Credentials</h2>
+  <ul>
+    <li>✅ Mai committare credenziali in git</li>
+    <li>✅ Usare <code>.env.local</code> (gitignored)</li>
+    <li>✅ Vercel Environment Variables per produzione</li>
+    <li>✅ Rotate keys periodicamente</li>
+  </ul>
+
+  <h2>Template HTML</h2>
+  <ul>
+    <li>✅ Sanitize variabili (XSS prevention)</li>
+    <li>✅ Validare HTML before save (optional)</li>
+    <li>✅ Rate limit email send (prevent abuse)</li>
+    <li>✅ Log tutti gli invii (audit trail)</li>
+  </ul>
+
+  <h2>Bounce Management</h2>
+  <ul>
+    <li>✅ Hard bounce → disable email utente</li>
+    <li>✅ Soft bounce → retry logic dopo 1h</li>
+    <li>✅ Complained (spam) → permanent disable</li>
+    <li>✅ Monitor bounce rate (alert se > 5%)</li>
+  </ul>
+
+  <h2>Privacy & GDPR</h2>
+  <ul>
+    <li>✅ Email consent tracking</li>
+    <li>✅ Unsubscribe link in footer (best practice)</li>
+    <li>✅ Data retention: delete sent_emails dopo 90 giorni (opzionale)</li>
+    <li>✅ Privacy policy updated</li>
+  </ul>
+</section>
+
+<!-- NEXT STEPS -->
+<section class="section">
+  <h1>📍 Prossimi Step</h1>
+
+  <div class="highlight-box success">
+    <h4>Quando Team Decide di Implementare:</h4>
+    <ol>
+      <li>Scegli provider: <strong>Resend</strong> (consigliato)</li>
+      <li>Registra account su <code>resend.com</code></li>
+      <li>Genera API key, metti in Vercel env vars</li>
+      <li>Crea migration DB 0038</li>
+      <li>Implementa email service (fase 3)</li>
+      <li>Build admin UI (fasi 4-5)</li>
+      <li>Integra trigger (fase 6)</li>
+      <li>Test complete suite (fase 7)</li>
+      <li>Deploy v1.1.0</li>
+    </ol>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Documento preparato per: Fortitudo Tennistavolo</p>
+  <p>Data: 2026-09-06 | Versione: 1.0.0 (Stabile) | Target: v1.1.0 (In Sviluppo)</p>
+  <p>Repository: <code>github.com/flaviocaloni/Fortitudo_Tennistavolo</code></p>
+  <p style="margin-top: 15px; font-size: 11px;">
+    <strong>Note Legali:</strong> Questo documento è destinato uso interno. Provider email (Resend, SendGrid, ecc) sono servizi di terze parti con propri termini di servizio.
+  </p>
+</footer>
+
+</body>
+</html>
