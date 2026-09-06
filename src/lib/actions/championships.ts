@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
 import * as notifications from "@/lib/supabase/notifications";
 import { isAdmin } from "@/lib/utils/roles";
@@ -509,7 +510,7 @@ export async function updateMatchResult(formData: FormData) {
   await requireAdmin();
 
   const admin = createAdminClient();
-  const dbClient = admin || (await createClient()).default;
+  const dbClient = admin;
 
   const matchId = String(formData.get("match_id"));
   const championshipId = String(formData.get("championship_id"));
