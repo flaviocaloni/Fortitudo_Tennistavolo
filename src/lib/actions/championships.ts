@@ -507,10 +507,10 @@ export async function deleteMatch(formData: FormData) {
 }
 
 export async function updateMatchResult(formData: FormData) {
-  await requireAdmin();
+  const supabase = await requireAdmin();
 
   const admin = createAdminClient();
-  const dbClient = admin;
+  const dbClient = admin || supabase;
 
   const matchId = String(formData.get("match_id"));
   const championshipId = String(formData.get("championship_id"));
