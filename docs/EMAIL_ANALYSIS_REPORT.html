@@ -813,6 +813,248 @@
   </div>
 </section>
 
+<!-- DOMAIN COMPARISON -->
+<section class="section" id="domain-comparison">
+  <h1>🌐 Gmail vs Dominio Aziendale Proprio</h1>
+
+  <p>Confronto tra due strategie: usando casella Gmail/personale oppure registrando un dominio aziendale .it</p>
+
+  <h2>Scenario 1: Gmail (Casella Personale)</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Aspetto</th>
+        <th>Dettagli</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>From Address</strong></td>
+        <td><code>noreply@fortitudo.it</code> alias Gmail ← backend tue@gmail.com</td>
+      </tr>
+      <tr>
+        <td><strong>Setup Time</strong></td>
+        <td>10 minuti</td>
+      </tr>
+      <tr>
+        <td><strong>Costo Iniziale</strong></td>
+        <td>€0</td>
+      </tr>
+      <tr>
+        <td><strong>Costo Mensile</strong></td>
+        <td>€0</td>
+      </tr>
+      <tr>
+        <td><strong>Volume Limite</strong></td>
+        <td>500 email/giorno</td>
+      </tr>
+      <tr>
+        <td><strong>Deliverability</strong></td>
+        <td>~70% (spam risk)</td>
+      </tr>
+      <tr>
+        <td><strong>SPF/DKIM/DMARC</strong></td>
+        <td>❌ Non configurabile</td>
+      </tr>
+      <tr>
+        <td><strong>Branding</strong></td>
+        <td>⭐⭐⭐ (Gmail via headers)</td>
+      </tr>
+      <tr>
+        <td><strong>Professional</strong></td>
+        <td>⭐⭐⭐ Medio</td>
+      </tr>
+      <tr>
+        <td><strong>Webhook Tracking</strong></td>
+        <td>⚠️ Limitato (polling required)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box success">
+    <h4>✅ Quando Usare Gmail</h4>
+    <ul>
+      <li>Budget limitato (€0 vs €255/anno)</li>
+      <li>Volume basso (&lt;500 email/settimana)</li>
+      <li>Timeline tight (launch veloce in 1 settimana)</li>
+      <li>Phase di test/MVP</li>
+      <li>Club piccolo (50-100 prenotazioni/settimana)</li>
+    </ul>
+  </div>
+
+  <h2>Scenario 2: Dominio Aziendale (.it)</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Aspetto</th>
+        <th>Dettagli</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>From Address</strong></td>
+        <td><code>noreply@fortitudo.it</code> ← dominio proprio</td>
+      </tr>
+      <tr>
+        <td><strong>Setup Time</strong></td>
+        <td>2-3 ore (DNS + provider setup)</td>
+      </tr>
+      <tr>
+        <td><strong>Costo Iniziale</strong></td>
+        <td>€15-20 (registrazione dominio .it)</td>
+      </tr>
+      <tr>
+        <td><strong>Costo Mensile</strong></td>
+        <td>€20-30 (Resend/SendGrid)</td>
+      </tr>
+      <tr>
+        <td><strong>Costo Annuale</strong></td>
+        <td>€255-380 (dominio + email provider)</td>
+      </tr>
+      <tr>
+        <td><strong>Volume Limite</strong></td>
+        <td>Illimitato (scalabile)</td>
+      </tr>
+      <tr>
+        <td><strong>Deliverability</strong></td>
+        <td>~95%+ (eccellente)</td>
+      </tr>
+      <tr>
+        <td><strong>SPF/DKIM/DMARC</strong></td>
+        <td>✅ Completo controllo</td>
+      </tr>
+      <tr>
+        <td><strong>Branding</strong></td>
+        <td>⭐⭐⭐⭐⭐ Proprio dominio</td>
+      </tr>
+      <tr>
+        <td><strong>Professional</strong></td>
+        <td>⭐⭐⭐⭐⭐ Eccellente</td>
+      </tr>
+      <tr>
+        <td><strong>Webhook Tracking</strong></td>
+        <td>✅ Completo (Resend/SendGrid)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box warning">
+    <h4>✅ Quando Usare Dominio Aziendale</h4>
+    <ul>
+      <li>Professional branding è prioritario</li>
+      <li>Volume alto (&gt;500 email/settimana)</li>
+      <li>Budget disponibile (€255/anno)</li>
+      <li>Compliance GDPR critical</li>
+      <li>Long-term vision/stabilità</li>
+      <li>Club grande con campionati</li>
+    </ul>
+  </div>
+
+  <h2>Confronto Costi Annuali</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th>Iniziale</th>
+        <th>Mensile</th>
+        <th>Annuale</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Gmail Only</strong></td>
+        <td>€0</td>
+        <td>€0</td>
+        <td><strong>€0</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Dominio (Resend)</strong></td>
+        <td>€15-20</td>
+        <td>€21.25</td>
+        <td><strong>€255</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Dominio (SendGrid)</strong></td>
+        <td>€15-20</td>
+        <td>€31</td>
+        <td><strong>€372</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>🎯 Raccomandazione: Strategia Ibrida</h2>
+
+  <div class="recommendation">
+    <h3>Fase 1 (Subito): Gmail</h3>
+    <p><strong>Timeline:</strong> 1 settimana | <strong>Costo:</strong> €0</p>
+    <div class="recommendation-reason">
+      <p>Launch v1.1.0 con email su Gmail. Sufficiente per phase alpha/test. Revisita decisione dopo 3-6 mesi.</p>
+    </div>
+  </div>
+
+  <div class="recommendation" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); margin-top: 20px;">
+    <h3>Fase 2 (Futuro, 3-6 mesi): Dominio Aziendale</h3>
+    <p><strong>Timeline:</strong> 2-3 settimane migrazione | <strong>Costo:</strong> €255/anno</p>
+    <div class="recommendation-reason">
+      <p>Se volume cresce, email finiscono in spam, o vuoi branding professionale. Migrazione low-risk (database schema identico, no downtime lungo).</p>
+    </div>
+  </div>
+
+  <h2>Impatto Tecnico sulla Implementazione</h2>
+
+  <p>La buona notizia: <strong>nessun cambio al codice email service</strong></p>
+
+  <pre><code>// Email service rimane uguale per Gmail e Dominio
+
+async function sendEmail(
+  to: string,
+  template: string,
+  variables: Record&lt;string, any&gt;
+) {
+  // 1. Fetch template
+  // 2. Render variables
+  // 3. Send via provider (Gmail SMTP o Resend API)
+  // 4. Log to database
+}
+
+// Differenza: Solo credenziali .env cambiano
+// SMTP_HOST, SMTP_USER, SMTP_PASSWORD (Gmail)
+// ↓ migrazione dopo 3-6 mesi ↓
+// RESEND_API_KEY (Dominio + Resend)
+</code></pre>
+
+  <h2>Percorso Migrativo</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-title">Settimana 1-2: Gmail Launch</div>
+      <div class="timeline-duration">Setup + implementazione</div>
+      <div class="timeline-description">Email notifications live con Gmail SMTP. Cost zero. Sufficiente per test.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Mese 3-6: Monitoraggio</div>
+      <div class="timeline-duration">Feedback phase</div>
+      <div class="timeline-description">Track: volume email, spam rate, user feedback, budget feedback.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Mese 6: Decisione</div>
+      <div class="timeline-duration">Go/No-Go</div>
+      <div class="timeline-description">Se volume/spam/branding issues → go to Dominio. Altrimenti, stay on Gmail.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-title">Mese 7-9: Dominio Aziendale</div>
+      <div class="timeline-duration">Migration phase</div>
+      <div class="timeline-description">Registra .it, setup DNS, switch a Resend. Webhook listener attivo. Professional branding.</div>
+    </div>
+  </div>
+</section>
+
 <!-- TEMPLATE SYSTEM -->
 <section class="section" id="template">
   <h1>📧 Template System</h1>
