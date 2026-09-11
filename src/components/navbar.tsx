@@ -49,6 +49,9 @@ export default async function Navbar() {
         ...(isAdmin(profile.role)
           ? [{ href: "/admin", label: "Admin", highlight: true }]
           : []),
+        ...(isSuperAdmin(profile.role)
+          ? [{ href: "/sys", label: "🔧 SYS", highlight: true }]
+          : []),
         { href: "/profilo", label: "👤 Il mio profilo" },
       ]
     : [];
