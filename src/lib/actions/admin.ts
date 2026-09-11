@@ -219,7 +219,7 @@ export async function toggleGoogleOAuth(formData: FormData) {
       value: enabled ? "true" : "false",
     });
 
-  if (error) backWithError("/admin/sys/google-oauth", error.message);
-  revalidatePath("/admin/sys/google-oauth");
+  if (error) backWithError("/sys/google-oauth", error.message);
+  revalidatePath("/sys/google-oauth");
   revalidatePath("/login");
 }

@@ -3,6 +3,11 @@ import Link from "next/link";
 export default function SysDashboard() {
   const sections = [
     {
+      href: "/sys/google-oauth",
+      title: "🔐 Google OAuth",
+      description: "Abilita/disabilita Google authentication nel login",
+    },
+    {
       href: "/sys/auto-booking",
       title: "🤖 Auto-Booking",
       description: "Gestisci la feature auto-booking degli utenti",

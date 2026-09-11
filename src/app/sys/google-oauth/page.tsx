@@ -23,12 +23,12 @@ export default async function GoogleOAuthPage(props: {
   return (
     <div>
       <div className="mb-6">
-        <a href="/admin" className="text-sm text-blue-600 hover:underline">
-          ← Torna ad Admin
+        <a href="/sys" className="text-sm text-blue-600 hover:underline">
+          ← Torna a System Admin
         </a>
       </div>
 
-      <h1 className="mb-2 text-2xl font-bold">Google OAuth</h1>
+      <h1 className="mb-2 text-2xl font-bold">🔐 Google OAuth</h1>
       <p className="mb-6 text-sm text-slate-600">
         Gestione Google OAuth authentication per la pagina di login.
       </p>
