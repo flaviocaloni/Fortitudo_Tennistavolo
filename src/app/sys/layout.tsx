@@ -16,6 +16,7 @@ export default async function SysLayout({
       <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-slate-200 pb-3 text-sm">
         <span className="font-bold text-red-700">🔧 System Admin</span>
         <Link href="/sys" className="hover:text-navy-700">Dashboard</Link>
+        <Link href="/sys/google-oauth" className="hover:text-navy-700">🔐 Google OAuth</Link>
         <Link href="/sys/auto-booking" className="hover:text-navy-700">🤖 Auto-Booking</Link>
       </div>
       {children}
