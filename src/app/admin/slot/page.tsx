@@ -4,12 +4,11 @@ import {
   createSlot,
   deleteClosure,
   deleteSlot,
-  toggleGoogleOAuth,
   toggleSlotActive,
   updateCalendarDays,
   updateSlot,
 } from "@/lib/actions/admin";
-import { getCalendarDaysAhead, getCurrentSeason, isGoogleOAuthEnabled } from "@/lib/settings";
+import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
 import { formatTime } from "@/lib/dates";
 import { AUDIENCE_LABEL, WEEKDAYS, type TrainingSlot } from "@/lib/types";
 import ErrorBanner from "@/components/error-banner";
@@ -25,7 +24,7 @@ export default async function AdminSlotPage(
 ) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
-  const [{ data: slots }, { data: closures }, { data: seasons }, googleOAuthEnabled] =
+  const [{ data: slots }, { data: closures }, { data: seasons }] =
     await Promise.all([
       supabase
         .from("training_slots")
@@ -35,7 +34,6 @@ export default async function AdminSlotPage(
         .order("start_time"),
       supabase.from("club_closures").select("*").order("start_date"),
       supabase.from("seasons").select("*").order("start_date", { ascending: false }),
-      isGoogleOAuthEnabled(supabase),
     ]);
   const calendarDays = await getCalendarDaysAhead(supabase);
   const currentSeason = await getCurrentSeason(supabase);
@@ -69,28 +67,6 @@ export default async function AdminSlotPage(
         <p className="text-xs text-slate-500">
           Gli utenti vedono e possono prenotare gli allenamenti fino a{" "}
           {calendarDays} giorni da oggi.
-        </p>
-      </form>
-
-      <form
-        action={toggleGoogleOAuth}
-        className="card mb-6 flex flex-wrap items-end gap-3"
-      >
-        <div>
-          <label className="label">Google OAuth</label>
-          <select
-            name="enabled"
-            defaultValue={googleOAuthEnabled ? "true" : "false"}
-            className="input w-40"
-          >
-            <option value="true">Abilitato</option>
-            <option value="false">Disabilitato</option>
-          </select>
-        </div>
-        <button className="btn-navy">Salva</button>
-        <p className="text-xs text-slate-500">
-          Il bottone "Continua con Google" {googleOAuthEnabled ? "è" : "non è"}{" "}
-          visibile nella pagina di login.
         </p>
       </form>
 

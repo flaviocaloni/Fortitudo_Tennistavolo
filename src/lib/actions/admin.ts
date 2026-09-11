@@ -3,11 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
-import { isAdmin } from "@/lib/utils/roles";
+import { isAdmin, isSuperAdmin } from "@/lib/utils/roles";
 
 async function requireAdmin() {
   const { supabase, profile } = await getSessionProfile();
   if (!profile || !isAdmin(profile.role)) redirect("/calendario");
+  return supabase;
+}
+
+async function requireSuperAdmin() {
+  const { supabase, profile } = await getSessionProfile();
+  if (!profile || !isSuperAdmin(profile.role)) redirect("/calendario");
   return supabase;
 }
 
@@ -201,9 +207,9 @@ export async function adminCancelBooking(formData: FormData) {
   revalidatePath("/calendario");
 }
 
-/** Attiva/disattiva Google OAuth. */
+/** Attiva/disattiva Google OAuth (Superadmin only). */
 export async function toggleGoogleOAuth(formData: FormData) {
-  const supabase = await requireAdmin();
+  const supabase = await requireSuperAdmin();
   const enabled = String(formData.get("enabled") ?? "false") === "true";
 
   const { error } = await supabase
@@ -213,7 +219,7 @@ export async function toggleGoogleOAuth(formData: FormData) {
       value: enabled ? "true" : "false",
     });
 
-  if (error) backWithError("/admin/slot", error.message);
-  revalidatePath("/admin/slot");
+  if (error) backWithError("/admin/sys/google-oauth", error.message);
+  revalidatePath("/admin/sys/google-oauth");
   revalidatePath("/login");
 }
