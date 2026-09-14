@@ -54,11 +54,9 @@ export default async function EventsPage(props: {
         {filtered.map((e: TrainingSlot) => (
           <div
             key={e.id}
-            className={`card flex flex-wrap items-center justify-between gap-3 ${
-              e.is_active ? "" : "opacity-60"
-            }`}
+            className={`card ${e.is_active ? "" : "opacity-60"}`}
           >
-            <div>
+            <div className="mb-3">
               <p className="font-medium">
                 {e.title} ·{" "}
                 {new Date(e.event_date! + "T00:00:00").toLocaleDateString("it-IT")} ·{" "}
@@ -84,18 +82,18 @@ export default async function EventsPage(props: {
               <p className="text-xs text-slate-400">ID: {e.id}</p>
               <SlotEditToggle slot={e} action={updateSlot} seasons={seasons ?? []} />
             </div>
-            <div className="flex gap-2 overflow-x-auto">
-              <Link href={`/admin/slot/eventi/${e.id}/clone`} className="btn-ghost flex-shrink-0">
+            <div className="flex gap-2">
+              <Link href={`/admin/slot/eventi/${e.id}/clone`} className="btn-ghost">
                 🔄 Clona
               </Link>
-              <form action={toggleSlotActive} className="flex-shrink-0">
+              <form action={toggleSlotActive}>
                 <input type="hidden" name="slot_id" value={e.id} />
                 <input type="hidden" name="is_active" value={String(!e.is_active)} />
                 <button className="btn-ghost">
                   {e.is_active ? "Disattiva" : "Riattiva"}
                 </button>
               </form>
-              <form action={deleteSlot} className="flex-shrink-0">
+              <form action={deleteSlot}>
                 <input type="hidden" name="slot_id" value={e.id} />
                 <button className="btn-danger">Elimina</button>
               </form>
