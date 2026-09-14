@@ -80,9 +80,9 @@ export default async function EventsPage(props: {
               )}
               {e.notes && <p className="text-sm text-slate-600">Note: {e.notes}</p>}
               <p className="text-xs text-slate-400">ID: {e.id}</p>
-              <SlotEditToggle slot={e} action={updateSlot} seasons={seasons ?? []} />
             </div>
             <div className="flex gap-2">
+              <SlotEditToggle slot={e} action={updateSlot} seasons={seasons ?? []} />
               <Link href={`/admin/slot/eventi/${e.id}/clone`} className="btn-ghost">
                 🔄 Clona
               </Link>

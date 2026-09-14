@@ -15,20 +15,19 @@ export default function SlotEditToggle({
 }) {
   const [editing, setEditing] = useState(false);
 
-  if (!editing) {
-    return (
+  return (
+    <>
       <button className="btn-ghost" onClick={() => setEditing(true)}>
         Modifica
       </button>
-    );
-  }
-
-  return (
-    <div className="mt-3 w-full">
-      <SlotForm action={action} seasons={seasons} slot={slot} submitLabel="Salva modifiche" />
-      <button className="btn-ghost mt-2" onClick={() => setEditing(false)}>
-        Chiudi
-      </button>
-    </div>
+      {editing && (
+        <div className="mt-3 w-full">
+          <SlotForm action={action} seasons={seasons} slot={slot} submitLabel="Salva modifiche" />
+          <button className="btn-ghost mt-2" onClick={() => setEditing(false)}>
+            Chiudi
+          </button>
+        </div>
+      )}
+    </>
   );
 }
