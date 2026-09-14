@@ -84,18 +84,18 @@ export default async function EventsPage(props: {
               <p className="text-xs text-slate-400">ID: {e.id}</p>
               <SlotEditToggle slot={e} action={updateSlot} seasons={seasons ?? []} />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href={`/admin/slot/eventi/${e.id}/clone`} className="btn-ghost">
+            <div className="flex gap-2 overflow-x-auto">
+              <Link href={`/admin/slot/eventi/${e.id}/clone`} className="btn-ghost flex-shrink-0">
                 🔄 Clona
               </Link>
-              <form action={toggleSlotActive}>
+              <form action={toggleSlotActive} className="flex-shrink-0">
                 <input type="hidden" name="slot_id" value={e.id} />
                 <input type="hidden" name="is_active" value={String(!e.is_active)} />
                 <button className="btn-ghost">
                   {e.is_active ? "Disattiva" : "Riattiva"}
                 </button>
               </form>
-              <form action={deleteSlot}>
+              <form action={deleteSlot} className="flex-shrink-0">
                 <input type="hidden" name="slot_id" value={e.id} />
                 <button className="btn-danger">Elimina</button>
               </form>
