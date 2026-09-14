@@ -1,17 +1,59 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createSlot } from "@/lib/actions/admin";
+import { redirect, revalidatePath } from "next/navigation";
+import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { getCurrentSeason } from "@/lib/settings";
 import { type TrainingSlot } from "@/lib/types";
+import { isAdmin } from "@/lib/utils/roles";
+import ErrorBanner from "@/components/error-banner";
 
 export const dynamic = "force-dynamic";
 
+async function cloneSlot(formData: FormData) {
+  "use server";
+  const { supabase, profile } = await getSessionProfile();
+  if (!profile || !isAdmin(profile.role)) redirect("/calendario");
+
+  const seasonId = String(formData.get("season_id") ?? "");
+  if (!seasonId) {
+    const eventId = String(formData.get("event_id") ?? "");
+    redirect(`/admin/slot/eventi/${eventId}/clone?error=${encodeURIComponent("Seleziona una stagione")}`);
+  }
+
+  const payload = {
+    title: String(formData.get("title") || "Evento"),
+    weekday: null,
+    event_date: String(formData.get("event_date") ?? ""),
+    start_date: null,
+    end_date: null,
+    start_time: String(formData.get("start_time")),
+    end_time: String(formData.get("end_time")),
+    audience: String(formData.get("audience") ?? "misto"),
+    min_capacity: Number(formData.get("min_capacity") ?? 1),
+    max_capacity: Number(formData.get("max_capacity") ?? 60),
+    notes: String(formData.get("notes") ?? "") || null,
+    season_id: seasonId,
+    sede_evento: String(formData.get("sede_evento") ?? "") || null,
+    url: String(formData.get("url") ?? "") || null,
+  };
+
+  const { error } = await supabase.from("training_slots").insert(payload);
+  if (error) {
+    const eventId = String(formData.get("event_id") ?? "");
+    redirect(`/admin/slot/eventi/${eventId}/clone?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/admin/slot/eventi");
+  redirect("/admin/slot/eventi");
+}
+
 export default async function CloneEventPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
   const supabase = await createClient();
 
   const [{ data: event }, { data: seasons }, currentSeason] = await Promise.all([
@@ -37,7 +79,10 @@ export default async function CloneEventPage({
         {new Date(slot.event_date + "T00:00:00").toLocaleDateString("it-IT")}
       </p>
 
-      <form action={createSlot} className="card grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <ErrorBanner message={sp.error} />
+
+      <form action={cloneSlot} className="card grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <input type="hidden" name="event_id" value={id} />
         <input type="hidden" name="kind" value="event" />
 
         <div className="sm:col-span-2 lg:col-span-4">
