@@ -1,4 +1,5 @@
-import { redirect, revalidatePath } from "next/navigation";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { getCurrentSeason } from "@/lib/settings";
 import { type TrainingSlot } from "@/lib/types";
