@@ -146,7 +146,7 @@ export default async function CloneEventPage({
         </div>
 
         <div className="sm:col-span-2 lg:col-span-4">
-          <button className="btn-primary">Crea slot clonato</button>
+          <button type="submit" className="btn-primary">Crea slot clonato</button>
         </div>
       </form>
     </div>
