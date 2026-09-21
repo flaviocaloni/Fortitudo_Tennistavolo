@@ -2,7 +2,8 @@
   "crons": [
     {
       "path": "/api/cron/auto-booking",
-      "schedule": "0 10 * * 6"
+      "schedule": "0 10 * * 6",
+      "description": "Auto-booking cron job: runs every Saturday at 10:00 UTC"
     }
   ]
 }
