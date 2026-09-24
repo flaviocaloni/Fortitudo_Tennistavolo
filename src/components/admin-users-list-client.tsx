@@ -79,6 +79,13 @@ export default function AdminUsersListClient({
       admin: users.filter((u) => u.profile.role === "admin").length,
       agonista: users.filter((u) => u.profile.role === "agonista").length,
       amatore: users.filter((u) => u.profile.role === "amatore").length,
+      // Weekly limits breakdown
+      agonista_limit_1: users.filter((u) => u.profile.role === "agonista" && u.profile.weekly_limit === 1).length,
+      agonista_limit_2: users.filter((u) => u.profile.role === "agonista" && u.profile.weekly_limit === 2).length,
+      agonista_limit_3: users.filter((u) => u.profile.role === "agonista" && u.profile.weekly_limit === 3).length,
+      amatore_limit_1: users.filter((u) => u.profile.role === "amatore" && u.profile.weekly_limit === 1).length,
+      amatore_limit_2: users.filter((u) => u.profile.role === "amatore" && u.profile.weekly_limit === 2).length,
+      amatore_limit_3: users.filter((u) => u.profile.role === "amatore" && u.profile.weekly_limit === 3).length,
     }),
     [users]
   );
@@ -132,6 +139,47 @@ export default function AdminUsersListClient({
         <StatCard label="Admin" value={counts.admin} filter="admin" color="text-amber-700" />
         <StatCard label="Agonisti" value={counts.agonista} filter="agonista" color="text-blue-700" />
         <StatCard label="Amatori" value={counts.amatore} filter="amatore" color="text-navy-700" />
+      </div>
+
+      {/* Weekly Limits Breakdown */}
+      <div className="mb-6 grid grid-cols-2 gap-4">
+        {/* Agonisti */}
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-slate-700">Agonisti per limite/sett</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="card bg-blue-50 px-3 py-2 text-center">
+              <p className="text-lg font-bold text-blue-700">{counts.agonista_limit_1}</p>
+              <p className="text-xs text-slate-600">Limite 1</p>
+            </div>
+            <div className="card bg-blue-50 px-3 py-2 text-center">
+              <p className="text-lg font-bold text-blue-700">{counts.agonista_limit_2}</p>
+              <p className="text-xs text-slate-600">Limite 2</p>
+            </div>
+            <div className="card bg-blue-50 px-3 py-2 text-center">
+              <p className="text-lg font-bold text-blue-700">{counts.agonista_limit_3}</p>
+              <p className="text-xs text-slate-600">Limite 3</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Amatori */}
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-slate-700">Amatori per limite/sett</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="card bg-navy-50 px-3 py-2 text-center">
+              <p className="text-lg font-bold text-navy-700">{counts.amatore_limit_1}</p>
+              <p className="text-xs text-slate-600">Limite 1</p>
+            </div>
+            <div className="card bg-navy-50 px-3 py-2 text-center">
+              <p className="text-lg font-bold text-navy-700">{counts.amatore_limit_2}</p>
+              <p className="text-xs text-slate-600">Limite 2</p>
+            </div>
+            <div className="card bg-navy-50 px-3 py-2 text-center">
+              <p className="text-lg font-bold text-navy-700">{counts.amatore_limit_3}</p>
+              <p className="text-xs text-slate-600">Limite 3</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mb-4">
