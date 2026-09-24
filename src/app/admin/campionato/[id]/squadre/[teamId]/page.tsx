@@ -150,9 +150,9 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
       </div>
 
       {/* ADD PLAYER FORM */}
-      {availablePlayers && availablePlayers.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Aggiungi Giocatore</h2>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Aggiungi Giocatore</h2>
+        {availablePlayers && availablePlayers.length > 0 ? (
           <form action={addPlayerToTeam} className="flex gap-4">
             <input type="hidden" name="teamId" value={teamId} />
             <input type="hidden" name="championshipId" value={championshipId} />
@@ -175,8 +175,14 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
               Aggiungi
             </button>
           </form>
-        </div>
-      )}
+        ) : (
+          <p className="text-gray-500 text-sm">
+            {players && players.length > 0
+              ? "Tutti gli agonisti sono già assegnati a questa squadra."
+              : "Non ci sono agonisti disponibili nel sistema."}
+          </p>
+        )}
+      </div>
 
       {/* PLAYERS LIST */}
       <div className="bg-white rounded-lg shadow-md p-6">
