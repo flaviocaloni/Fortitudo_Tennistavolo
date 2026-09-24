@@ -76,12 +76,17 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
 
   // Recupera agonisti non assegnati a questa squadra
   const assignedUserIds = playersData?.map((p) => p.user_id) || [];
-  const { data: availablePlayers } = await dbClient
+  let availablePlayersQuery = dbClient
     .from("profiles")
     .select("id, full_name, role")
-    .eq("role", "agonista")
-    .not("id", "in", assignedUserIds.length > 0 ? `(${assignedUserIds.map((id) => `'${id}'`).join(",")})` : "()")
-    .order("full_name");
+    .eq("role", "agonista");
+
+  // Esclude solo se ci sono giocatori assegnati
+  if (assignedUserIds.length > 0) {
+    availablePlayersQuery = availablePlayersQuery.not("id", "in", `(${assignedUserIds.map((id) => `'${id}'`).join(",")})`);
+  }
+
+  const { data: availablePlayers } = await availablePlayersQuery.order("full_name");
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
