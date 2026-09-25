@@ -18,6 +18,7 @@ function getFitetUrls(team: Team) {
   return {
     calendario: `https://portale.fitet.org/risultati/campionati/Calendario.asp?CAM=${cam}&ANNO=41`,
     classifica: `https://portale.fitet.org/risultati/campionati/classifica_squadre.php?CAM=${cam}`,
+    statistiche: `https://portale.fitet.org/risultati/campionati/statistiche_atleti.php?CAM=${cam}`,
   };
 }
 
@@ -90,7 +91,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                                 `${team.name} - Classifica FITET`
                               )
                             }
-                            className="text-blue-600 hover:underline"
+                            className="text-blue-600 hover:underline text-xs sm:text-sm"
                           >
                             📊 Classifica
                           </button>
@@ -101,9 +102,20 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                                 `${team.name} - Risultati FITET`
                               )
                             }
-                            className="text-green-600 hover:underline"
+                            className="text-green-600 hover:underline text-xs sm:text-sm"
                           >
                             📅 Risultati
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleOpenModal(
+                                fitetUrls.statistiche,
+                                `${team.name} - Statistiche Atleti FITET`
+                              )
+                            }
+                            className="text-purple-600 hover:underline text-xs sm:text-sm"
+                          >
+                            👥 Atleti
                           </button>
                         </>
                       ) : (
