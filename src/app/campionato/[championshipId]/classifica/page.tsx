@@ -60,14 +60,14 @@ export default async function ChampionatoClassificaPage({
       <FitetLinksTable teams={teams || []} />
 
       {/* STANDINGS TABLE */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-        <div className="px-6 py-4 bg-gray-50 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Classifica Squadre
-          </h2>
-        </div>
+      {standings && standings.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="px-6 py-4 bg-gray-50 border-b">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Classifica Squadre
+            </h2>
+          </div>
 
-        {standings && standings.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -130,22 +130,18 @@ export default async function ChampionatoClassificaPage({
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="p-6 text-center text-gray-500">
-            Nessun risultato ancora.
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* RESULTS TABLE */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Risultati Partite
-          </h2>
-        </div>
+      {matchesWithScores && matchesWithScores.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Risultati Partite
+            </h2>
+          </div>
 
-        {matchesWithScores && matchesWithScores.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -206,12 +202,8 @@ export default async function ChampionatoClassificaPage({
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="p-6 text-center text-gray-500">
-            Nessun risultato ancora.
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
