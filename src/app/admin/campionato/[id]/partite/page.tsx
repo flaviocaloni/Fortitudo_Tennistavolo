@@ -106,6 +106,12 @@ export default async function AdminChampionatoMatchesPage({ params, searchParams
           <h1 className="text-3xl font-bold text-gray-900">Partite del Campionato</h1>
           <div className="flex gap-2">
             <a
+              href={`/admin/campionato/${championshipId}/partite/formazioni`}
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition text-sm"
+            >
+              👥 Formazioni
+            </a>
+            <a
               href={`/admin/campionato/${championshipId}/partite/import-export`}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm"
             >
