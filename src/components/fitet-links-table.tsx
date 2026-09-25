@@ -8,30 +8,16 @@ interface Team {
   name: string;
   series: string;
   group_code: string;
+  fitet_cam_code?: number | null;
 }
 
-const FITET_MAPPINGS: Record<string, { calendarioCAM: number; classificaCAM: number }> = {
-  "D1_A": { calendarioCAM: 414, classificaCAM: 414 },
-  "D2_D": { calendarioCAM: 425, classificaCAM: 425 },
-  "D2_J": { calendarioCAM: 431, classificaCAM: 431 },
-  "D3_MI_D": { calendarioCAM: 444, classificaCAM: 444 },
-  "D3_MI_F": { calendarioCAM: 446, classificaCAM: 446 },
-};
+function getFitetUrls(team: Team) {
+  if (!team.fitet_cam_code) return null;
 
-function getSeriesKey(series: string, groupCode: string): string {
-  const key = `${series}_${groupCode}`.toUpperCase();
-  return key;
-}
-
-function getFitetUrls(series: string, groupCode: string) {
-  const key = getSeriesKey(series, groupCode);
-  const mapping = FITET_MAPPINGS[key];
-
-  if (!mapping) return null;
-
+  const cam = team.fitet_cam_code;
   return {
-    calendario: `https://portale.fitet.org/risultati/campionati/Calendario.asp?CAM=${mapping.calendarioCAM}&ANNO=41`,
-    classifica: `https://portale.fitet.org/risultati/campionati/classifica_squadre.php?CAM=${mapping.classificaCAM}`,
+    calendario: `https://portale.fitet.org/risultati/campionati/Calendario.asp?CAM=${cam}&ANNO=41`,
+    classifica: `https://portale.fitet.org/risultati/campionati/classifica_squadre.php?CAM=${cam}`,
   };
 }
 
@@ -82,7 +68,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
             </thead>
             <tbody>
               {teams.map((team) => {
-                const fitetUrls = getFitetUrls(team.series, team.group_code);
+                const fitetUrls = getFitetUrls(team);
                 return (
                   <tr key={team.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
@@ -122,7 +108,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                         </>
                       ) : (
                         <span className="text-gray-400 text-xs">
-                          Serie non mappata
+                          CAM code non configurato
                         </span>
                       )}
                     </td>
