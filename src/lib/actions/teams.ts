@@ -110,3 +110,47 @@ export async function removePlayerFromTeam(formData: FormData) {
 
   redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?success=Giocatore rimosso`);
 }
+
+export async function updateTeam(formData: FormData) {
+  const { profile } = await getSessionProfile();
+  if (!profile || !isAdmin(profile.role)) {
+    redirect("/calendario");
+  }
+
+  const teamId = String(formData.get("teamId") ?? "");
+  const championshipId = String(formData.get("championshipId") ?? "");
+  const name = String(formData.get("name") ?? "");
+  const series = String(formData.get("series") ?? "");
+  const groupCode = String(formData.get("group_code") ?? "");
+
+  if (!teamId || !championshipId) {
+    redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=Dati mancanti`);
+  }
+
+  if (!name || !series || !groupCode) {
+    redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=Tutti i campi sono obbligatori`);
+  }
+
+  const admin = createAdminClient();
+  const dbClient = admin || null;
+
+  if (!dbClient) {
+    redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=Admin client non disponibile`);
+  }
+
+  const { error } = await dbClient
+    .from("championship_teams")
+    .update({
+      name: name.trim(),
+      series: series.toUpperCase(),
+      group_code: groupCode.toUpperCase(),
+    })
+    .eq("id", teamId)
+    .eq("championship_id", championshipId);
+
+  if (error) {
+    redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect(`/admin/campionato/${championshipId}/squadre/${teamId}?success=Informazioni squadra aggiornate`);
+}

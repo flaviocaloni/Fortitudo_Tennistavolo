@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
-import { deactivateTeam, addPlayerToTeam, removePlayerFromTeam } from "@/lib/actions/teams";
+import { deactivateTeam, addPlayerToTeam, removePlayerFromTeam, updateTeam } from "@/lib/actions/teams";
 
 interface PageProps {
   params: Promise<{ id: string; teamId: string }>;
@@ -132,27 +132,67 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form action={updateTeam} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input type="hidden" name="teamId" value={teamId} />
+          <input type="hidden" name="championshipId" value={championshipId} />
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nome Squadra</label>
-            <p className="text-gray-900 font-medium">{team.name}</p>
+            <input
+              type="text"
+              name="name"
+              defaultValue={team.name}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Serie</label>
-            <p className="text-gray-900 font-medium">{team.series}</p>
+            <select
+              name="series"
+              defaultValue={team.series}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="D3">D3</option>
+              <option value="D2">D2</option>
+              <option value="D1">D1</option>
+              <option value="A2">A2</option>
+              <option value="A1">A1</option>
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Girone</label>
-            <p className="text-gray-900 font-medium">{team.group_code}</p>
+            <input
+              type="text"
+              name="group_code"
+              defaultValue={team.group_code}
+              maxLength={1}
+              placeholder="A"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <p className="text-gray-900 font-medium">{team.status}</p>
+            <input
+              type="text"
+              value={team.status}
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+            />
           </div>
-        </div>
+
+          <div className="md:col-span-2 flex gap-2 pt-2">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Salva Modifiche
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* ADD PLAYER FORM */}
