@@ -168,7 +168,7 @@ export default async function AdminSquadraDetailPage({ params, searchParams }: P
               type="text"
               name="group_code"
               defaultValue={team.group_code}
-              maxLength={1}
+              maxLength={5}
               placeholder="A"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
