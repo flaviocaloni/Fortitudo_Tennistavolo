@@ -64,15 +64,18 @@ export default async function AdminChampionatoDetailPage(props: PageProps) {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Modifica Campionato</h1>
 
       {/* NAVIGATION TABS */}
-      <div className="flex gap-4 mb-6 border-b">
-        <button className="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold">
+      <div className="flex gap-4 mb-6 border-b overflow-x-auto">
+        <button className="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold whitespace-nowrap">
           Dettagli
         </button>
-        <Link href={`/admin/campionato/${id}/squadre`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+        <Link href={`/admin/campionato/${id}/squadre`} className="px-4 py-2 text-gray-600 hover:text-gray-900 whitespace-nowrap">
           👥 Squadre
         </Link>
-        <Link href={`/admin/campionato/${id}/partite`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+        <Link href={`/admin/campionato/${id}/partite`} className="px-4 py-2 text-gray-600 hover:text-gray-900 whitespace-nowrap">
           🏓 Partite
+        </Link>
+        <Link href={`/admin/campionato/${id}/partite/formazioni`} className="px-4 py-2 text-gray-600 hover:text-gray-900 whitespace-nowrap">
+          👥 Formazioni
         </Link>
       </div>
 
