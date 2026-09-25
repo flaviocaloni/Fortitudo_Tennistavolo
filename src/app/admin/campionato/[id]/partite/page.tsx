@@ -102,14 +102,22 @@ export default async function AdminChampionatoMatchesPage({ params, searchParams
         <a href={`/admin/campionato/${championshipId}`} className="text-blue-600 hover:underline">
           ← Torna a modifica campionato
         </a>
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-4 gap-3">
           <h1 className="text-3xl font-bold text-gray-900">Partite del Campionato</h1>
-          <a
-            href={`/admin/campionato/${championshipId}/classifica`}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Visualizza Classifica
-          </a>
+          <div className="flex gap-2">
+            <a
+              href={`/admin/campionato/${championshipId}/partite/import-export`}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm"
+            >
+              📥 Import/Export
+            </a>
+            <a
+              href={`/admin/campionato/${championshipId}/classifica`}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Visualizza Classifica
+            </a>
+          </div>
         </div>
       </div>
 

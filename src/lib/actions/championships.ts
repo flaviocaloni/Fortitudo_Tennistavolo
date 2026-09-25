@@ -793,3 +793,131 @@ export async function updateMatchDetails(formData: FormData) {
   revalidatePath(`/admin/campionato/${championshipId}/partite/${matchId}`);
   redirect(`/admin/campionato/${championshipId}/partite/${matchId}?success=Partita modificata`);
 }
+
+// ============ IMPORT/EXPORT ============
+
+export async function importMatches(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  try {
+    const championshipId = String(formData.get("championshipId"));
+    const matchesJson = String(formData.get("matches"));
+
+    if (!championshipId || !matchesJson) {
+      return { success: false, error: "Dati mancanti" };
+    }
+
+    const matches = JSON.parse(matchesJson);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    let imported = 0;
+    let failed = 0;
+
+    for (const match of matches) {
+      if (match.error) {
+        failed++;
+        continue;
+      }
+
+      try {
+        // Fetch championship to get season_id
+        const { data: championship } = await supabase
+          .from("championships")
+          .select("season_id")
+          .eq("id", championshipId)
+          .single();
+
+        if (!championship) {
+          failed++;
+          continue;
+        }
+
+        const payload = {
+          championship_id: championshipId,
+          season_id: championship.season_id,
+          team_id: match.team_id,
+          opponent_name: match.opponent_name,
+          scheduled_start_at: match.scheduled_start_at,
+          venue_name: match.location || null,
+          notes: match.notes || null,
+          leg_type: "SINGLE",
+          venue_type: "HOME",
+          created_by_user_id: user?.id,
+        };
+
+        const { error } = await supabase
+          .from("championship_matches")
+          .insert([payload]);
+
+        if (error) {
+          failed++;
+        } else {
+          imported++;
+        }
+      } catch (e) {
+        failed++;
+      }
+    }
+
+    revalidatePath(`/admin/campionato/${championshipId}/partite`);
+    revalidatePath("/campionato");
+
+    return { success: true, imported, failed };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Errore sconosciuto",
+    };
+  }
+}
+
+export async function exportMatches(championshipId: string) {
+  const supabase = await requireAdmin();
+
+  try {
+    // Fetch all matches for championship
+    const { data: matches, error } = await supabase
+      .from("championship_matches")
+      .select("*")
+      .eq("championship_id", championshipId)
+      .order("scheduled_start_at", { ascending: true });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Fetch teams to map IDs to names
+    const { data: teams } = await supabase
+      .from("championship_teams")
+      .select("id, name")
+      .eq("championship_id", championshipId);
+
+    const teamMap = new Map((teams || []).map((t: any) => [t.id, t.name]));
+
+    // Generate CSV
+    const headers = ["Squadra", "Avversario", "Data", "Ora", "Sede", "Tipo Gara", "Sede (Home/Away)", "Note"];
+    const rows = (matches || []).map((m: any) => [
+      teamMap.get(m.team_id) || "—",
+      m.opponent_name,
+      new Date(m.scheduled_start_at).toLocaleDateString("it-IT"),
+      new Date(m.scheduled_start_at).toLocaleTimeString("it-IT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      m.venue_name || "—",
+      m.leg_type || "SINGLE",
+      m.venue_type || "HOME",
+      m.notes || "",
+    ]);
+
+    const csvContent =
+      [headers, ...rows.map((r: any[]) => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+
+    return { success: true, csvContent };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Errore sconosciuto",
+    };
+  }
+}
