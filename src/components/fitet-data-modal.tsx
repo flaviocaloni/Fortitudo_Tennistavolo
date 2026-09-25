@@ -23,12 +23,8 @@ export default function FitetDataModal({
         setLoading(true);
         setError(null);
 
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          },
-        });
+        const proxyUrl = `/api/proxy/fitet?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
