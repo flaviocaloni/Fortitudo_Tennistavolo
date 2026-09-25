@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 /**
@@ -18,19 +18,18 @@ export default function ConfirmDeleteMatchButton({
 }) {
   const [showDialog, setShowDialog] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setShowDialog(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     if (isChecked) {
       setShowDialog(false);
       setIsChecked(false);
-      // Submetti il form
-      buttonRef.current?.form?.submit();
+      (e.currentTarget.form as HTMLFormElement).requestSubmit(e.currentTarget);
     }
   };
 
@@ -41,7 +40,7 @@ export default function ConfirmDeleteMatchButton({
 
   return (
     <>
-      <button ref={buttonRef} type="button" className={className} onClick={handleClick}>
+      <button type="button" className={className} onClick={handleClick}>
         {children}
       </button>
 
@@ -77,14 +76,16 @@ export default function ConfirmDeleteMatchButton({
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={handleCancel}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
               >
                 Annulla
               </button>
               <button
-                onClick={handleConfirm}
+                type="submit"
                 disabled={!isChecked}
+                onClick={handleConfirm}
                 className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition ${
                   isChecked
                     ? "bg-red-600 hover:bg-red-700"

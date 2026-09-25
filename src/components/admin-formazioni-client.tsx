@@ -6,6 +6,7 @@ import { useState } from "react";
 interface Team {
   id: string;
   name: string;
+  group_code?: string;
 }
 
 interface Match {
@@ -56,16 +57,16 @@ export default function FormazioniClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleTeamChange = (teamId: string) => {
+  const handleMatchChange = (matchId: string) => {
     const params = new URLSearchParams();
-    params.set("squadra", teamId);
+    if (matchId) params.set("partita", matchId);
     router.push(`?${params.toString()}`);
   };
 
-  const handleMatchChange = (matchId: string) => {
+  const handleTeamChange = (teamId: string) => {
     const params = new URLSearchParams();
-    params.set("squadra", selectedTeamId || "");
-    params.set("partita", matchId);
+    if (selectedMatchId) params.set("partita", selectedMatchId);
+    if (teamId) params.set("squadra", teamId);
     router.push(`?${params.toString()}`);
   };
 
@@ -96,13 +97,32 @@ export default function FormazioniClient({
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Filtri</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Partita */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Partita (Data)</label>
+            <select
+              value={selectedMatchId || ""}
+              onChange={(e) => handleMatchChange(e.target.value)}
+              disabled={matches.length === 0}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+            >
+              <option value="">Seleziona una data partita...</option>
+              {matches.map((match) => (
+                <option key={match.id} value={match.id}>
+                  {match.opponent_name} - {new Date(match.scheduled_start_at).toLocaleDateString("it-IT")}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Squadra */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Squadra</label>
             <select
               value={selectedTeamId || ""}
               onChange={(e) => handleTeamChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!selectedMatchId}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
             >
               <option value="">Seleziona una squadra...</option>
               {teams.map((team) => (
@@ -112,50 +132,41 @@ export default function FormazioniClient({
               ))}
             </select>
           </div>
-
-          {/* Partita */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Partita</label>
-            <select
-              value={selectedMatchId || ""}
-              onChange={(e) => handleMatchChange(e.target.value)}
-              disabled={!selectedTeamId || matches.length === 0}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-            >
-              <option value="">Seleziona una partita...</option>
-              {matches.map((match) => (
-                <option key={match.id} value={match.id}>
-                  {match.opponent_name} - {new Date(match.scheduled_start_at).toLocaleDateString("it-IT")}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 
       {/* DETTAGLI PARTITA */}
-      {selectedMatch && selectedTeam && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">{selectedTeam.name}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-blue-700 font-medium">Avversario</p>
-              <p className="text-gray-800">{selectedMatch.opponent_name}</p>
+      {selectedMatch && (selectedTeam || selectedMatchId) && (
+        (() => {
+          const displayTeam = selectedTeam || teams.find((t) => t.id === selectedMatch.team_id);
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">{displayTeam?.name}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                <div>
+                  <p className="text-blue-700 font-medium">Squadra</p>
+                  <p className="text-gray-800">{displayTeam?.name}</p>
+                </div>
+                <div>
+                  <p className="text-blue-700 font-medium">Girone</p>
+                  <p className="text-gray-800">{displayTeam?.group_code || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-blue-700 font-medium">Avversario</p>
+                  <p className="text-gray-800">{selectedMatch.opponent_name}</p>
+                </div>
+                <div>
+                  <p className="text-blue-700 font-medium">Data</p>
+                  <p className="text-gray-800">{matchDate}</p>
+                </div>
+                <div>
+                  <p className="text-blue-700 font-medium">Ora</p>
+                  <p className="text-gray-800">{matchTime}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-blue-700 font-medium">Data</p>
-              <p className="text-gray-800">{matchDate}</p>
-            </div>
-            <div>
-              <p className="text-blue-700 font-medium">Ora</p>
-              <p className="text-gray-800">{matchTime}</p>
-            </div>
-            <div>
-              <p className="text-blue-700 font-medium">Sede</p>
-              <p className="text-gray-800">{selectedMatch.venue_type === "HOME" ? "Casa" : "Trasferta"}</p>
-            </div>
-          </div>
-        </div>
+          );
+        })()
       )}
 
       {/* GIOCATORI */}
@@ -170,20 +181,20 @@ export default function FormazioniClient({
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nome</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Data Iscrizione</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Squadra</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Girone</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Presenza</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Stato</th>
                 </tr>
               </thead>
               <tbody>
                 {players.map((player) => {
                   const attendance = getPlayerAttendance(player.user_id);
+                  const playerTeam = teams.find((t) => t.id === player.team_id);
                   return (
                     <tr key={player.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">{player.full_name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {new Date(player.joined_at).toLocaleDateString("it-IT")}
-                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{playerTeam?.name || "—"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{playerTeam?.group_code || "—"}</td>
                       <td className="px-4 py-3 text-center text-sm">
                         {attendance ? (
                           <span
@@ -199,11 +210,6 @@ export default function FormazioniClient({
                           <span className="text-gray-400 text-xs">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-center text-sm">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                          Attivo
-                        </span>
-                      </td>
                     </tr>
                   );
                 })}
@@ -213,11 +219,11 @@ export default function FormazioniClient({
         </div>
       ) : selectedMatchId && players.length === 0 ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-          <p className="text-yellow-800">Nessun giocatore disponibile per questa squadra.</p>
+          <p className="text-yellow-800">Nessun giocatore disponibile per questa partita.</p>
         </div>
       ) : (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <p className="text-gray-600">Seleziona una squadra e una partita per visualizzare i giocatori.</p>
+          <p className="text-gray-600">Seleziona una data partita e poi una squadra per visualizzare i giocatori.</p>
         </div>
       )}
     </div>

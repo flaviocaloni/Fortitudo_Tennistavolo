@@ -127,6 +127,22 @@ export default async function AdminChampionatoMatchesPage({ params, searchParams
         </div>
       </div>
 
+      {/* NAVIGATION TABS */}
+      <div className="flex gap-4 mb-6 border-b overflow-x-auto whitespace-nowrap">
+        <Link href={`/admin/campionato/${championshipId}`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          Dettagli
+        </Link>
+        <Link href={`/admin/campionato/${championshipId}/squadre`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          👥 Squadre
+        </Link>
+        <button className="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold">
+          🏓 Partite
+        </button>
+        <Link href={`/admin/campionato/${championshipId}/partite/formazioni`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          👥 Formazioni
+        </Link>
+      </div>
+
       {/* CREATE MATCH FORM */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Crea Nuova Partita</h2>

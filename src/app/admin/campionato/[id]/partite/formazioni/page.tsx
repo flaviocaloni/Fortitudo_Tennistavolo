@@ -45,21 +45,19 @@ export default async function AdminFormazioniPage({ params, searchParams }: Page
     .eq("status", "active")
     .order("name");
 
-  // Recupera partite del campionato
+  // Recupera partite del campionato (sempre tutte)
   const { data: allMatches } = await dbClient
     .from("championship_matches")
     .select("*")
     .eq("championship_id", championshipId)
     .order("scheduled_start_at", { ascending: false });
 
-  // Filtra partite per squadra selezionata
-  const matches = selectedTeamId
-    ? (allMatches || []).filter((m: any) => m.team_id === selectedTeamId)
-    : [];
+  const matches = allMatches || [];
 
-  // Recupera giocatori della squadra selezionata
+  // Recupera giocatori della squadra selezionata (richiede sia partita che squadra)
   let players: any[] = [];
-  if (selectedTeamId) {
+
+  if (selectedMatchId && selectedTeamId) {
     const { data: playersData } = await dbClient
       .from("championship_team_players")
       .select("*")
@@ -109,6 +107,22 @@ export default async function AdminFormazioniPage({ params, searchParams }: Page
         </Link>
         <h1 className="text-3xl font-bold text-gray-900 mt-4">Gestione Formazioni</h1>
         <p className="text-gray-600 mt-1">{championship.name}</p>
+      </div>
+
+      {/* NAVIGATION TABS */}
+      <div className="flex gap-4 mb-6 border-b overflow-x-auto whitespace-nowrap">
+        <Link href={`/admin/campionato/${championshipId}`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          Dettagli
+        </Link>
+        <Link href={`/admin/campionato/${championshipId}/squadre`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          👥 Squadre
+        </Link>
+        <Link href={`/admin/campionato/${championshipId}/partite`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          🏓 Partite
+        </Link>
+        <button className="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold whitespace-nowrap">
+          👥 Formazioni
+        </button>
       </div>
 
       <FormazioniClient

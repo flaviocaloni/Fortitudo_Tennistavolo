@@ -57,7 +57,7 @@ export default async function AdminSquadreListPage({ params }: PageProps) {
       </div>
 
       {/* NAVIGATION TABS */}
-      <div className="flex gap-4 mb-6 border-b">
+      <div className="flex gap-4 mb-6 border-b overflow-x-auto whitespace-nowrap">
         <Link href={`/admin/campionato/${championshipId}`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
           Dettagli
         </Link>
@@ -66,6 +66,9 @@ export default async function AdminSquadreListPage({ params }: PageProps) {
         </button>
         <Link href={`/admin/campionato/${championshipId}/partite`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
           🏓 Partite
+        </Link>
+        <Link href={`/admin/campionato/${championshipId}/partite/formazioni`} className="px-4 py-2 text-gray-600 hover:text-gray-900">
+          👥 Formazioni
         </Link>
       </div>
 
