@@ -22,6 +22,21 @@ function getFitetUrls(team: Team) {
   };
 }
 
+function sortTeamsBySeriesAndGroup(teams: Team[]): Team[] {
+  return [...teams].sort((a, b) => {
+    // Extract series number: D1 = 1, D2 = 2, D3 = 3
+    const seriesA = parseInt(a.series.replace("D", ""), 10) || 0;
+    const seriesB = parseInt(b.series.replace("D", ""), 10) || 0;
+
+    if (seriesA !== seriesB) {
+      return seriesA - seriesB; // Sort by series number (1, 2, 3)
+    }
+
+    // If same series, sort by group code alphabetically
+    return a.group_code.localeCompare(b.group_code);
+  });
+}
+
 export default function FitetLinksTable({ teams }: { teams: Team[] }) {
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [modalTitle, setModalTitle] = useState<string>("");
@@ -39,6 +54,8 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
   if (!teams || teams.length === 0) {
     return null;
   }
+
+  const sortedTeams = sortTeamsBySeriesAndGroup(teams);
 
   return (
     <>
@@ -68,7 +85,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
               </tr>
             </thead>
             <tbody>
-              {teams.map((team) => {
+              {sortedTeams.map((team) => {
                 const fitetUrls = getFitetUrls(team);
                 return (
                   <tr key={team.id} className="border-b hover:bg-gray-50">
