@@ -837,11 +837,13 @@ export async function importMatches(formData: FormData) {
           season_id: championship.season_id,
           team_id: match.team_id,
           opponent_name: match.opponent_name,
+          opponent_club_name: match.opponent_club_name || null,
           scheduled_start_at: match.scheduled_start_at,
-          venue_name: match.location || null,
+          leg_type: match.leg_type || "SINGLE",
+          venue_type: match.venue_type || "HOME",
+          venue_name: match.venue_name || null,
+          address: match.address || null,
           notes: match.notes || null,
-          leg_type: "SINGLE",
-          venue_type: "HOME",
           created_by_user_id: user?.id,
         };
 
@@ -895,20 +897,27 @@ export async function exportMatches(championshipId: string) {
     const teamMap = new Map((teams || []).map((t: any) => [t.id, t.name]));
 
     // Generate CSV
-    const headers = ["Squadra", "Avversario", "Data", "Ora", "Sede", "Tipo Gara", "Sede (Home/Away)", "Note"];
-    const rows = (matches || []).map((m: any) => [
-      teamMap.get(m.team_id) || "—",
-      m.opponent_name,
-      new Date(m.scheduled_start_at).toLocaleDateString("it-IT"),
-      new Date(m.scheduled_start_at).toLocaleTimeString("it-IT", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      m.venue_name || "—",
-      m.leg_type || "SINGLE",
-      m.venue_type || "HOME",
-      m.notes || "",
-    ]);
+    const headers = ["Squadra", "Avversario", "Data e Ora", "Tipo Gara", "Sede", "Luogo", "Indirizzo", "Società Avversaria", "Note"];
+    const rows = (matches || []).map((m: any) => {
+      const dateTime = new Date(m.scheduled_start_at);
+      return [
+        teamMap.get(m.team_id) || "—",
+        m.opponent_name,
+        dateTime.toLocaleString("it-IT", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        m.leg_type || "SINGLE",
+        m.venue_type || "HOME",
+        m.venue_name || "",
+        m.address || "",
+        m.opponent_club_name || "",
+        m.notes || "",
+      ];
+    });
 
     const csvContent =
       [headers, ...rows.map((r: any[]) => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");

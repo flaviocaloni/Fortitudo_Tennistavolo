@@ -25,8 +25,12 @@ interface ImportPreviewMatch {
   rowNumber: number;
   team_name?: string;
   opponent_name: string;
+  opponent_club_name?: string;
   scheduled_start_at: string;
-  location?: string;
+  leg_type?: string;
+  venue_type?: string;
+  venue_name?: string;
+  address?: string;
   notes?: string;
   team_id?: string;
   error?: string;
@@ -61,12 +65,27 @@ export default function ImportExportClient({
 
       const teamName = values[headers.indexOf("squadra")];
       const opponentName = values[headers.indexOf("avversario")];
-      const dateStr = values[headers.indexOf("data")];
-      const location = values[headers.indexOf("sede")];
+      const opponentClubName = values[headers.indexOf("società avversaria")] || values[headers.indexOf("societa avversaria")];
+      const dateStr = values[headers.indexOf("data e ora")] || values[headers.indexOf("data")];
+      const timeStr = values[headers.indexOf("ora")];
+      const legType = values[headers.indexOf("tipo gara")] || "SINGLE";
+      const venueType = values[headers.indexOf("sede")] || "HOME";
+      const venueName = values[headers.indexOf("luogo")];
+      const address = values[headers.indexOf("indirizzo")];
       const notes = values[headers.indexOf("note")];
 
       // Find team by name
       const team = teams.find((t) => t.name.toLowerCase() === teamName?.toLowerCase());
+
+      // Normalize venue type
+      const normalizedVenueType = venueType?.toLowerCase().includes("casa") || venueType?.toLowerCase().includes("home") ? "HOME" :
+                                  venueType?.toLowerCase().includes("trasferta") || venueType?.toLowerCase().includes("away") ? "AWAY" : "HOME";
+
+      // Combine date and time if separate
+      let scheduledStartAt = dateStr;
+      if (timeStr && dateStr) {
+        scheduledStartAt = `${dateStr}T${timeStr}`;
+      }
 
       let error = "";
       if (!teamName) error = "Squadra mancante";
@@ -78,8 +97,12 @@ export default function ImportExportClient({
         rowNumber: i + 1,
         team_name: teamName,
         opponent_name: opponentName || "",
-        scheduled_start_at: dateStr || "",
-        location,
+        opponent_club_name: opponentClubName,
+        scheduled_start_at: scheduledStartAt || "",
+        leg_type: legType,
+        venue_type: normalizedVenueType,
+        venue_name: venueName,
+        address,
         notes,
         team_id: team?.id,
         error: error || undefined,
@@ -190,15 +213,17 @@ export default function ImportExportClient({
         {!showPreview ? (
           <>
             <p className="text-gray-600 mb-4">
-              Incolla il contenuto CSV (Squadra, Avversario, Data, Sede, Note). Colonne richieste: squadra, avversario, data
+              Incolla il contenuto CSV con le colonne: Squadra*, Avversario*, Data e Ora*, Tipo Gara, Sede, Luogo, Indirizzo, Società Avversaria, Note
+              <br />
+              <span className="text-xs text-gray-500">(*) Campi obbligatori</span>
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">CSV Content</label>
               <textarea
                 value={csvContent}
                 onChange={(e) => setCsvContent(e.target.value)}
-                className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Squadra,Avversario,Data,Sede,Note&#10;YoungTeam,FC Milano,2026-09-21 19:00,Campo A,Amichevole"
+                className="w-full h-40 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"
+                placeholder="Squadra,Avversario,Data e Ora,Tipo Gara,Sede,Luogo,Indirizzo,Società Avversaria,Note&#10;YoungTeam,FC Milano,2026-09-21 19:00,SINGLE,HOME,Campo A,Via Roma 1,FC Milano SRL,Amichevole"
               />
             </div>
             <button
@@ -212,28 +237,34 @@ export default function ImportExportClient({
         ) : (
           <>
             <div className="mb-6 overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-gray-50 border-b">
-                    <th className="px-4 py-2 text-left font-semibold">Riga</th>
-                    <th className="px-4 py-2 text-left font-semibold">Squadra</th>
-                    <th className="px-4 py-2 text-left font-semibold">Avversario</th>
-                    <th className="px-4 py-2 text-left font-semibold">Data</th>
-                    <th className="px-4 py-2 text-left font-semibold">Sede</th>
-                    <th className="px-4 py-2 text-left font-semibold">Status</th>
+                    <th className="px-2 py-2 text-left font-semibold">Riga</th>
+                    <th className="px-2 py-2 text-left font-semibold">Squadra</th>
+                    <th className="px-2 py-2 text-left font-semibold">Avversario</th>
+                    <th className="px-2 py-2 text-left font-semibold">Società</th>
+                    <th className="px-2 py-2 text-left font-semibold">Data/Ora</th>
+                    <th className="px-2 py-2 text-left font-semibold">Tipo Gara</th>
+                    <th className="px-2 py-2 text-left font-semibold">Sede</th>
+                    <th className="px-2 py-2 text-left font-semibold">Luogo</th>
+                    <th className="px-2 py-2 text-left font-semibold">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {previewData.map((row) => (
                     <tr key={row.rowNumber} className={row.error ? "bg-red-50 border-b" : "border-b"}>
-                      <td className="px-4 py-2">{row.rowNumber}</td>
-                      <td className="px-4 py-2">{row.team_name}</td>
-                      <td className="px-4 py-2">{row.opponent_name}</td>
-                      <td className="px-4 py-2">{row.scheduled_start_at}</td>
-                      <td className="px-4 py-2">{row.location || "—"}</td>
-                      <td className="px-4 py-2">
+                      <td className="px-2 py-2 font-semibold">{row.rowNumber}</td>
+                      <td className="px-2 py-2">{row.team_name}</td>
+                      <td className="px-2 py-2">{row.opponent_name}</td>
+                      <td className="px-2 py-2 text-gray-600">{row.opponent_club_name || "—"}</td>
+                      <td className="px-2 py-2">{row.scheduled_start_at}</td>
+                      <td className="px-2 py-2 text-center">{row.leg_type || "SINGLE"}</td>
+                      <td className="px-2 py-2 text-center font-semibold">{row.venue_type || "HOME"}</td>
+                      <td className="px-2 py-2 text-gray-600">{row.venue_name || "—"}</td>
+                      <td className="px-2 py-2">
                         {row.error ? (
-                          <span className="text-red-700 text-xs font-semibold">{row.error}</span>
+                          <span className="text-red-700 text-xs font-semibold">❌ {row.error}</span>
                         ) : (
                           <span className="text-green-700 text-xs font-semibold">✓ OK</span>
                         )}
