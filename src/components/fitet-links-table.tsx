@@ -19,6 +19,7 @@ function getFitetUrls(team: Team) {
     calendario: `https://portale.fitet.org/risultati/campionati/Calendario.asp?CAM=${cam}&ANNO=41`,
     classifica: `https://portale.fitet.org/risultati/campionati/classifica_squadre.php?CAM=${cam}`,
     statistiche: `https://portale.fitet.org/risultati/campionati/statistiche_atleti.php?CAM=${cam}`,
+    pdf: `https://portale.fitet.org/fpdf2/stampa_calend.php?ANNO=41&CAM=${cam}`,
   };
 }
 
@@ -134,6 +135,14 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                           >
                             👥 Atleti
                           </button>
+                          <a
+                            href={fitetUrls.pdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-red-600 hover:underline text-xs sm:text-sm"
+                          >
+                            📄 PDF
+                          </a>
                         </>
                       ) : (
                         <span className="text-gray-400 text-xs">
