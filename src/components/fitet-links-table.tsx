@@ -61,26 +61,26 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-        <div className="px-6 py-4 bg-gray-50 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Squadre - Link Classifica e Risultati FITET
+        <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+            Squadre - Link FITET
           </h2>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-gray-700">
                   Squadra
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-gray-700">
                   Serie
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-gray-700">
                   Girone
                 </th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-gray-700">
                   Azioni
                 </th>
               </tr>
@@ -90,18 +90,21 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                 const fitetUrls = getFitetUrls(team);
                 return (
                   <tr key={team.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {team.name}
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 font-medium text-gray-900">
+                      <div className="font-semibold">{team.name}</div>
+                      <div className="sm:hidden text-xs text-gray-600 mt-1">
+                        {team.series} {team.group_code}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-4 text-gray-600">
                       {team.series}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-4 text-gray-600">
                       {team.group_code}
                     </td>
-                    <td className="px-6 py-4 text-sm text-center space-x-2">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 text-center">
                       {fitetUrls ? (
-                        <>
+                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-center">
                           <button
                             onClick={() =>
                               handleOpenModal(
@@ -109,7 +112,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                                 `${team.name} - Classifica FITET`
                               )
                             }
-                            className="text-blue-600 hover:underline text-xs sm:text-sm"
+                            className="text-blue-600 hover:underline px-2 py-1.5 rounded hover:bg-blue-50 text-xs sm:text-sm"
                           >
                             📊 Classifica
                           </button>
@@ -120,7 +123,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                                 `${team.name} - Risultati FITET`
                               )
                             }
-                            className="text-green-600 hover:underline text-xs sm:text-sm"
+                            className="text-green-600 hover:underline px-2 py-1.5 rounded hover:bg-green-50 text-xs sm:text-sm"
                           >
                             📅 Risultati
                           </button>
@@ -131,7 +134,7 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                                 `${team.name} - Statistiche Atleti FITET`
                               )
                             }
-                            className="text-purple-600 hover:underline text-xs sm:text-sm"
+                            className="text-purple-600 hover:underline px-2 py-1.5 rounded hover:bg-purple-50 text-xs sm:text-sm"
                           >
                             👥 Atleti
                           </button>
@@ -139,11 +142,11 @@ export default function FitetLinksTable({ teams }: { teams: Team[] }) {
                             href={fitetUrls.pdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-red-600 hover:underline text-xs sm:text-sm"
+                            className="text-red-600 hover:underline px-2 py-1.5 rounded hover:bg-red-50 text-xs sm:text-sm"
                           >
                             📄 PDF
                           </a>
-                        </>
+                        </div>
                       ) : (
                         <span className="text-gray-400 text-xs">
                           CAM code non configurato
