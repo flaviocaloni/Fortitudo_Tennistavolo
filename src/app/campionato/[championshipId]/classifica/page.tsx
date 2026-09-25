@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import * as championships from "@/lib/supabase/championships";
+import FitetLinksTable from "@/components/fitet-links-table";
 
 interface PageProps {
   params: Promise<{ championshipId: string }>;
@@ -25,6 +26,12 @@ export default async function ChampionatoClassificaPage({
     notFound();
   }
 
+  // Recupera tutte le squadre
+  const { data: teams } = await championships.getTeamsByChampionshipId(
+    supabase,
+    championshipId
+  );
+
   // Recupera classifica
   const { data: standings, error: standingsError } =
     await championships.getChampionshipStandings(supabase, championshipId);
@@ -48,6 +55,9 @@ export default async function ChampionatoClassificaPage({
           {championship.name} - Classifica e Risultati
         </h1>
       </div>
+
+      {/* SQUADRE E LINK FITET */}
+      <FitetLinksTable teams={teams || []} />
 
       {/* STANDINGS TABLE */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
