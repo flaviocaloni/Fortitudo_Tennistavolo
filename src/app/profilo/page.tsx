@@ -65,6 +65,15 @@ export default async function ProfiloPage(props: {
   const fmtDate = (d?: string | null) =>
     d ? new Date(d).toLocaleDateString("it-IT", { dateStyle: "long" }) : "—";
 
+  // Check if user has auto-booking enabled
+  let autoBookingEnabled = false;
+  const { data: autoBookingData } = await supabase
+    .from("user_auto_booking_enabled")
+    .select("auto_booking_enabled")
+    .eq("user_id", profile.id)
+    .single();
+  autoBookingEnabled = autoBookingData?.auto_booking_enabled ?? false;
+
   const getCertStatus = (expiry?: string | null) => {
     if (!expiry) return { status: "missing", label: "Non inserito", color: "bg-slate-100 text-slate-800" };
     const exp = new Date(expiry);
@@ -77,7 +86,17 @@ export default async function ProfiloPage(props: {
 
   return (
     <div className="mx-auto max-w-xl">
-      <h1 className="mb-4 text-2xl font-bold">👤 Il mio profilo</h1>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">👤 Il mio profilo</h1>
+        {autoBookingEnabled && (
+          <Link
+            href="/calendario/auto-booking"
+            className="btn-navy whitespace-nowrap text-sm"
+          >
+            🤖 Auto-Booking
+          </Link>
+        )}
+      </div>
       <ErrorBanner message={searchParams.error} />
       {searchParams.ok && (
         <div className="mb-4 rounded-md border border-navy-200 bg-navy-50 px-4 py-2 text-sm text-navy-800">

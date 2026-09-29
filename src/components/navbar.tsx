@@ -25,18 +25,6 @@ export default async function Navbar() {
     impersonatedName = data?.full_name ?? "Utente";
   }
 
-  // Check if user has auto-booking enabled
-  let autoBookingEnabled = false;
-  if (profile) {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("user_auto_booking_enabled")
-      .select("auto_booking_enabled")
-      .eq("user_id", profile.id)
-      .single();
-    autoBookingEnabled = data?.auto_booking_enabled ?? false;
-  }
-
   const links: NavLink[] = profile
     ? [
         { href: "/calendario", label: "Calendario" },
@@ -50,9 +38,6 @@ export default async function Navbar() {
           ? [{ href: "/sys", label: "🔧 SYS", highlight: true }]
           : []),
         { href: "/profilo", label: "👤 Il mio profilo" },
-        ...(autoBookingEnabled
-          ? [{ href: "/calendario/auto-booking", label: "🤖 Auto-Booking" }]
-          : []),
       ]
     : [];
 
@@ -126,15 +111,6 @@ export default async function Navbar() {
               >
                 👤 {profile.full_name}
               </Link>
-              {autoBookingEnabled && (
-                <Link
-                  href="/calendario/auto-booking"
-                  title="Auto-Booking"
-                  className="text-yellow-300 underline-offset-2 hover:text-yellow-200 hover:underline"
-                >
-                  🤖 Auto-Booking
-                </Link>
-              )}
             </div>
             <form action={signOut}>
               <button className="btn border border-white/40 text-white hover:bg-navy-700">
