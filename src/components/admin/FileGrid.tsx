@@ -1,12 +1,6 @@
 'use client';
 
-interface GridFile {
-  id: string;
-  file_name: string;
-  size_bytes: number;
-  imported_at: string;
-  web_view_link: string;
-}
+import { GridFile } from '@/lib/types/file-manager';
 
 interface FileGridProps {
   files: GridFile[];

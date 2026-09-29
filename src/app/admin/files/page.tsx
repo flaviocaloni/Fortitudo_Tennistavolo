@@ -7,6 +7,7 @@ import FolderTree from '@/components/admin/FolderTree';
 import FileGrid from '@/components/admin/FileGrid';
 import SearchBar from '@/components/admin/SearchBar';
 import TrashBin from '@/components/admin/TrashBin';
+import { AdminFile, GridFile } from '@/lib/types/file-manager';
 import {
   getFolders,
   getFilesInFolder,
@@ -24,15 +25,6 @@ interface Folder {
   name: string;
   parent_id: string | null;
   children?: Folder[];
-}
-
-interface AdminFile {
-  id: string;
-  file_name: string;
-  size_bytes: number;
-  imported_at: string;
-  web_view_link: string;
-  deleted_at: string | null;
 }
 
 export default function AdminFilesPage() {
@@ -152,7 +144,7 @@ export default function AdminFilesPage() {
     }
   };
 
-  const handleDownloadFile = (file: AdminFile) => {
+  const handleDownloadFile = (file: GridFile) => {
     window.open(file.web_view_link, '_blank');
   };
 
