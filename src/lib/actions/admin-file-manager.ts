@@ -1,43 +1,33 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Helper: Get current user
-async function getCurrentUserId(): Promise<string | null> {
-  try {
-    const headersList = await headers();
-    const auth = headersList.get('authorization');
-    if (!auth) return null;
-
-    const { data } = await supabase.auth.getUser(auth.replace('Bearer ', ''));
-    return data.user?.id || null;
-  } catch {
-    return null;
-  }
-}
-
-// Check admin
+// Check admin (usa la sessione via cookie, come il resto dell'app)
 async function requireAdmin(): Promise<string> {
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error('Not authenticated');
+  const serverClient = await createServerClient();
+  const {
+    data: { user },
+  } = await serverClient.auth.getUser();
+
+  if (!user) throw new Error('Not authenticated');
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', userId)
+    .eq('id', user.id)
     .single();
 
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     throw new Error('Permessi insufficienti');
   }
 
-  return userId;
+  return user.id;
 }
 
 // FOLDER OPERATIONS
