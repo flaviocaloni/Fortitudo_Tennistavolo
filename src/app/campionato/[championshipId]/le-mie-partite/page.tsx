@@ -63,22 +63,22 @@ export default async function MyMatchesPage({ params }: PageProps) {
 
   const teamMap = new Map(teams?.map((t: any) => [t.id, t]) || []);
 
-  // Per ogni partita, recupera lo status di presenza dell'utente
-  const matchesWithAttendance = await Promise.all(
-    (matches || []).map(async (match: any) => {
-      const { data: attendance } = await supabase
-        .from("championship_match_attendances")
-        .select("id, status")
-        .eq("match_id", match.id)
-        .eq("user_id", profile.id)
-        .single();
+  // Carica tutti gli attendances in UNA query (batch, non N+1)
+  const matchIds = (matches || []).map((m: any) => m.id);
+  const { data: allAttendances } = await supabase
+    .from("championship_match_attendances")
+    .select("id, status, match_id")
+    .eq("user_id", profile.id)
+    .in("match_id", matchIds.length > 0 ? matchIds : [null]);
 
-      return {
-        ...match,
-        attendance,
-      };
-    })
+  const attendanceMap = new Map(
+    allAttendances?.map((a: any) => [a.match_id, a]) || []
   );
+
+  const matchesWithAttendance = (matches || []).map((match: any) => ({
+    ...match,
+    attendance: attendanceMap.get(match.id) || null,
+  }));
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
