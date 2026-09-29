@@ -2,21 +2,46 @@
 
 **Piattaforma completa di prenotazione allenamenti e gestione campionati** per il club Fortitudo Busnago Tennistavolo.
 
-**Versione 1.0.0** — Stabile e Produzione Ready  
+**Versione 1.1.0** — Performance Optimized & Production Ready  
 **Tech Stack:** Next.js 16 (App Router) · Supabase (PostgreSQL + Auth) · Tailwind CSS · Vercel  
-**Produzione:** https://fortitudo-tennistavolo.vercel.app
+**Produzione:** https://fortitudo-tennistavolo.vercel.app  
+**Release Notes:** [v1.1.0](https://github.com/flaviocaloni/Fortitudo_Tennistavolo/releases/tag/v1.1.0) · [CHANGELOG](./CHANGELOG.md)
 
 ---
 
 ## 📋 Sommario
 
-1. [Funzionalità](#funzionalità)
-2. [Ruoli e Accesso](#ruoli-e-accesso)
-3. [Setup Locale](#setup-locale)
-4. [Deploy Produzione](#deploy-produzione)
-5. [Struttura Progetto](#struttura-progetto)
-6. [In Sviluppo](#in-sviluppo)
-7. [Problemi Noti](#problemi-noti)
+1. [Nuove Features v1.1](#nuove-features-v11---performance--redesign)
+2. [Funzionalità](#funzionalità)
+3. [Ruoli e Accesso](#ruoli-e-accesso)
+4. [Setup Locale](#setup-locale)
+5. [Deploy Produzione](#deploy-produzione)
+6. [Struttura Progetto](#struttura-progetto)
+7. [In Sviluppo](#in-sviluppo)
+8. [Problemi Noti](#problemi-noti)
+
+---
+
+## ✨ Nuove Features v1.1 — Performance & Redesign
+
+### 🚀 Ottimizzazioni Supabase (40-60% riduzione log)
+- **Fix N+1 Query Pattern**: Batch loading attendances in "Le mie partite"
+- **Profile Filtering**: Carica solo profili della squadra in formazioni (non tutti i 1000+ utenti)
+- **Season Filtering**: Calendario carica solo slot della stagione corrente (non tutti i 500+ slot)
+- **Impatto**: ~1950 query ridotte, significativo risparmio su storage log Supabase
+
+### 📊 Admin Statistiche — Redesign UI
+- **Dashboard Principale**: Menu con 3 sezioni dedicate
+  - **Riepilogo Prenotazioni** (`/admin/statistiche/prenotazioni`) — Stats per utente con filtri integrati
+  - **Certificati Medici** (`/admin/statistiche/certificati`) — Monitoraggio scadenze
+  - **Grafico Prenotazioni** (`/admin/statistiche/booking-chart`) — Trend per stagione
+- **Ricerca Utente**: Filtra per nome/ID (fallback mostra intero elenco)
+- **Navigazione Intuitiva**: Card descrittive con icone e link diretti
+
+### 🐛 Bug Fix & Stabilità
+- Fix caricamento redundante di tutti i profili
+- Fix N+1 query in "Le mie partite" (collo di bottiglia)
+- Ottimizzazione query calendiario per season_id
 
 ---
 
