@@ -12,7 +12,7 @@ interface Folder {
 interface FolderTreeProps {
   folders: Folder[];
   selectedFolderId: string | null;
-  onSelectFolder: (id: string) => void;
+  onSelectFolder: (id: string | null) => void;
   onDeleteFolder: (id: string) => void;
 }
 
@@ -83,6 +83,17 @@ export default function FolderTree({
     <div className="p-3">
       <h3 className="font-bold mb-3 text-sm text-gray-700">📂 CARTELLE</h3>
       <div className="space-y-0.5">
+        <div
+          className={`flex items-center gap-2 px-3 py-2 cursor-pointer rounded ${
+            selectedFolderId === null
+              ? 'bg-blue-100 text-blue-900 font-semibold'
+              : 'hover:bg-gray-100'
+          }`}
+          onClick={() => onSelectFolder(null)}
+        >
+          <span className="w-4" />
+          <span className="flex-1 truncate">🏠 Principale</span>
+        </div>
         {folders.map((folder) => renderFolder(folder))}
       </div>
     </div>

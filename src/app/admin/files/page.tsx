@@ -27,6 +27,8 @@ interface Folder {
   children?: Folder[];
 }
 
+const CESTINO_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
+
 export default function AdminFilesPage() {
   const router = useRouter();
 
@@ -69,9 +71,6 @@ export default function AdminFilesPage() {
     try {
       const result = await getFolders();
       setFolders(result);
-      if (result.length > 0 && !selectedFolderId) {
-        setSelectedFolderId(result[0].id);
-      }
     } catch (error) {
       setMessage({
         type: 'error',
@@ -97,6 +96,14 @@ export default function AdminFilesPage() {
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {
       setMessage({ type: 'error', text: 'Nome cartella vuoto' });
+      return;
+    }
+
+    if (selectedFolderId === CESTINO_FOLDER_ID) {
+      setMessage({
+        type: 'error',
+        text: 'Non è possibile creare sottocartelle dentro il Cestino',
+      });
       return;
     }
 
