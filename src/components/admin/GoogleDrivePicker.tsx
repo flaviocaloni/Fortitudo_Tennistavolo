@@ -78,7 +78,7 @@ export default function GoogleDrivePicker({
       return;
     }
 
-    const FOLDER_ID = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '';
+    const FOLDER_ID = (process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '').trim();
 
     if (!FOLDER_ID) {
       onError?.(
@@ -131,7 +131,7 @@ export default function GoogleDrivePicker({
       const doc = data[window.google?.picker?.Action?.PICKED_ACTION][0];
 
       // Validazione: file deve essere dentro cartella autorizzata
-      const FOLDER_ID = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '';
+      const FOLDER_ID = (process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '').trim();
 
       if (doc.parents && !doc.parents.includes(FOLDER_ID)) {
         onError?.(

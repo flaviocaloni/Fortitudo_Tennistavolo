@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body>
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+        <GoogleOAuthProvider clientId={(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "").trim()}>
           <Navbar />
           <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
           <Analytics />
