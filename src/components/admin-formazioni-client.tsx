@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { updateAdminAttendance } from "@/lib/actions/championships";
 
 interface Team {
   id: string;
@@ -56,6 +57,28 @@ export default function FormazioniClient({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  const handleAttendanceChange = async (userId: string, status: "PRESENT" | "ABSENT") => {
+    if (!selectedMatchId) return;
+
+    setUpdatingUserId(userId);
+    try {
+      const formData = new FormData();
+      formData.append("match_id", selectedMatchId);
+      formData.append("user_id", userId);
+      formData.append("status", status);
+
+      await updateAdminAttendance(formData);
+
+      // Ricarica la pagina per aggiornare i dati
+      router.refresh();
+    } catch (error) {
+      console.error("Errore nell'aggiornamento della presenza:", error);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
 
   const handleMatchChange = (matchId: string) => {
     const params = new URLSearchParams();
@@ -243,19 +266,30 @@ export default function FormazioniClient({
                       <td className="px-4 py-3 text-sm text-gray-600">{playerTeam?.name || "—"}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">{playerTeam?.group_code || "—"}</td>
                       <td className="px-4 py-3 text-center text-sm">
-                        {attendance ? (
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                              attendance.status === "PRESENT"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => handleAttendanceChange(player.user_id, "PRESENT")}
+                            disabled={updatingUserId === player.user_id}
+                            className={`px-3 py-1 rounded text-xs font-medium transition ${
+                              attendance?.status === "PRESENT"
+                                ? "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100"
                             }`}
                           >
-                            {attendance.status === "PRESENT" ? "✓ Presente" : "✗ Assente"}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-xs">—</span>
-                        )}
+                            {updatingUserId === player.user_id ? "..." : "✓"}
+                          </button>
+                          <button
+                            onClick={() => handleAttendanceChange(player.user_id, "ABSENT")}
+                            disabled={updatingUserId === player.user_id}
+                            className={`px-3 py-1 rounded text-xs font-medium transition ${
+                              attendance?.status === "ABSENT"
+                                ? "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100"
+                            }`}
+                          >
+                            {updatingUserId === player.user_id ? "..." : "✗"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
