@@ -81,9 +81,9 @@ export default function FormazioniClient({
   };
 
   const handleMatchChange = (matchId: string) => {
-    const params = new URLSearchParams();
-    if (matchId) params.set("partita", matchId);
-    router.push(`?${params.toString()}`);
+    if (matchId) {
+      router.push(`/admin/campionato/${championshipId}/partite/${matchId}`);
+    }
   };
 
   const handleTeamChange = (teamId: string) => {
