@@ -281,6 +281,7 @@ export default function CalendarioFilters({
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Data</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Azioni</th>
                   <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Squadra</th>
                   <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Serie</th>
                   <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Girone</th>
@@ -289,7 +290,6 @@ export default function CalendarioFilters({
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Luogo</th>
                   <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Sede incontro</th>
                   <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Stato</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap">Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -297,6 +297,14 @@ export default function CalendarioFilters({
                   <tr key={match.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
                       {formatDateCompact(match.scheduled_start_at)}
+                    </td>
+                    <td className="px-4 py-4 text-sm">
+                      <button
+                        onClick={() => openMatchDetails(match)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                      >
+                        Dettagli
+                      </button>
                     </td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{match.team_name}</td>
                     <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-600">{match.series}</td>
@@ -321,14 +329,6 @@ export default function CalendarioFilters({
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(match.status)}`}>
                         {getStatusLabel(match.status)}
                       </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <button
-                        onClick={() => openMatchDetails(match)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                      >
-                        Dettagli
-                      </button>
                     </td>
                   </tr>
                 ))}
