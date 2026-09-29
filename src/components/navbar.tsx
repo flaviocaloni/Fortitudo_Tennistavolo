@@ -43,9 +43,6 @@ export default async function Navbar() {
         { href: "/prenotazioni", label: "Le mie prenotazioni" },
         { href: "/campionato", label: "Campionato" },
         { href: "/statistiche", label: "Statistiche" },
-        ...(autoBookingEnabled
-          ? [{ href: "/calendario/auto-booking", label: "🤖 Auto-Booking" }]
-          : []),
         ...(isAdmin(profile.role)
           ? [{ href: "/admin", label: "Admin", highlight: true }]
           : []),
@@ -53,6 +50,9 @@ export default async function Navbar() {
           ? [{ href: "/sys", label: "🔧 SYS", highlight: true }]
           : []),
         { href: "/profilo", label: "👤 Il mio profilo" },
+        ...(autoBookingEnabled
+          ? [{ href: "/calendario/auto-booking", label: "🤖 Auto-Booking" }]
+          : []),
       ]
     : [];
 
@@ -102,11 +102,6 @@ export default async function Navbar() {
               <Link href="/statistiche" className="hover:text-crimson-500">
                 Statistiche
               </Link>
-              {autoBookingEnabled && (
-                <Link href="/calendario/auto-booking" className="hover:text-yellow-300">
-                  🤖 Auto-Booking
-                </Link>
-              )}
               {isAdmin(profile.role) && (
                 <Link
                   href="/admin"
@@ -131,6 +126,15 @@ export default async function Navbar() {
               >
                 👤 {profile.full_name}
               </Link>
+              {autoBookingEnabled && (
+                <Link
+                  href="/calendario/auto-booking"
+                  title="Auto-Booking"
+                  className="text-yellow-300 underline-offset-2 hover:text-yellow-200 hover:underline"
+                >
+                  🤖 Auto-Booking
+                </Link>
+              )}
             </div>
             <form action={signOut}>
               <button className="btn border border-white/40 text-white hover:bg-navy-700">
