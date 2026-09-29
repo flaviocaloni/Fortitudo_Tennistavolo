@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import Link from "next/link"; // Used for back navigation
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
@@ -79,32 +79,19 @@ export default async function PrenotazioniStatistichePage(props: {
   const { data: bookings } = await query;
   const allBookings = bookings ?? [];
 
-  // Se c'è ricerca per utente, carica solo quel profilo
-  // Altrimenti carica tutti i profili
-  const searchTerm = searchParams.search?.toLowerCase() || "";
-
-  let profilesQuery = dbClient
+  // Carica tutti i profili
+  const { data: profiles } = await dbClient
     .from("profiles")
     .select("*")
     .order("full_name");
 
-  if (searchTerm) {
-    // Se ricerca è specificata, filtra per nome o ID
-    profilesQuery = profilesQuery.or(`full_name.ilike.%${searchTerm}%,id.ilike.%${searchTerm}%`);
-  }
-
-  const { data: profiles } = await profilesQuery;
   const allProfiles = profiles ?? [];
 
-  // Costruisci stats per gli utenti trovati
+  // Costruisci stats per tutti gli utenti
   const adminRows: UserStats[] = allProfiles.map((p: Profile) => ({
     profile: p,
     stats: countPeriods(allBookings.filter((b) => b.user_id === p.id)),
   }));
-
-  const resultLabel = searchTerm
-    ? `Risultati per "${searchTerm}" (${adminRows.length})`
-    : `Tutti gli utenti (${adminRows.length})`;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -121,47 +108,13 @@ export default async function PrenotazioniStatistichePage(props: {
         selectedSeasonId={selectedSeasonId}
       />
 
-      {/* Ricerca Utente */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Ricerca Utente</h2>
-        <form method="get" className="flex gap-2">
-          <input
-            type="hidden"
-            name="season"
-            value={selectedSeasonId}
-          />
-          <input
-            type="text"
-            name="search"
-            placeholder="Digita nome o ID utente..."
-            defaultValue={searchTerm}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-          >
-            Cerca
-          </button>
-          {searchTerm && (
-            <Link
-              href={`/admin/statistiche/prenotazioni?season=${selectedSeasonId}`}
-              className="px-6 py-2 bg-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-400 transition"
-            >
-              Resetta
-            </Link>
-          )}
-        </form>
-      </div>
-
-      {/* Risultati */}
+      {/* Report */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">{resultLabel}</h2>
         {adminRows.length > 0 ? (
           <AdminUsersReport users={adminRows} />
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <p>Nessun utente trovato{searchTerm ? ` per "${searchTerm}"` : ""}.</p>
+            <p>Nessun dato disponibile.</p>
           </div>
         )}
       </div>
