@@ -45,13 +45,19 @@ export default async function AdminFormazioniPage({ params, searchParams }: Page
     .eq("status", "active")
     .order("name");
 
-  // Recupera partite del campionato (sempre tutte)
-  const { data: allMatches } = await dbClient
+  // Recupera partite del campionato (sempre tutte, ordinate per data crescente)
+  let matchQuery = dbClient
     .from("championship_matches")
     .select("*")
     .eq("championship_id", championshipId)
-    .order("scheduled_start_at", { ascending: false });
+    .order("scheduled_start_at", { ascending: true });
 
+  // Se una squadra è selezionata, filtra per quella squadra
+  if (selectedTeamId) {
+    matchQuery = matchQuery.eq("team_id", selectedTeamId);
+  }
+
+  const { data: allMatches } = await matchQuery;
   const matches = allMatches || [];
 
   // Recupera giocatori della squadra selezionata (richiede sia partita che squadra)

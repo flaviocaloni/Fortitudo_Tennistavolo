@@ -65,7 +65,6 @@ export default function FormazioniClient({
 
   const handleTeamChange = (teamId: string) => {
     const params = new URLSearchParams();
-    if (selectedMatchId) params.set("partita", selectedMatchId);
     if (teamId) params.set("squadra", teamId);
     router.push(`?${params.toString()}`);
   };
@@ -97,6 +96,23 @@ export default function FormazioniClient({
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Filtri</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Squadra */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Squadra</label>
+            <select
+              value={selectedTeamId || ""}
+              onChange={(e) => handleTeamChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Seleziona una squadra...</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Partita */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Partita (Data)</label>
@@ -110,24 +126,6 @@ export default function FormazioniClient({
               {matches.map((match) => (
                 <option key={match.id} value={match.id}>
                   {match.opponent_name} - {new Date(match.scheduled_start_at).toLocaleDateString("it-IT")}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Squadra */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Squadra</label>
-            <select
-              value={selectedTeamId || ""}
-              onChange={(e) => handleTeamChange(e.target.value)}
-              disabled={!selectedMatchId}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-            >
-              <option value="">Seleziona una squadra...</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
                 </option>
               ))}
             </select>
@@ -223,7 +221,7 @@ export default function FormazioniClient({
         </div>
       ) : (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <p className="text-gray-600">Seleziona una data partita e poi una squadra per visualizzare i giocatori.</p>
+          <p className="text-gray-600">Seleziona una squadra e una data partita per visualizzare i giocatori.</p>
         </div>
       )}
     </div>
