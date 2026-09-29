@@ -73,7 +73,14 @@ export default async function CalendarioPage(
   const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }] =
     dates.length > 0
       ? await Promise.all([
-          supabase.from("training_slots").select("*").eq("is_active", true),
+          // Load only slots from current season (not all slots in the system)
+          season
+            ? supabase
+                .from("training_slots")
+                .select("*")
+                .eq("is_active", true)
+                .eq("season_id", season.id)
+            : supabase.from("training_slots").select("*").eq("is_active", true),
           supabase.rpc("slot_occupancy", { p_from: rangeFrom, p_to: rangeTo }),
           supabase
             .from("bookings")
