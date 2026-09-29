@@ -26,7 +26,7 @@ interface Folder {
   children?: Folder[];
 }
 
-interface File {
+interface AdminFile {
   id: string;
   file_name: string;
   size_bytes: number;
@@ -40,7 +40,7 @@ export default function AdminFilesPage() {
 
   // State
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<AdminFile[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

@@ -11,7 +11,7 @@ const supabase = createClient(
 // Helper: Get current user
 async function getCurrentUserId(): Promise<string | null> {
   try {
-    const headersList = headers();
+    const headersList = await headers();
     const auth = headersList.get('authorization');
     if (!auth) return null;
 
