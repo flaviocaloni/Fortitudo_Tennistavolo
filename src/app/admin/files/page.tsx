@@ -152,7 +152,7 @@ export default function AdminFilesPage() {
     }
   };
 
-  const handleDownloadFile = (file: File) => {
+  const handleDownloadFile = (file: AdminFile) => {
     window.open(file.web_view_link, '_blank');
   };
 
