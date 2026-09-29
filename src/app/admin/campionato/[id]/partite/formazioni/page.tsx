@@ -70,12 +70,13 @@ export default async function AdminFormazioniPage({ params, searchParams }: Page
       .eq("team_id", selectedTeamId)
       .eq("status", "active");
 
-    // Arricchisci con dati profili
+    // Arricchisci con dati profili (filtra solo per user_id della squadra)
     if (playersData && playersData.length > 0) {
       const userIds = playersData.map((p) => p.user_id);
       const { data: profilesData } = await dbClient
         .from("profiles")
-        .select("id, full_name");
+        .select("id, full_name")
+        .in("id", userIds);
 
       players = playersData.map((p) => {
         const profile = profilesData?.find((pr) => pr.id === p.user_id);
