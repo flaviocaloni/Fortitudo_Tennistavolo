@@ -133,8 +133,57 @@ export default function FormazioniClient({
         </div>
       </div>
 
+      {/* PARTITE DELLA SQUADRA */}
+      {selectedTeamId && matches.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Partite ({matches.length})</h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Data</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Avversario</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sede</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Azione</th>
+                </tr>
+              </thead>
+              <tbody>
+                {matches.map((match) => (
+                  <tr key={match.id} className={`border-b hover:bg-gray-50 cursor-pointer ${selectedMatchId === match.id ? 'bg-blue-50' : ''}`}>
+                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                      {new Date(match.scheduled_start_at).toLocaleDateString("it-IT")} {new Date(match.scheduled_start_at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{match.opponent_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {match.venue_type === "HOME" ? "Casa" : "Trasferta"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {match.opponent_name}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <button
+                        onClick={() => handleMatchChange(match.id)}
+                        className={`px-3 py-1 rounded text-xs font-medium transition ${
+                          selectedMatchId === match.id
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }`}
+                      >
+                        {selectedMatchId === match.id ? "✓ Selezionata" : "Seleziona"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* DETTAGLI PARTITA */}
-      {selectedMatch && (selectedTeam || selectedMatchId) && (
+      {selectedMatch && selectedTeamId && (
         (() => {
           const displayTeam = selectedTeam || teams.find((t) => t.id === selectedMatch.team_id);
           return (
@@ -219,9 +268,17 @@ export default function FormazioniClient({
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
           <p className="text-yellow-800">Nessun giocatore disponibile per questa partita.</p>
         </div>
+      ) : selectedTeamId && matches.length === 0 ? (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+          <p className="text-gray-600">Nessuna partita disponibile per questa squadra.</p>
+        </div>
+      ) : !selectedTeamId ? (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+          <p className="text-gray-600">Seleziona una squadra per visualizzare le sue partite.</p>
+        </div>
       ) : (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <p className="text-gray-600">Seleziona una squadra e una data partita per visualizzare i giocatori.</p>
+          <p className="text-gray-600">Seleziona una partita per visualizzare i giocatori.</p>
         </div>
       )}
     </div>
