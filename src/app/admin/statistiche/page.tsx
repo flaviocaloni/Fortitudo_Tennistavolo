@@ -1,108 +1,56 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSessionProfile } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/utils/roles";
-import { getCurrentSeason } from "@/lib/settings";
-import type { Booking, Profile, Season } from "@/lib/types";
-import AdminBookingsChart from "@/components/admin-bookings-chart";
-import AdminUsersReport from "@/components/admin-users-report";
-import CertificateReportClient from "@/components/certificate-report-client";
-import SeasonFilter from "@/components/season-filter";
 
 export const dynamic = "force-dynamic";
 
-interface Periods {
-  week: number;
-  month: number;
-  year: number;
-  cancelled: number;
-}
-
-function countPeriods(bookings: Pick<Booking, "session_date" | "status">[]): Periods {
-  const res: Periods = { week: 0, month: 0, year: 0, cancelled: 0 };
-  const today = new Date().toISOString().split("T")[0];
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  const weekStartStr = weekStart.toISOString().split("T")[0];
-  const monthPrefix = today.slice(0, 7);
-  const yearPrefix = today.slice(0, 4);
-
-  for (const b of bookings) {
-    if (b.status === "cancelled") {
-      if (b.session_date.startsWith(yearPrefix)) res.cancelled++;
-      continue;
-    }
-    if (b.session_date.startsWith(yearPrefix)) res.year++;
-    if (b.session_date.startsWith(monthPrefix)) res.month++;
-    if (b.session_date >= weekStartStr) res.week++;
-  }
-  return res;
-}
-
-export default async function AdminStatistichePage(props: {
-  searchParams: Promise<{ season?: string }>;
-}) {
-  const searchParams = await props.searchParams;
+export default async function AdminStatistichePage() {
   const { supabase, profile } = await getSessionProfile();
   if (!profile || !isAdmin(profile.role)) redirect("/calendario");
 
-  // Use admin client to bypass RLS for data queries
-  const admin = createAdminClient();
-  const dbClient = admin || supabase;
-
-  const { data: seasons } = await dbClient
-    .from("seasons")
-    .select("*")
-    .order("start_date", { ascending: false });
-  const currentSeason = await getCurrentSeason(dbClient);
-  const selectedSeasonId = searchParams.season || currentSeason?.id || "all";
-
-  const twoYearsAgo = new Date();
-  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-  const minDate = twoYearsAgo.toISOString().split("T")[0];
-
-  let query = dbClient
-    .from("bookings")
-    .select("id, slot_id, user_id, session_date, status, created_at, cancelled_at, season_id, is_overbooking")
-    .gte("session_date", minDate)
-    .order("session_date", { ascending: false });
-
-  if (selectedSeasonId !== "all") {
-    query = query.eq("season_id", selectedSeasonId);
-  }
-
-  const { data: bookings } = await query;
-
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("full_name");
-
-  const allVisible = bookings ?? [];
-  const allProfiles = profiles ?? [];
-
-  const adminRows = allProfiles.map((p: Profile) => ({
-    profile: p,
-    stats: countPeriods((allVisible).filter((b) => b.user_id === p.id)),
-  }));
-
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">Statistiche Amministrative</h1>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="mb-2 text-3xl font-bold text-gray-900">Statistiche Amministrative</h1>
+      <p className="mb-8 text-gray-600">Seleziona una sezione per visualizzare i dettagli</p>
 
-      <SeasonFilter seasons={(seasons ?? []) as Season[]} selectedSeasonId={selectedSeasonId} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Prenotazioni */}
+        <Link
+          href="/admin/statistiche/prenotazioni"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-blue-600"
+        >
+          <div className="text-2xl font-bold text-blue-600 mb-2">📊</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Riepilogo Prenotazioni</h2>
+          <p className="text-sm text-gray-600">
+            Visualizza statistiche di prenotazione per utente. Ricerca per nome o ID.
+          </p>
+        </Link>
 
-      <AdminBookingsChart bookings={allVisible} />
+        {/* Certificati */}
+        <Link
+          href="/admin/statistiche/certificati"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-green-600"
+        >
+          <div className="text-2xl font-bold text-green-600 mb-2">🏥</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Certificati Medici</h2>
+          <p className="text-sm text-gray-600">
+            Monitora scadenze certificati. Filtra per stato (valido, scaduto, etc).
+          </p>
+        </Link>
 
-      <h2 className="my-8 font-semibold text-amber-700">
-        Riepilogo per utente
-      </h2>
-      <AdminUsersReport users={adminRows} />
-
-      <h2 className="my-8 font-semibold text-amber-700">
-        Certificati medici
-      </h2>
-      <CertificateReportClient profiles={allProfiles} />
+        {/* Grafico */}
+        <Link
+          href="/admin/statistiche/booking-chart"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-amber-600"
+        >
+          <div className="text-2xl font-bold text-amber-600 mb-2">📈</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Grafico Prenotazioni</h2>
+          <p className="text-sm text-gray-600">
+            Visualizza trend prenotazioni per stagione e periodo.
+          </p>
+        </Link>
+      </div>
     </div>
   );
 }
