@@ -1,6 +1,6 @@
 'use client';
 
-interface File {
+interface AdminFile {
   id: string;
   file_name: string;
   size_bytes: number;
@@ -9,8 +9,8 @@ interface File {
 }
 
 interface FileGridProps {
-  files: File[];
-  onDownload: (file: File) => void;
+  files: AdminFile[];
+  onDownload: (file: AdminFile) => void;
   onDelete: (fileId: string) => void;
 }
 
