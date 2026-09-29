@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import { Analytics } from "@vercel/analytics/react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export const metadata: Metadata = {
   title: "Fortitudo Busnago Tennistavolo — Prenotazioni",
@@ -17,9 +18,11 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body>
-        <Navbar />
-        <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
-        <Analytics />
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+          <Navbar />
+          <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+          <Analytics />
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
