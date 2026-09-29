@@ -32,18 +32,29 @@ declare global {
   }
 }
 
+type PendingAction = 'picker' | 'upload' | null;
+
 export default function GoogleDrivePicker({
   onFileSelected,
   onError,
 }: GoogleDrivePickerProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const accessTokenRef = useRef<string>('');
+  const pendingActionRef = useRef<PendingAction>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Google Login
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => {
       accessTokenRef.current = codeResponse.access_token;
-      openPicker(codeResponse.access_token);
+
+      if (pendingActionRef.current === 'upload') {
+        setIsLoading(false);
+        fileInputRef.current?.click();
+      } else {
+        openPicker(codeResponse.access_token);
+      }
     },
     onError: (error) => {
       setIsLoading(false);
@@ -157,16 +168,148 @@ export default function GoogleDrivePicker({
     }
   };
 
-  const handleClick = () => {
+  const handlePickerClick = () => {
+    pendingActionRef.current = 'picker';
     setIsLoading(true);
     login();
   };
 
+  const handleUploadClick = () => {
+    pendingActionRef.current = 'upload';
+    setIsLoading(true);
+    login();
+  };
+
+  const handleFileInputChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permette di riselezionare lo stesso file in futuro
+
+    if (!file) return;
+
+    const FOLDER_ID = (process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '').trim();
+    if (!FOLDER_ID) {
+      onError?.(
+        'FOLDER_ID non configurato (NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID)'
+      );
+      return;
+    }
+
+    const accessToken = accessTokenRef.current;
+    if (!accessToken) {
+      onError?.('Sessione Google scaduta, riprova');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // 1) Crea il file (metadata) dentro la cartella autorizzata
+      const createRes = await fetch(
+        'https://www.googleapis.com/drive/v3/files',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: file.name,
+            parents: [FOLDER_ID],
+          }),
+        }
+      );
+
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => null);
+        throw new Error(
+          err?.error?.message || `Errore creazione file (${createRes.status})`
+        );
+      }
+
+      const created = await createRes.json();
+
+      // 2) Carica il contenuto del file
+      const uploadRes = await fetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${created.id}?uploadType=media`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+          body: file,
+        }
+      );
+
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => null);
+        throw new Error(
+          err?.error?.message || `Errore upload contenuto (${uploadRes.status})`
+        );
+      }
+
+      // 3) Recupera i metadati completi
+      const metaRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${created.id}?fields=id,name,mimeType,size,webViewLink,parents`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      if (!metaRes.ok) {
+        throw new Error('Errore recupero metadati file caricato');
+      }
+
+      const doc = await metaRes.json();
+
+      const uploadedFile: GoogleDriveFile = {
+        id: doc.id,
+        name: doc.name,
+        mimeType: doc.mimeType,
+        size: doc.size ? Number(doc.size) : file.size,
+        webViewLink:
+          doc.webViewLink || `https://drive.google.com/file/d/${doc.id}/view`,
+        parents: doc.parents,
+      };
+
+      onFileSelected?.(uploadedFile);
+    } catch (error) {
+      onError?.(
+        `Errore upload: ${error instanceof Error ? error.message : 'Sconosciuto'}`
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="flex gap-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileInputChange}
+      />
+
       <button
-        onClick={handleClick}
-        disabled={isLoading}
+        onClick={handleUploadClick}
+        disabled={isLoading || isUploading}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
+      >
+        {isUploading ? (
+          <>
+            <span className="animate-spin">⏳</span>
+            Caricamento file...
+          </>
+        ) : (
+          <>⬆️ Carica File da PC</>
+        )}
+      </button>
+
+      <button
+        onClick={handlePickerClick}
+        disabled={isLoading || isUploading}
         className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
       >
         {isLoading ? (
@@ -175,9 +318,7 @@ export default function GoogleDrivePicker({
             Caricamento...
           </>
         ) : (
-          <>
-            📂 Apri Google Drive Picker
-          </>
+          <>📂 Apri Google Drive Picker</>
         )}
       </button>
     </div>
