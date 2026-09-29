@@ -118,7 +118,7 @@ export default function FormazioniClient({
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Filtri</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {/* Squadra */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Squadra</label>
@@ -131,24 +131,6 @@ export default function FormazioniClient({
               {teams.map((team) => (
                 <option key={team.id} value={team.id}>
                   {team.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Partita */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Partita (Data)</label>
-            <select
-              value={selectedMatchId || ""}
-              onChange={(e) => handleMatchChange(e.target.value)}
-              disabled={matches.length === 0}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-            >
-              <option value="">Seleziona una data partita...</option>
-              {matches.map((match) => (
-                <option key={match.id} value={match.id}>
-                  {match.opponent_name} - {new Date(match.scheduled_start_at).toLocaleDateString("it-IT")}
                 </option>
               ))}
             </select>
