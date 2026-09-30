@@ -117,6 +117,7 @@ async function sendNotificationForBooking(
             html,
             bookingId,
             recipientUserId: recipient.userId,
+            notificationConfigId: config.id,
           },
           supabase
         )

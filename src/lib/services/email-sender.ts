@@ -7,6 +7,7 @@ export interface EmailPayload {
   html: string;
   bookingId: string;
   recipientUserId: string;
+  notificationConfigId: number;
 }
 
 interface EmailResult {
@@ -49,7 +50,7 @@ export async function sendNotificationEmail(
   payload: EmailPayload,
   supabase: SupabaseClient
 ): Promise<EmailResult> {
-  const { to, subject, html, bookingId, recipientUserId } = payload;
+  const { to, subject, html, bookingId, recipientUserId, notificationConfigId } = payload;
   const idempotencyKey = `${bookingId}-${recipientUserId}`;
 
   try {
@@ -81,7 +82,7 @@ export async function sendNotificationEmail(
 
     // Registra invio riuscito
     await supabase.from("notification_delivery").insert({
-      notification_config_id: 1, // ID della config EVENT_NON_RECURRING_BOOKING
+      notification_config_id: notificationConfigId,
       booking_id: bookingId,
       recipient_user_id: recipientUserId,
       recipient_email: to,
@@ -101,7 +102,7 @@ export async function sendNotificationEmail(
 
     // Registra errore
     await supabase.from("notification_delivery").insert({
-      notification_config_id: 1,
+      notification_config_id: notificationConfigId,
       booking_id: bookingId,
       recipient_user_id: recipientUserId,
       recipient_email: to,
