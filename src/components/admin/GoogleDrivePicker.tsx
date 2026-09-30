@@ -42,6 +42,7 @@ export default function GoogleDrivePicker({
   const [isUploading, setIsUploading] = useState(false);
   const accessTokenRef = useRef<string>('');
   const pendingActionRef = useRef<PendingAction>(null);
+  const pendingFileRef = useRef<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Google Login
@@ -51,7 +52,9 @@ export default function GoogleDrivePicker({
 
       if (pendingActionRef.current === 'upload') {
         setIsLoading(false);
-        fileInputRef.current?.click();
+        const file = pendingFileRef.current;
+        pendingFileRef.current = null;
+        if (file) uploadFile(file, codeResponse.access_token);
       } else {
         openPicker(codeResponse.access_token);
       }
@@ -175,14 +178,12 @@ export default function GoogleDrivePicker({
   };
 
   const handleUploadClick = () => {
-    pendingActionRef.current = 'upload';
-    setIsLoading(true);
-    login();
+    // Apre subito il selettore file nativo: deve avvenire in modo sincrono
+    // nello stesso gesto utente (click), altrimenti i browser lo bloccano.
+    fileInputRef.current?.click();
   };
 
-  const handleFileInputChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ''; // permette di riselezionare lo stesso file in futuro
 
@@ -196,9 +197,25 @@ export default function GoogleDrivePicker({
       return;
     }
 
-    const accessToken = accessTokenRef.current;
-    if (!accessToken) {
-      onError?.('Sessione Google scaduta, riprova');
+    // Login Google (popup) DOPO la selezione del file: se abbiamo già un
+    // token valido evitiamo un nuovo popup, altrimenti lo richiediamo ora.
+    pendingActionRef.current = 'upload';
+    pendingFileRef.current = file;
+
+    if (accessTokenRef.current) {
+      uploadFile(file, accessTokenRef.current);
+    } else {
+      setIsLoading(true);
+      login();
+    }
+  };
+
+  const uploadFile = async (file: File, accessToken: string) => {
+    const FOLDER_ID = (process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '').trim();
+    if (!FOLDER_ID) {
+      onError?.(
+        'FOLDER_ID non configurato (NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID)'
+      );
       return;
     }
 
