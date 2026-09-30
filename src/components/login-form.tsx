@@ -89,6 +89,10 @@ export default function LoginForm({
           <Link href="/privacy" className="text-slate-400 hover:underline">
             Privacy Policy
           </Link>
+          {" · "}
+          <Link href="/termini" className="text-slate-400 hover:underline">
+            Termini di Servizio
+          </Link>
         </p>
       </div>
     </div>
