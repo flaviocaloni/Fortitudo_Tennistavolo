@@ -10,9 +10,17 @@ export default function PrivacyPage() {
 
       <h2>1. Titolare del trattamento</h2>
       <p>
-        Il presente sito (l&apos;&quot;App&quot;) è gestito da Fortitudo Busnago
-        Tennistavolo, per finalità di gestione delle prenotazioni degli
+        Il presente sito (l&apos;&quot;App&quot;) è gestito da{" "}
+        <strong>Polisportiva Fortitudo</strong> (sezione Tennistavolo —
+        Fortitudo Busnago), per finalità di gestione delle prenotazioni degli
         allenamenti e delle attività sportive del club.
+      </p>
+      <p>
+        Per qualsiasi richiesta relativa al trattamento dei dati personali, è
+        possibile contattare il Titolare all&apos;indirizzo email:{" "}
+        <a href="mailto:infotennistavolo@gmail.com">
+          infotennistavolo@gmail.com
+        </a>
       </p>
 
       <h2>2. Dati raccolti</h2>
@@ -66,14 +74,21 @@ export default function PrivacyPage() {
       <h2>6. Diritti dell&apos;utente</h2>
       <p>
         L&apos;utente può richiedere in qualsiasi momento l&apos;accesso,
-        la rettifica o la cancellazione dei propri dati contattando il club.
+        la rettifica o la cancellazione dei propri dati scrivendo a{" "}
+        <a href="mailto:infotennistavolo@gmail.com">
+          infotennistavolo@gmail.com
+        </a>
+        .
       </p>
 
       <h2>7. Contatti</h2>
       <p>
         Per qualsiasi domanda relativa alla presente informativa, è possibile
-        contattare il club tramite i canali ufficiali di Fortitudo Busnago
-        Tennistavolo.
+        contattare Polisportiva Fortitudo all&apos;indirizzo{" "}
+        <a href="mailto:infotennistavolo@gmail.com">
+          infotennistavolo@gmail.com
+        </a>
+        .
       </p>
     </div>
   );
