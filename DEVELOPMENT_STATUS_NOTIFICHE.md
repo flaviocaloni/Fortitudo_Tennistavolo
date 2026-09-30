@@ -1,129 +1,104 @@
 # 📧 Stato Sviluppo: Notifiche Email
 
-**Data**: 2026-09-03/04  
-**Feature**: Notifiche email per prenotazioni su slot evento non ricorrente  
-**Stato**: 🟡 **IN PROGRESS** — Bloccato su configurazione Google OAuth
+**Data ultimo aggiornamento**: 2026-09-30
+**Stato**: 🟡 **IN PROGRESS** — Bloccato su configurazione Gmail OAuth (Step 1 di 6 in corso)
 
 ---
 
-## ✅ COMPLETATO
+## 📋 Due Feature Distinte
+
+### A) Notifica "Prenotazione Evento" (`EVENT_NON_RECURRING_BOOKING`)
+✅ **Codice completo al 100%** (DB, trigger, UI admin) — manca solo la configurazione Gmail OAuth per poter inviare davvero le email.
+
+### B) Notifica "Rimozione Presenza Campionato" (`CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED`)
+⚠️ **Solo UI di configurazione implementata** (toggle attivazione, scelta destinatari in `/admin/notifiche?tab=campionato`). **Manca la logica di invio effettiva**: non è collegata a `updateMyAttendance()` / `updateAdminAttendance()` in `src/lib/actions/championships.ts`. Da implementare da zero quando si riprende (riusare `email-sender.ts` + `recipients-resolver.ts`, già generici).
+
+**Decisione presa il 2026-09-30**: si riprende **solo la Parte A** per ora. La Parte B resta ferma.
+
+---
+
+## ✅ COMPLETATO (Parte A)
 
 ### Database (Supabase)
-- ✅ Migration SQL `0021_notification_config.sql` applicata
-- ✅ Tabelle create:
-  - `notification_configs` — configurazione notifiche
-  - `notification_delivery` — storico invii email
-  - `notification_audit` — audit log modifiche
-- ✅ ENUM types: `notification_code`, `recipient_mode`, `delivery_status`
-- ✅ RLS (Row Level Security) configurato
-- ✅ Trigger e funzioni PL/pgSQL implementati
-- ✅ Indici per performance
+- ✅ Migration `0021_notification_config.sql` applicata
+- ✅ Tabelle: `notification_configs`, `notification_delivery`, `notification_audit`
+- ✅ ENUM types, RLS, trigger di audit, indici
 
 ### Backend (Next.js)
-- ✅ Package: `nodemailer`, `@types/nodemailer` aggiunto
-- ✅ Servizi creati:
-  - `src/lib/services/email-sender.ts` — invio via Gmail OAuth
-  - `src/lib/services/recipients-resolver.ts` — risoluzione destinatari
-  - `src/lib/supabase/notifications.ts` — query helper
-- ✅ Server actions: `src/lib/actions/notifications.ts`
-  - `toggleNotification()` — attiva/disattiva
-  - `updateRecipientMode()` — cambia modalità destinatari
-  - `fetchNotificationConfig()`, `fetchNotificationAuditLog()`, `fetchAdminsList()`, `fetchUsersList()`
-- ✅ Trigger integrato in `bookSlot()`:
-  - `sendNotificationForBooking()` — fire-and-forget asincrono
-  - Invia solo per slot evento (non ricorrente)
-  - Deduplicazione per booking + recipient
-  - Errori non bloccano la prenotazione
-- ✅ Build, TypeScript, lint — ✅ Nessun errore
+- ✅ `src/lib/services/email-sender.ts` — invio via Gmail OAuth (nodemailer)
+- ✅ `src/lib/services/recipients-resolver.ts` — risoluzione destinatari (ALL_ADMINS/ALL_USERS/MANUAL)
+- ✅ `src/lib/supabase/notifications.ts` — query helper
+- ✅ `src/lib/actions/notifications.ts` — server actions (toggle, update recipients, fetch config/audit/liste utenti)
+- ✅ Trigger integrato in `bookSlot()` (`src/lib/actions/bookings.ts`):
+  - `sendNotificationForBooking()` fire-and-forget, non blocca la prenotazione
+  - Invia solo per slot evento (non ricorrente, `event_date` valorizzato)
+  - Deduplicazione per booking + recipient (constraint UNIQUE su `delivery_idempotency_key` + check su `notification_delivery`)
+- ✅ **Fix 2026-09-30**: `notification_config_id` non più hardcoded a `1` in `email-sender.ts` — ora passato esplicitamente come parametro (commit `c41d965`)
 
-### Frontend (React + Admin)
-- ✅ Pagina: `src/app/admin/notifiche/page.tsx`
-- ✅ Componente form: `src/components/notification-config-form.tsx`
-  - Toggle attivazione/disattivazione
-  - Modalità destinatari (ALL_ADMINS, ALL_USERS, MANUAL)
-  - Anteprima destinatari
-  - Audit log storico
-- ✅ Menu admin: link aggiunto a `/admin/notifiche`
-
-### Configurazione
-- ✅ `.env.example` aggiornato con variabili Gmail OAuth
-- ✅ `types.ts` esteso con tipi notifiche
-- ✅ `package.json` aggiornato
-
-### Git
-- ✅ Commit `fcbc8ea` — Implementazione completa
-- ✅ Commit `3ba982a` — Fix trigger auth.uid()
-- ✅ Commit `8c84144` — Fix modified_by nullable
-- ✅ Tutti i commit pushati a `main`
+### Frontend
+- ✅ `src/app/admin/notifiche/page.tsx` — pagina con tab "Prenotazioni" / "Campionato"
+- ✅ `src/components/notification-config-form.tsx` — form toggle + destinatari + audit log
+- ✅ Link in navbar admin (`src/app/admin/layout.tsx`, `src/app/admin/page.tsx`)
 
 ---
 
-## 🟡 IN PROGRESS: Google OAuth
+## 🟡 IN PROGRESS: Gmail OAuth (Parte A — unico blocco rimanente)
 
-### Punto di blocco
-Configurazione credenziali Google per invio email via Gmail OAuth.
+### Contesto importante
+Il progetto Google Cloud **"Fortitudo-Tennistavolo"** esiste già (creato per un'altra feature — Google Drive Picker per gestione file admin, **poi rimossa interamente il 2026-09-30** per problemi di privacy/UX). La Consent Screen è già in stato **"In produzione"**, tipo utente **"Esterno"**, con Branding già compilato (nome app, email supporto, homepage, privacy policy). **Va solo integrato lo scope Gmail**, non serve ricreare tutto da zero.
 
-### Step completati
-1. ✅ Progetto Google Cloud creato: `Fortitudo Tennistavolo`
-2. ✅ Gmail API abilitata
-3. ⏳ OAuth Consent Screen — **IN PROGRESS**
+⚠️ **Differenza chiave rispetto al Drive Picker (che ha dato molti problemi)**: qui useremo OAuth tipo **"Applicazione desktop"** con flusso "installed app" — **un solo utente (lo sviluppatore) autorizza una volta sola** tramite script locale, ottenendo un `refresh_token` permanente usato lato server. Nessun popup ricorrente per gli admin, nessun rischio "app non verificata" visibile agli utenti finali.
 
-### Prossimi step (per Flavio)
-1. **Configura OAuth Consent Screen** su Google Console:
-   - URL: https://console.cloud.google.com/
-   - Menu: OAuth consent screen
-   - User Type: **External**
-   - App name: `Fortitudo Tennistavolo`
-   - Support email: `flavio.caloni@gmail.com`
-   - Developer contact: `flavio.caloni@gmail.com`
-   - Scopes: Aggiungi `gmail.send` (Gmail API)
-   - Salva
+### Piano step-by-step (dove siamo)
 
-2. **Genera Client ID e Secret**:
-   - Credentials → Create OAuth Client ID
-   - Application type: **Applicazione desktop**
-   - Copia:
-     - `CLIENT_ID`
-     - `CLIENT_SECRET`
+1. ⏳ **[IN CORSO]** Aggiungere scope Gmail alla Consent Screen:
+   - Google Cloud Console → Google Auth Platform → **Accesso ai dati** (Data Access)
+   - Se necessario, prima abilitare **"Gmail API"** da APIs e servizi → Libreria
+   - Aggiungere scope `https://www.googleapis.com/auth/gmail.send`
+   - Salvare
 
-3. **Genera Refresh Token**:
-   - Usa script Node.js locale (vedi sotto)
-   - Ottieni `REFRESH_TOKEN`
+2. ⬜ Creare un nuovo **OAuth Client ID** tipo **"Applicazione desktop"**:
+   - Google Auth Platform → Client → Crea client
+   - Nome suggerito: `fortitudo-gmail-notifier`
+   - Copiare `Client ID` e `Client secret`
 
-4. **Configura Vercel**:
-   - Dashboard → tennistavolo-booking → Settings → Environment Variables
-   - Aggiungi:
-     ```
-     GMAIL_USER = flavio.caloni@gmail.com
-     GMAIL_CLIENT_ID = [da Google]
-     GMAIL_CLIENT_SECRET = [da Google]
-     GMAIL_REFRESH_TOKEN = [da script]
-     ```
-   - Redeploy
+3. ⬜ Generare il `REFRESH_TOKEN` con script locale (vedi sotto)
 
-5. **Test manuale** (vedi sezione TESTING)
+4. ⬜ Configurare 4 variabili d'ambiente su **Vercel** (Config, non serve prefisso NEXT_PUBLIC_ — usate solo server-side):
+   ```
+   GMAIL_USER = flavio.caloni@gmail.com (o infotennistavolo@gmail.com)
+   GMAIL_CLIENT_ID = <da step 2>
+   GMAIL_CLIENT_SECRET = <da step 2>
+   GMAIL_REFRESH_TOKEN = <da step 3>
+   ```
+   Aggiungere gli stessi valori anche in `.env.local` per test in locale.
+
+5. ⬜ Redeploy Vercel
+
+6. ⬜ Test end-to-end (vedi sezione TESTING PLAN sotto)
 
 ---
 
 ## 📝 SCRIPT: Generare Refresh Token
 
-**File**: `get-refresh-token.js` (nella root del progetto)
+Creare un file temporaneo `get-refresh-token.js` nella root del progetto (NON committarlo — aggiungerlo a `.gitignore` o cancellarlo dopo l'uso):
 
 ```javascript
 const { google } = require('googleapis');
 
 const oauth2Client = new google.auth.OAuth2(
-  'YOUR_CLIENT_ID',         // Sostituisci con CLIENT_ID da Google
-  'YOUR_CLIENT_SECRET',     // Sostituisci con CLIENT_SECRET da Google
-  'http://localhost:3000/auth/callback'
+  'CLIENT_ID_DA_STEP_2',
+  'CLIENT_SECRET_DA_STEP_2',
+  'urn:ietf:wg:oauth:2.0:oob' // redirect per app desktop, mostra il code a schermo
 );
 
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: 'offline',
+  prompt: 'consent', // forza il rilascio di un nuovo refresh_token
   scope: ['https://www.googleapis.com/auth/gmail.send'],
 });
 
-console.log('Autorizza visitando:');
+console.log('Autorizza visitando questo URL, poi copia il "code" mostrato da Google:');
 console.log(authUrl);
 
 const code = process.argv[2];
@@ -143,111 +118,49 @@ if (code) {
 ```bash
 npm install googleapis
 node get-refresh-token.js
-# Copia URL nel browser → Autorizza → Ricevi code nella URL
+# Apri l'URL stampato nel browser, accedi con l'account Gmail scelto, autorizza
+# Google mostra un "code" a schermo (flusso desktop, nessun redirect a un server)
 node get-refresh-token.js <code>
-# Ottieni REFRESH_TOKEN
+# Stampa il REFRESH_TOKEN
 ```
 
 ---
 
-## 🧪 TESTING PLAN
+## 🧪 TESTING PLAN (da eseguire dopo Step 4-5)
 
 ### Prerequisiti
 - [ ] Gmail OAuth configurato in Vercel (4 variabili)
-- [ ] Supabase migration applicata
 - [ ] Deployment Vercel completato
 
 ### Test Manuale
-1. **Admin accede a `/admin/notifiche`**
-   - [ ] Vede card "Prenotazione Evento"
-   - [ ] Stato: DISATTIVA, modalità ALL_ADMINS
+1. Admin va su `/admin/notifiche` (tab Prenotazioni) → clicca "Attiva"
+2. Admin crea uno slot **evento** (non ricorrente) in `/admin/slot`
+3. Un utente (non admin) prenota quello slot
+4. Verificare ricezione email all'indirizzo admin configurato
+5. Verificare in Supabase: `SELECT * FROM notification_delivery ORDER BY created_at DESC LIMIT 5;`
 
-2. **Admin attiva notifica**
-   - [ ] Clicca "Attiva"
-   - [ ] Redirect con success message
-   - [ ] Badge: ATTIVA
-
-3. **Admin crea slot evento**
-   - [ ] `/admin/slot` → Nuovo evento
-   - [ ] Es: "Torneo" il 10-09-2026, 18:00-20:00
-
-4. **Utente prenota evento**
-   - [ ] Logout admin
-   - [ ] Login come amatore
-   - [ ] `/calendario` → Prenota evento
-   - [ ] Prenotazione confermata ✓
-
-5. **Email inviata**
-   - [ ] Inbox flavio.caloni@gmail.com
-   - [ ] Soggetto: "Nuova prenotazione: Torneo il ..."
-   - [ ] Contiene link "Vedi Prenotazione"
-
-6. **Admin verifica storico**
-   - [ ] Login admin
-   - [ ] `/admin/notifiche` → Destinatari
-   - [ ] "Anteprima Destinatari" → mostra admin Flavio
-
-### Test Edge Cases
-- [ ] **Slot ricorrente**: NO email (solo evento)
-- [ ] **Notifica disattivata**: NO email
-- [ ] **Duplicazione**: Stessa prenotazione → 1 email
-- [ ] **Errore email**: Prenotazione rimane confermata
-- [ ] **Utente senza email**: Skipped
-- [ ] **Utente disattivato**: Skipped
-
-### Query di verifica (SQL)
-```sql
--- Invii email
-SELECT * FROM notification_delivery ORDER BY created_at DESC LIMIT 10;
-
--- Audit log
-SELECT * FROM notification_audit ORDER BY modified_at DESC LIMIT 10;
-
--- Config
-SELECT * FROM notification_configs;
-```
+### Edge Case da verificare
+- [ ] Slot ricorrente → nessuna email (solo eventi)
+- [ ] Notifica disattivata → nessuna email
+- [ ] Doppia prenotazione stesso booking → 1 sola email (deduplicazione)
+- [ ] Errore invio → prenotazione resta comunque confermata
 
 ---
 
-## 🔗 Risorse Esterne
+## 📌 Note Tecniche
 
-- [Google Cloud Console](https://console.cloud.google.com/)
-- [Gmail API Docs](https://developers.google.com/gmail/api)
-- [Nodemailer OAuth2](https://nodemailer.com/smtp/oauth2/)
-- [Vercel Env Vars](https://vercel.com/docs/environment-variables)
+- **Email Provider**: Gmail OAuth via nodemailer (soluzione MVP, non un servizio email dedicato)
+- **Invio**: fire-and-forget asincrono, non blocca la prenotazione
+- **Rate limit Gmail**: ~100-200 email/giorno per account — sufficiente per il volume attuale del club
+- **Limite attuale**: mittente fisso, una sola notifica realmente funzionante (booking evento)
 
----
-
-## 📌 Note di Sviluppo
-
-### Decisioni Tecniche
-1. **Email Provider**: Gmail OAuth via nodemailer (MVP temporanea, non servizio esterno)
-2. **Invio**: Fire-and-forget asincrono (non blocca prenotazione)
-3. **Errori**: Registrati in `notification_delivery` ma non mostrati all'utente
-4. **Deduplicazione**: UUID + booking_id + recipient_user_id
-5. **RLS**: Accesso limitato agli admin
-
-### Limitazioni Attuali
-- Mittente fisso: `flavio.caloni@gmail.com` (Flavio)
-- Solo modalità EMAIL (no SMS, push, ecc.)
-- Una sola notifica: `EVENT_NON_RECURRING_BOOKING`
-- Rate limit Gmail: ~100-200 email/giorno per account
-
-### Prossimi Miglioramenti (Future)
-- [ ] Migrare a provider email dedicato (Resend, Sendgrid)
-- [ ] Aggiungere notifiche per altri eventi (cancellazione, overbooking, ecc.)
-- [ ] Coda asincrona (job queue)
-- [ ] Template email customizzabili
-- [ ] Webhook per integrazioni esterne
+## 🔮 Prossimi Passi (dopo aver sbloccato Parte A)
+1. Completare Parte B (invio email reale per rimozione presenza campionato)
+2. Eventuale migrazione futura a provider email dedicato (Resend, SendGrid) se il volume cresce
 
 ---
 
-## 👤 Proprietario
-
-Flavio Caloni (f.caloni01@teamsystem.com)  
-**Contatto per domande**: Revisione git commits, controllo database, test UI
-
----
-
-**Ultimo aggiornamento**: 2026-09-04 00:30 UTC  
-**Prossimo step**: Completare configurazione Google OAuth
+## 👤 Riferimenti
+- Proprietario: Flavio Caloni (f.caloni01@teamsystem.com)
+- Account Gmail per invio: da confermare tra flavio.caloni@gmail.com / infotennistavolo@gmail.com
+- Progetto Google Cloud: **Fortitudo-Tennistavolo** (già esistente)
