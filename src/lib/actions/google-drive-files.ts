@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,7 +47,7 @@ export async function saveGoogleDriveFile(
     }
 
     // Validazione cartella autorizzata (lato server)
-    const AUTHORIZED_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    const AUTHORIZED_FOLDER_ID = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID;
     if (
       data.parents &&
       !data.parents.includes(AUTHORIZED_FOLDER_ID || '')
@@ -189,16 +189,15 @@ export async function deleteGoogleDriveFile(
 }
 
 /**
- * Helper: Ottieni ID utente corrente
+ * Helper: Ottieni ID utente corrente (sessione via cookie, come il resto dell'app)
  */
 async function getCurrentUserId(): Promise<string | null> {
   try {
-    const headersList = await headers();
-    const auth = headersList.get('authorization');
-    if (!auth) return null;
-
-    const { data } = await supabase.auth.getUser(auth.replace('Bearer ', ''));
-    return data.user?.id || null;
+    const serverClient = await createServerClient();
+    const {
+      data: { user },
+    } = await serverClient.auth.getUser();
+    return user?.id || null;
   } catch (error) {
     console.error('Error getting current user:', error);
     return null;
