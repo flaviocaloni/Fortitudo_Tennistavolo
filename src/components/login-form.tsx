@@ -84,6 +84,12 @@ export default function LoginForm({
         <p className="mt-4 text-center text-xs text-slate-500">
           Non hai un account? Contatta il club per la registrazione.
         </p>
+
+        <p className="mt-3 text-center text-xs">
+          <Link href="/privacy" className="text-slate-400 hover:underline">
+            Privacy Policy
+          </Link>
+        </p>
       </div>
     </div>
   );
