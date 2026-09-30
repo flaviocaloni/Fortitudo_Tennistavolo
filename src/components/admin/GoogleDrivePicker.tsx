@@ -61,10 +61,10 @@ export default function GoogleDrivePicker({
       onError?.(`Login fallito: ${JSON.stringify(error)}`);
     },
     flow: 'implicit',
-    scope:
-      'https://www.googleapis.com/auth/drive ' +
-      'https://www.googleapis.com/auth/drive.file ' +
-      'https://www.googleapis.com/auth/drive.readonly',
+    // Solo drive.file: accesso ai soli file creati dall'app o selezionati
+    // esplicitamente dall'utente tramite Picker. Scope non sensibile,
+    // non richiede la verifica Google (a differenza di drive/drive.readonly).
+    scope: 'https://www.googleapis.com/auth/drive.file',
   });
 
   // Carica Google Picker API
