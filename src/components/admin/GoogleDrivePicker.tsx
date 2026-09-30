@@ -60,11 +60,15 @@ export default function GoogleDrivePicker({
       return;
     }
 
+    // NOTA: setParentFolder di Google Picker API è noto per non filtrare in
+    // modo affidabile (a volte restituisce lista vuota anche con file
+    // presenti). Si lascia quindi navigare liberamente "Il mio Drive" e si
+    // valida la cartella del file selezionato lato client come misura di
+    // sicurezza (vedi callbackFunction sotto).
     openPicker({
       clientId: CLIENT_ID,
       developerKey: API_KEY,
       viewId: 'DOCS',
-      setParentFolder: FOLDER_ID,
       setSelectFolderEnabled: false,
       showUploadView: false, // l'upload da PC usa un percorso separato (drive.file)
       supportDrives: false,
@@ -78,7 +82,7 @@ export default function GoogleDrivePicker({
 
           if (doc.parentId && doc.parentId !== FOLDER_ID) {
             onError?.(
-              'File NON autorizzato: non è dentro la cartella "fortitudo-google-drive"'
+              `File NON autorizzato: seleziona un file dentro la cartella "fortitudo-google-drive"`
             );
             return;
           }
