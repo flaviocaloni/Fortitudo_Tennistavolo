@@ -28,6 +28,11 @@ export default async function Home() {
       <Link href="/login" className="btn-primary mt-6">
         Accedi o registrati
       </Link>
+      <p className="mt-8 text-xs text-slate-400">
+        <Link href="/privacy" className="hover:underline">
+          Privacy Policy
+        </Link>
+      </p>
     </div>
   );
 }
