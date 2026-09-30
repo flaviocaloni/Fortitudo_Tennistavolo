@@ -31,47 +31,20 @@ export default function PrivacyPage() {
         <li>Dati relativi a campionati, squadre e partite (se applicabile)</li>
       </ul>
 
-      <h2>3. Integrazione con Google Drive (solo amministratori)</h2>
-      <p>
-        Gli utenti con ruolo di amministratore possono collegare il proprio
-        account Google per gestire documenti del club (es. moduli, certificati,
-        regolamenti) archiviati in una cartella dedicata di Google Drive.
-        L&apos;App richiede i seguenti permessi Google (scope OAuth):
-      </p>
-      <ul>
-        <li>
-          <code>drive.file</code> — consente all&apos;App di creare e gestire
-          esclusivamente i file caricati tramite l&apos;App stessa.
-        </li>
-        <li>
-          <code>drive.readonly</code> — consente all&apos;App di leggere
-          l&apos;elenco dei file presenti nella specifica cartella Google Drive
-          dedicata al club, per permettere all&apos;amministratore di
-          selezionarli senza doverli ricaricare manualmente.
-        </li>
-      </ul>
-      <p>
-        L&apos;App non accede, legge né condivide alcun file al di fuori della
-        cartella dedicata al club. Nessun dato di Google Drive viene condiviso
-        con terze parti. L&apos;accesso a queste funzionalità è riservato ai
-        soli amministratori autorizzati del club.
-      </p>
-
-      <h2>4. Finalità del trattamento</h2>
+      <h2>3. Finalità del trattamento</h2>
       <p>
         I dati raccolti sono utilizzati esclusivamente per la gestione delle
-        prenotazioni, la comunicazione relativa alle attività del club e,
-        per gli amministratori, la gestione documentale interna.
+        prenotazioni e la comunicazione relativa alle attività del club.
       </p>
 
-      <h2>5. Conservazione dei dati</h2>
+      <h2>4. Conservazione dei dati</h2>
       <p>
         I dati sono conservati per il tempo necessario alle finalità sopra
         indicate e comunque non oltre la cessazione del rapporto associativo
         con il club, salvo obblighi di legge.
       </p>
 
-      <h2>6. Diritti dell&apos;utente</h2>
+      <h2>5. Diritti dell&apos;utente</h2>
       <p>
         L&apos;utente può richiedere in qualsiasi momento l&apos;accesso,
         la rettifica o la cancellazione dei propri dati scrivendo a{" "}
@@ -81,7 +54,7 @@ export default function PrivacyPage() {
         .
       </p>
 
-      <h2>7. Contatti</h2>
+      <h2>6. Contatti</h2>
       <p>
         Per qualsiasi domanda relativa alla presente informativa, è possibile
         contattare Polisportiva Fortitudo all&apos;indirizzo{" "}

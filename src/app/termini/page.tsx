@@ -40,15 +40,7 @@ export default function TerminiPage() {
         <li>Non tentare di accedere a funzionalità riservate agli amministratori senza autorizzazione.</li>
       </ul>
 
-      <h2>4. Funzionalità amministrative e Google Drive</h2>
-      <p>
-        Gli amministratori del club possono utilizzare funzionalità
-        aggiuntive per la gestione documentale, incluso il collegamento con
-        Google Drive secondo quanto descritto nella{" "}
-        <a href="/privacy">Privacy Policy</a>.
-      </p>
-
-      <h2>5. Limitazione di responsabilità</h2>
+      <h2>4. Limitazione di responsabilità</h2>
       <p>
         L&apos;App è fornita &quot;così com&apos;è&quot;, senza garanzie di
         continuità del servizio. Polisportiva Fortitudo non è responsabile
@@ -62,7 +54,7 @@ export default function TerminiPage() {
         disponibili tramite i consueti canali del club.
       </p>
 
-      <h2>6. Modifiche al servizio e ai termini</h2>
+      <h2>5. Modifiche al servizio e ai termini</h2>
       <p>
         Polisportiva Fortitudo si riserva il diritto di modificare o
         sospendere l&apos;App, in tutto o in parte, e di aggiornare i
@@ -70,14 +62,14 @@ export default function TerminiPage() {
         comunicazione agli utenti tramite l&apos;App stessa.
       </p>
 
-      <h2>7. Trattamento dei dati personali</h2>
+      <h2>6. Trattamento dei dati personali</h2>
       <p>
         Per informazioni su come vengono raccolti e trattati i dati
         personali, consulta la{" "}
         <a href="/privacy">Privacy Policy</a>.
       </p>
 
-      <h2>8. Contatti</h2>
+      <h2>7. Contatti</h2>
       <p>
         Per domande relative ai presenti Termini di Servizio, è possibile
         contattare Polisportiva Fortitudo all&apos;indirizzo{" "}

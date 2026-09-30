@@ -37,11 +37,6 @@ export default async function AdminDashboard() {
       description: "Report e analisi avanzate",
     },
     {
-      href: "/admin/files",
-      title: "📁 Gestione File",
-      description: "Carica, scarica, organizza file su Google Drive",
-    },
-    {
       href: "/admin/campionato",
       title: "🏆 Campionato",
       description: "Gestisci campionati, squadre e partite",
