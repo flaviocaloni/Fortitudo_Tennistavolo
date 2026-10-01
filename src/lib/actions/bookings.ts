@@ -37,8 +37,12 @@ export async function bookSlot(formData: FormData) {
 
   // Trigger asincrono per inviare notifiche (non blocca il redirect)
   if (booking?.id) {
-    const adminClient = createAdminClient() || supabase;
-    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient).catch((err) => {
+    const adminClient = createAdminClient();
+    console.log("[bookSlot] Admin client created:", !!adminClient);
+    if (!adminClient) {
+      console.warn("[bookSlot] SUPABASE_SERVICE_ROLE_KEY not configured, notifications will be limited");
+    }
+    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient || supabase).catch((err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
     });
   }
