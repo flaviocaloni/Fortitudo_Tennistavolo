@@ -6,6 +6,10 @@ import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
 import * as notifications from "@/lib/supabase/notifications";
+import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";
+import { sendNotificationTelegram } from "@/lib/services/telegram-sender";
+import { resolveNotificationRecipients, deduplicateRecipients } from "@/lib/services/recipients-resolver";
+import { getNotificationConfig } from "@/lib/supabase/notifications";
 import { isAdmin } from "@/lib/utils/roles";
 
 // ============ AUTHORIZATION ============
@@ -30,6 +34,105 @@ async function requireAuthenticated() {
 
 function backWithError(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
+}
+
+// ============ NOTIFICATIONS ============
+
+/** Invia notifiche per rimozione presenza da partita (fire-and-forget) */
+async function sendNotificationForAttendanceRemoved(
+  matchId: string,
+  userId: string,
+  supabase: any
+) {
+  try {
+    // Leggi match
+    const { data: match } = await championships.getMatchById(supabase, matchId);
+    if (!match) return;
+
+    // Leggi utente
+    const { data: user } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", userId)
+      .single();
+    if (!user) return;
+
+    // Leggi configurazione notifica
+    const { data: config } = await getNotificationConfig(
+      supabase,
+      "CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED"
+    );
+
+    if (!config || !config.is_active) {
+      console.log("[sendNotificationForAttendanceRemoved] Notification inactive, skipping");
+      return;
+    }
+
+    // Risolvi destinatari (admin/staff della squadra)
+    const recipients = await resolveNotificationRecipients(config.id, supabase);
+    const dedupRecipients = await deduplicateRecipients(recipients);
+
+    if (!dedupRecipients.length) return;
+
+    // Invia Email se abilitata
+    if (config.email_enabled) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fortitudo-tennistavolo.vercel.app";
+      const { subject, html } = await buildBookingNotificationEmail(
+        {
+          slotTitle: `${match.championship_name} - ${match.team_name}`,
+          sessionDate: new Date(match.date).toLocaleDateString("it-IT"),
+          startTime: match.time || "N/A",
+          endTime: "",
+          userName: user.full_name,
+        },
+        siteUrl
+      );
+
+      await Promise.allSettled(
+        dedupRecipients.map((recipient) =>
+          sendNotificationEmail(
+            {
+              to: recipient.email,
+              subject: `Agonista rimosso dalla partita: ${user.full_name}`,
+              html,
+              bookingId: matchId,
+              recipientUserId: recipient.userId,
+              notificationConfigId: config.id,
+            },
+            supabase
+          )
+        )
+      );
+    }
+
+    // Invia Telegram se abilitata
+    if (config.telegram_enabled) {
+      const registrationDate = new Date().toLocaleDateString("it-IT", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      sendNotificationTelegram(
+        {
+          bookingTitle: `${user.full_name} - ${match.team_name}`,
+          userName: user.full_name,
+          slotName: `${match.championship_name}`,
+          sessionDate: new Date(match.date).toLocaleDateString("it-IT"),
+          registrationDate,
+          bookingId: matchId,
+          notificationConfigId: config.id,
+        },
+        supabase
+      ).catch((err) => {
+        console.error("[sendNotificationForAttendanceRemoved] Telegram error (non-blocking):", err);
+      });
+    }
+  } catch (error) {
+    console.error("[sendNotificationForAttendanceRemoved] Error:", error);
+  }
 }
 
 // ============ CHAMPIONSHIP CRUD ============
@@ -651,6 +754,8 @@ export async function updateMyAttendance(formData: FormData) {
     }
   } else {
     // Aggiorna presence
+    const previousStatus = attendance.status;
+
     const { error: updateError } = await championships.updateAttendance(
       supabase,
       attendance.id,
@@ -663,6 +768,13 @@ export async function updateMyAttendance(formData: FormData) {
 
     if (updateError) {
       backWithError("/campionato", updateError.message);
+    }
+
+    // Invia notifica se lo status è cambiato da PRESENT a ABSENT (rimozione)
+    if (previousStatus === "PRESENT" && status === "ABSENT") {
+      sendNotificationForAttendanceRemoved(matchId, profile.id, supabase).catch((err) => {
+        console.error("[updateMyAttendance] Notification error (non-blocking):", err);
+      });
     }
   }
 
@@ -720,6 +832,8 @@ export async function updateAdminAttendance(formData: FormData) {
     }
   } else {
     // Aggiorna presenza
+    const previousStatus = attendance.status;
+
     const { error: updateError } = await championships.updateAttendance(
       supabase,
       attendance.id,
@@ -732,6 +846,13 @@ export async function updateAdminAttendance(formData: FormData) {
 
     if (updateError) {
       backWithError("/admin/campionato", updateError.message);
+    }
+
+    // Invia notifica se lo status è cambiato da PRESENT a ABSENT (rimozione)
+    if (previousStatus === "PRESENT" && status === "ABSENT") {
+      sendNotificationForAttendanceRemoved(matchId, userId, supabase).catch((err) => {
+        console.error("[updateAdminAttendance] Notification error (non-blocking):", err);
+      });
     }
   }
 
