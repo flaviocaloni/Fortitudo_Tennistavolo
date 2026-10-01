@@ -54,6 +54,8 @@ async function sendNotificationForBooking(
   supabase: any
 ) {
   try {
+    console.log("[sendNotificationForBooking] START:", { bookingId, slotId, sessionDate, userId });
+
     // Leggi lo slot per determinare se è ricorrente o evento
     const { data: slot } = await supabase
       .from("training_slots")
@@ -65,6 +67,8 @@ async function sendNotificationForBooking(
       console.log("[sendNotificationForBooking] Slot not found");
       return;
     }
+
+    console.log("[sendNotificationForBooking] Slot loaded:", slot);
 
     // Determina il tipo di notifica in base al tipo di slot
     let notificationCode: "EVENT_NON_RECURRING_BOOKING" | "RECURRING_SLOT_BOOKING";
@@ -80,16 +84,22 @@ async function sendNotificationForBooking(
       return;
     }
 
+    console.log("[sendNotificationForBooking] Notification code:", notificationCode);
+
     // Verifica se la notifica è attivata per questo tipo
-    const { data: config } = await getNotificationConfig(
+    const { data: config, error: configError } = await getNotificationConfig(
       supabase,
       notificationCode
     );
 
+    console.log("[sendNotificationForBooking] Config loaded:", { config, configError });
+
     if (!config || !config.is_active) {
-      console.log(`[sendNotificationForBooking] ${notificationCode} inactive, skipping`);
+      console.log(`[sendNotificationForBooking] ${notificationCode} inactive or missing, skipping`);
       return;
     }
+
+    console.log("[sendNotificationForBooking] Config active, email_enabled:", config.email_enabled, "telegram_enabled:", config.telegram_enabled);
 
     // Verifica l'utente che ha prenotato
     const { data: profile } = await supabase
@@ -155,6 +165,14 @@ async function sendNotificationForBooking(
         minute: "2-digit",
       });
 
+      console.log("[sendNotificationForBooking] Telegram payload:", {
+        userName: profile.full_name,
+        slotName: slot.title,
+        sessionDate,
+        registrationDate,
+        configId: config.id,
+      });
+
       sendNotificationTelegram(
         {
           bookingTitle: `${profile.full_name} - ${slot.title}`,
@@ -169,6 +187,8 @@ async function sendNotificationForBooking(
       ).catch((err) => {
         console.error("[sendNotificationForBooking] Telegram error (non-blocking):", err);
       });
+
+      console.log("[sendNotificationForBooking] Telegram send initiated (fire-and-forget)");
     } else {
       console.log(`[sendNotificationForBooking] Telegram disabled for ${notificationCode}`);
     }
