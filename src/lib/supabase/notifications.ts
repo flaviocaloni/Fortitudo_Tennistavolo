@@ -6,7 +6,7 @@ export async function getNotificationConfig(
 ) {
   return supabase
     .from("notification_configs")
-    .select("id, notification_code, is_active, recipient_mode, manual_recipient_ids, enable_telegram")
+    .select("id, notification_code, is_active, recipient_mode, manual_recipient_ids, email_enabled, telegram_enabled")
     .eq("notification_code", notificationCode)
     .single();
 }
