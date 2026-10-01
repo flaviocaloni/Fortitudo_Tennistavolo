@@ -9,7 +9,8 @@ interface NotificationConfig {
   is_active: boolean;
   recipient_mode: "ALL_ADMINS" | "ALL_USERS" | "MANUAL";
   manual_recipient_ids: string[] | null;
-  enable_telegram?: boolean;
+  email_enabled?: boolean;
+  telegram_enabled?: boolean;
 }
 
 interface NotificationConfigFormProps {
@@ -30,7 +31,8 @@ export default function NotificationConfigForm({
   const [adminsList, setAdminsList] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
-  const [enableTelegram, setEnableTelegram] = useState(config.enable_telegram || false);
+  const [enableEmail, setEnableEmail] = useState(config.email_enabled ?? true);
+  const [enableTelegram, setEnableTelegram] = useState(config.telegram_enabled || false);
   const [sendingTestMessage, setSendingTestMessage] = useState(false);
   const [testMessageStatus, setTestMessageStatus] = useState<"success" | "error" | null>(null);
 
@@ -42,15 +44,41 @@ export default function NotificationConfigForm({
     await toggleNotification(formData);
   };
 
-  const handleTelegramToggle = async () => {
+  const handleEmailToggle = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/notifications/toggle-telegram", {
+      const response = await fetch("/api/notifications/toggle-channel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notification_code: notificationCode,
-          enable_telegram: !enableTelegram,
+          channel: "email",
+          enabled: !enableEmail,
+        }),
+      });
+      if (response.ok) {
+        setEnableEmail(!enableEmail);
+      } else {
+        alert("Errore nel salvataggio della configurazione Email");
+      }
+    } catch (error) {
+      console.error("Error toggling Email:", error);
+      alert("Errore nel salvataggio");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTelegramToggle = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/notifications/toggle-channel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notification_code: notificationCode,
+          channel: "telegram",
+          enabled: !enableTelegram,
         }),
       });
       if (response.ok) {
@@ -187,9 +215,34 @@ export default function NotificationConfigForm({
 
           {!config.is_active && (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              ⚠️ La configurazione è salvata, ma non verranno inviate email fino alla riattivazione.
+              ⚠️ La configurazione è salvata, ma non verranno inviate notifiche fino alla riattivazione.
             </div>
           )}
+
+          {/* Email Channel Toggle */}
+          <div className="rounded-lg bg-amber-50 p-4 border border-amber-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">📧 Email</p>
+                <p className="text-sm text-slate-600">
+                  {enableEmail
+                    ? "Notifiche verranno inviate via Email"
+                    : "Notifiche Email disattivate"}
+                </p>
+              </div>
+              <button
+                onClick={handleEmailToggle}
+                disabled={isLoading}
+                className={`px-4 py-2 rounded-md font-medium text-white transition ${
+                  enableEmail
+                    ? "bg-amber-600 hover:bg-amber-700"
+                    : "bg-slate-400 hover:bg-slate-500"
+                } disabled:opacity-50`}
+              >
+                {isLoading ? "..." : enableEmail ? "Disattiva" : "Attiva"}
+              </button>
+            </div>
+          </div>
 
           {/* Telegram Toggle */}
           <div className="rounded-lg bg-blue-50 p-4 border border-blue-200 space-y-3">

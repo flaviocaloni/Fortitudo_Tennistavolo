@@ -122,25 +122,30 @@ async function sendNotificationForBooking(
       siteUrl
     );
 
-    // Invia a tutti i destinatari (parallelo, fire-and-forget)
-    await Promise.allSettled(
-      dedupRecipients.map((recipient) =>
-        sendNotificationEmail(
-          {
-            to: recipient.email,
-            subject,
-            html,
-            bookingId,
-            recipientUserId: recipient.userId,
-            notificationConfigId: config.id,
-          },
-          supabase
+    // Invia email se abilitata (parallelo, fire-and-forget)
+    if (config.email_enabled) {
+      console.log(`[sendNotificationForBooking] Email enabled for ${notificationCode}, sending...`);
+      await Promise.allSettled(
+        dedupRecipients.map((recipient) =>
+          sendNotificationEmail(
+            {
+              to: recipient.email,
+              subject,
+              html,
+              bookingId,
+              recipientUserId: recipient.userId,
+              notificationConfigId: config.id,
+            },
+            supabase
+          )
         )
-      )
-    );
+      );
+    } else {
+      console.log(`[sendNotificationForBooking] Email disabled for ${notificationCode}`);
+    }
 
     // Invia notifica Telegram se abilitata (fire-and-forget)
-    if (config.enable_telegram) {
+    if (config.telegram_enabled) {
       console.log(`[sendNotificationForBooking] Telegram enabled for ${notificationCode}, sending...`);
       const registrationDate = new Date().toLocaleDateString("it-IT", {
         year: "numeric",
