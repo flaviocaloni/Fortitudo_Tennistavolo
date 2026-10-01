@@ -56,8 +56,22 @@ export async function bookSlot(formData: FormData) {
   if (booking?.id) {
     console.log("[bookSlot] Triggering notification for booking:", booking.id);
     const adminClient = createAdminClient() || supabase;
-    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient).catch((err) => {
+
+    // Log quando la promessa è creata (prima di await)
+    const notificationPromise = sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient);
+    console.log("[bookSlot] Notification promise created");
+
+    notificationPromise.catch((err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
+      // Log errore al database
+      adminClient.from("notification_delivery").insert({
+        booking_id: booking.id,
+        recipient_email: "error-notification",
+        channel: "ERROR",
+        provider: "ERROR",
+        status: "failed",
+        error_code: String(err),
+      }).catch(e => console.error("[bookSlot] Error log failed:", e));
     });
   }
 
