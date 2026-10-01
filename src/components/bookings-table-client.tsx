@@ -347,7 +347,13 @@ export default function BookingsTableClient({
               return (
                 <tr key={b.id} className="border-t border-slate-100">
                   <td className="px-3 py-2 capitalize">{formatDateIT(b.session_date)}</td>
-                  <td className="px-3 py-2 text-xs">{formatDateIT(b.created_at.split("T")[0])}</td>
+                  <td className="px-3 py-2 text-xs">
+                    {formatDateIT(b.created_at.split("T")[0])}{" "}
+                    {new Date(b.created_at).toLocaleTimeString("it-IT", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
                   <td className="px-3 py-2">
                     {slot?.title} ({formatTime(slot?.start_time ?? "")}–
                     {formatTime(slot?.end_time ?? "")})
