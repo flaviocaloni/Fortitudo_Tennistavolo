@@ -35,25 +35,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Leggi la configurazione della notifica per determinare il tipo
+    const { data: config } = await supabase
+      .from("notification_configs")
+      .select("notification_code")
+      .eq("id", notificationConfigId)
+      .single();
+
+    if (!config) {
+      return NextResponse.json(
+        { error: "Notification config not found" },
+        { status: 404 }
+      );
+    }
+
+    // Prepara payload in base al tipo di notifica
+    const isAttendanceRemoved = config.notification_code === "CHAMPIONSHIP_MATCH_ATTENDANCE_REMOVED";
+
+    const payload = isAttendanceRemoved
+      ? {
+          bookingTitle: "Mario Rossi - Test Messaggio",
+          userName: "Mario Rossi",
+          slotName: "ESEMPIO",
+          sessionDate: "lunedì 3 ottobre 2026",
+          registrationDate: new Date().toISOString(),
+          bookingId: "test-" + Date.now(),
+          notificationConfigId,
+          teamName: "Babyteam",
+          opponentName: "ASD Rivale",
+          notificationType: "attendance_removed" as const,
+        }
+      : {
+          bookingTitle: "Mario Rossi - Test Messaggio",
+          userName: "Mario Rossi",
+          slotName: "Allenamento Lunedì (ESEMPIO)",
+          sessionDate: "lunedì 30 settembre 2026",
+          registrationDate: new Date().toISOString(),
+          bookingId: "test-" + Date.now(),
+          notificationConfigId,
+        };
+
     // Invia messaggio d'esempio
-    const result = await sendNotificationTelegram(
-      {
-        bookingTitle: "Mario Rossi - Test Messaggio",
-        userName: "Mario Rossi",
-        slotName: "Allenamento Lunedì (ESEMPIO)",
-        sessionDate: "lunedì 30 settembre 2026",
-        registrationDate: new Date().toLocaleDateString("it-IT", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        bookingId: "test-" + Date.now(),
-        notificationConfigId,
-      },
-      supabase
-    );
+    const result = await sendNotificationTelegram(payload, supabase);
 
     if (!result.success) {
       return NextResponse.json(
