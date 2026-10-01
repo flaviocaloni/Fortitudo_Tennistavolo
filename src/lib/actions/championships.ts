@@ -107,7 +107,8 @@ async function sendNotificationForAttendanceRemoved(
 
     // Invia Telegram se abilitata
     if (config.telegram_enabled) {
-      const registrationDate = new Date().toLocaleDateString("it-IT", {
+      const registrationDate = new Date().toLocaleString("it-IT", {
+        timeZone: "Europe/Rome",
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -124,6 +125,9 @@ async function sendNotificationForAttendanceRemoved(
           registrationDate,
           bookingId: matchId,
           notificationConfigId: config.id,
+          teamName: match.team_name,
+          opponentName: match.opponent_name,
+          notificationType: "attendance_removed",
         },
         supabase
       ).catch((err) => {

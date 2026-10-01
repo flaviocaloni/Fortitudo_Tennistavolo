@@ -8,6 +8,10 @@ export interface TelegramPayload {
   registrationDate: string; // data di registrazione della prenotazione
   bookingId: string;
   notificationConfigId: number;
+  // Campi opzionali per notifiche di campionato
+  teamName?: string;
+  opponentName?: string;
+  notificationType?: "booking" | "attendance_removed";
 }
 
 interface TelegramResult {
@@ -115,6 +119,20 @@ function buildTelegramMessage(payload: TelegramPayload): string {
     minute: "2-digit",
   });
 
+  // Template per rimozione presenza da campionato
+  if (payload.notificationType === "attendance_removed") {
+    return `⛔ <b>Rimozione Presenza Partita</b>
+
+<b>Giocatore:</b> ${payload.userName}
+<b>Squadra:</b> ${payload.teamName}
+<b>Avversario:</b> ${payload.opponentName}
+<b>Data Evento:</b> ${payload.sessionDate}
+<b>Data Registrazione:</b> ${registrationDateFormatted}
+
+⚠️ L'agonista ha rimosso la propria presenza!`;
+  }
+
+  // Template per prenotazione evento (default)
   return `🎾 <b>Prenotazione Confermata</b>
 
 <b>Giocatore:</b> ${payload.userName}
