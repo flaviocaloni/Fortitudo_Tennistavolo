@@ -45,8 +45,19 @@ async function sendNotificationForAttendanceRemoved(
   supabase: any
 ) {
   try {
-    // Leggi match
-    const { data: match } = await championships.getMatchById(supabase, matchId);
+    // Leggi match con championship e team join
+    const { data: match } = await supabase
+      .from("championship_matches")
+      .select(
+        `
+        id, championship_id, scheduled_start_at, opponent_name, team_id,
+        championships:championship_id(name),
+        championship_teams:team_id(name)
+        `
+      )
+      .eq("id", matchId)
+      .single();
+
     if (!match) return;
 
     // Leggi utente
@@ -74,14 +85,22 @@ async function sendNotificationForAttendanceRemoved(
 
     if (!dedupRecipients.length) return;
 
+    const championshipName = (match.championships as any)?.name || "";
+    const teamName = (match.championship_teams as any)?.name || "";
+    const eventDate = new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
     // Invia Email se abilitata
     if (config.email_enabled) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fortitudo-tennistavolo.vercel.app";
       const { subject, html } = await buildBookingNotificationEmail(
         {
-          slotTitle: `${match.championship_name} - ${match.team_name}`,
-          sessionDate: new Date(match.date).toLocaleDateString("it-IT"),
-          startTime: match.time || "N/A",
+          slotTitle: `${championshipName} - ${teamName}`,
+          sessionDate: eventDate,
+          startTime: "N/A",
           endTime: "",
           userName: user.full_name,
         },
@@ -118,14 +137,14 @@ async function sendNotificationForAttendanceRemoved(
 
       sendNotificationTelegram(
         {
-          bookingTitle: `${user.full_name} - ${match.team_name}`,
+          bookingTitle: `${user.full_name} - ${teamName}`,
           userName: user.full_name,
-          slotName: `${match.championship_name}`,
-          sessionDate: new Date(match.date).toLocaleDateString("it-IT"),
+          slotName: championshipName,
+          sessionDate: eventDate,
           registrationDate,
           bookingId: matchId,
           notificationConfigId: config.id,
-          teamName: match.team_name,
+          teamName,
           opponentName: match.opponent_name,
           notificationType: "attendance_removed",
         },
