@@ -34,48 +34,12 @@ export async function bookSlot(formData: FormData) {
 
   if (error) backWithError("/calendario", error.message);
 
-  // Log booking confirmation to debug table
+
+  // Trigger asincrono per inviare notifiche (non blocca il redirect)
   if (booking?.id) {
     const adminClient = createAdminClient() || supabase;
-    try {
-      await adminClient.from("notification_delivery").insert({
-        booking_id: booking.id,
-        recipient_email: "debug-booking-created",
-        channel: "DEBUG",
-        provider: "DEBUG",
-        status: "sent",
-        sent_at: new Date().toISOString(),
-      });
-      console.log("[bookSlot] Debug log created for booking:", booking.id);
-    } catch (debugError) {
-      console.error("[bookSlot] Debug log failed:", debugError);
-    }
-  }
-
-  // Trigger asincrono per inviare notifiche email (non blocca il redirect)
-  if (booking?.id) {
-    console.log("[bookSlot] Triggering notification for booking:", booking.id);
-    const adminClient = createAdminClient() || supabase;
-
-    // Log quando la promessa è creata (prima di await)
-    const notificationPromise = sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient);
-    console.log("[bookSlot] Notification promise created");
-
-    notificationPromise.catch(async (err) => {
+    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient).catch((err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
-      // Log errore al database (fire-and-forget)
-      try {
-        await adminClient.from("notification_delivery").insert({
-          booking_id: booking.id,
-          recipient_email: "error-notification",
-          channel: "ERROR",
-          provider: "ERROR",
-          status: "failed",
-          error_code: String(err),
-        });
-      } catch (e) {
-        console.error("[bookSlot] Error log failed:", e);
-      }
     });
   }
 
