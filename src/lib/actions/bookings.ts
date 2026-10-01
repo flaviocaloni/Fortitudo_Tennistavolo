@@ -35,6 +35,7 @@ export async function bookSlot(formData: FormData) {
 
   // Trigger asincrono per inviare notifiche email (non blocca il redirect)
   if (booking?.id) {
+    console.log("[bookSlot] Triggering notification for booking:", booking.id);
     sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, supabase).catch((err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
     });
