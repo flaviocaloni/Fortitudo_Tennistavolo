@@ -63,7 +63,7 @@ export async function bookSlot(formData: FormData) {
 
     notificationPromise.catch((err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
-      // Log errore al database
+      // Log errore al database (fire-and-forget)
       adminClient.from("notification_delivery").insert({
         booking_id: booking.id,
         recipient_email: "error-notification",
@@ -71,7 +71,7 @@ export async function bookSlot(formData: FormData) {
         provider: "ERROR",
         status: "failed",
         error_code: String(err),
-      }).catch(e => console.error("[bookSlot] Error log failed:", e));
+      }).then().catch((e: any) => console.error("[bookSlot] Error log failed:", e));
     });
   }
 
