@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { toISODate } from "@/lib/dates";
 import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";
+import { sendNotificationTelegram } from "@/lib/services/telegram-sender";
 import { resolveNotificationRecipients, deduplicateRecipients } from "@/lib/services/recipients-resolver";
 import { getNotificationConfig } from "@/lib/supabase/notifications";
 
@@ -53,26 +54,40 @@ async function sendNotificationForBooking(
   supabase: any
 ) {
   try {
-    // Verifica se la notifica è attivata
-    const { data: config } = await getNotificationConfig(
-      supabase,
-      "EVENT_NON_RECURRING_BOOKING"
-    );
-
-    if (!config || !config.is_active) {
-      console.log("[sendNotificationForBooking] Notification inactive, skipping");
-      return;
-    }
-
-    // Verificare che lo slot sia non ricorrente (evento)
+    // Leggi lo slot per determinare se è ricorrente o evento
     const { data: slot } = await supabase
       .from("training_slots")
-      .select("event_date, title, start_time, end_time")
+      .select("event_date, weekday, title, start_time, end_time")
       .eq("id", slotId)
       .single();
 
-    if (!slot || !slot.event_date) {
-      console.log("[sendNotificationForBooking] Not an event slot, skipping");
+    if (!slot) {
+      console.log("[sendNotificationForBooking] Slot not found");
+      return;
+    }
+
+    // Determina il tipo di notifica in base al tipo di slot
+    let notificationCode: "EVENT_NON_RECURRING_BOOKING" | "RECURRING_SLOT_BOOKING";
+
+    if (slot.event_date) {
+      // Slot evento (non ricorrente)
+      notificationCode = "EVENT_NON_RECURRING_BOOKING";
+    } else if (slot.weekday !== null) {
+      // Slot ricorrente (ha weekday)
+      notificationCode = "RECURRING_SLOT_BOOKING";
+    } else {
+      console.log("[sendNotificationForBooking] Slot type not recognized, skipping");
+      return;
+    }
+
+    // Verifica se la notifica è attivata per questo tipo
+    const { data: config } = await getNotificationConfig(
+      supabase,
+      notificationCode
+    );
+
+    if (!config || !config.is_active) {
+      console.log(`[sendNotificationForBooking] ${notificationCode} inactive, skipping`);
       return;
     }
 
@@ -123,6 +138,23 @@ async function sendNotificationForBooking(
         )
       )
     );
+
+    // Invia notifica Telegram se abilitata (fire-and-forget)
+    if (config.enable_telegram) {
+      sendNotificationTelegram(
+        {
+          bookingTitle: `${profile.full_name} - ${slot.title}`,
+          userName: profile.full_name,
+          slotName: slot.title,
+          sessionDate: sessionDate,
+          bookingId,
+          notificationConfigId: config.id,
+        },
+        supabase
+      ).catch((err) => {
+        console.error("[sendNotificationForBooking] Telegram error (non-blocking):", err);
+      });
+    }
   } catch (error) {
     console.error("[sendNotificationForBooking] Error:", error);
     // Non re-throw: la prenotazione è già confermata, l'errore non deve ripercuotersi

@@ -9,6 +9,7 @@ interface NotificationConfig {
   is_active: boolean;
   recipient_mode: "ALL_ADMINS" | "ALL_USERS" | "MANUAL";
   manual_recipient_ids: string[] | null;
+  enable_telegram?: boolean;
 }
 
 interface NotificationConfigFormProps {
@@ -29,6 +30,7 @@ export default function NotificationConfigForm({
   const [adminsList, setAdminsList] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
+  const [enableTelegram, setEnableTelegram] = useState(config.enable_telegram || false);
 
   const handleToggle = async () => {
     setIsLoading(true);
@@ -36,6 +38,30 @@ export default function NotificationConfigForm({
     formData.append("notification_code", notificationCode);
     formData.append("is_active", String(!config.is_active));
     await toggleNotification(formData);
+  };
+
+  const handleTelegramToggle = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/notifications/toggle-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notification_code: notificationCode,
+          enable_telegram: !enableTelegram,
+        }),
+      });
+      if (response.ok) {
+        setEnableTelegram(!enableTelegram);
+      } else {
+        alert("Errore nel salvataggio della configurazione Telegram");
+      }
+    } catch (error) {
+      console.error("Error toggling Telegram:", error);
+      alert("Errore nel salvataggio");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLoadRecipients = async () => {
@@ -134,6 +160,30 @@ export default function NotificationConfigForm({
               ⚠️ La configurazione è salvata, ma non verranno inviate email fino alla riattivazione.
             </div>
           )}
+
+          {/* Telegram Toggle */}
+          <div className="flex items-center justify-between rounded-lg bg-blue-50 p-4 border border-blue-200">
+            <div>
+              <p className="font-medium">📱 Telegram</p>
+              <p className="text-sm text-slate-600">
+                {enableTelegram
+                  ? "Notifiche verranno inviate anche sul canale Telegram"
+                  : "Notifiche Telegram disattivate"}
+              </p>
+            </div>
+            <button
+              onClick={handleTelegramToggle}
+              disabled={isLoading || !config.is_active}
+              className={`px-4 py-2 rounded-md font-medium text-white transition ${
+                enableTelegram
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-slate-400 hover:bg-slate-500"
+              } disabled:opacity-50`}
+              title={!config.is_active ? "Attiva prima le notifiche email" : ""}
+            >
+              {isLoading ? "..." : enableTelegram ? "Disattiva" : "Attiva"}
+            </button>
+          </div>
         </div>
       )}
 
