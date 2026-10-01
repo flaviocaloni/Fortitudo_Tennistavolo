@@ -23,17 +23,27 @@ export async function sendNotificationTelegram(
   payload: TelegramPayload,
   supabase: SupabaseClient
 ): Promise<TelegramResult> {
+  console.log("[TelegramSender] Starting Telegram notification send...");
+
   // Verifica configurazione
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
-    console.warn("[TelegramSender] Telegram not configured, skipping");
+    console.error("[TelegramSender] Configuration missing:", {
+      hasToken: !!TELEGRAM_BOT_TOKEN,
+      hasChannelId: !!TELEGRAM_CHANNEL_ID,
+    });
     return { success: false, error: "Telegram not configured" };
   }
 
   try {
     // Costruisci messaggio formattato
     const message = buildTelegramMessage(payload);
+    console.log("[TelegramSender] Message built:", {
+      bookingId: payload.bookingId,
+      messageLength: message.length
+    });
 
     // Invia via Telegram Bot API
+    console.log("[TelegramSender] Calling Telegram API...");
     const response = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
       {
@@ -48,9 +58,13 @@ export async function sendNotificationTelegram(
     );
 
     const result = await response.json();
+    console.log("[TelegramSender] Telegram API response:", { ok: result.ok, status: response.status });
 
     if (!result.ok) {
-      console.error("[TelegramSender] API error:", result.description);
+      console.error("[TelegramSender] API error:", {
+        description: result.description,
+        errorCode: result.error_code,
+      });
       return {
         success: false,
         error: result.description,
@@ -58,6 +72,7 @@ export async function sendNotificationTelegram(
     }
 
     const messageId = result.result.message_id;
+    console.log("[TelegramSender] Message sent successfully:", messageId);
 
     // Log a notification_delivery
     try {
@@ -72,11 +87,11 @@ export async function sendNotificationTelegram(
         status: "sent",
         sent_at: new Date().toISOString(),
       });
+      console.log("[TelegramSender] Database log created");
     } catch (logError) {
       console.error("[TelegramSender] Log error (non-blocking):", logError);
     }
 
-    console.log(`[TelegramSender] Message sent: ${messageId}`);
     return {
       success: true,
       messageId,
