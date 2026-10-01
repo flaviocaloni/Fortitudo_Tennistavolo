@@ -9,6 +9,17 @@ import NotificationConfigForm from "@/components/notification-config-form";
 
 export const dynamic = "force-dynamic";
 
+function getChannelBadges(config: any) {
+  const channels = [];
+  if (config.email_enabled) channels.push("EMAIL");
+  if (config.telegram_enabled) channels.push("TELEGRAM");
+
+  if (channels.length === 0) {
+    return "NESSUN CANALE";
+  }
+  return channels.join(" + ");
+}
+
 export default async function NotificheAdminPage(props: {
   searchParams: Promise<{ error?: string; success?: string; tab?: string }>;
 }) {
@@ -122,7 +133,7 @@ export default async function NotificheAdminPage(props: {
                     >
                       {bookingConfig.is_active ? "ATTIVA" : "DISATTIVA"}
                     </span>
-                    <span className="badge bg-blue-100 text-blue-800">EMAIL</span>
+                    <span className="badge bg-blue-100 text-blue-800">{getChannelBadges(bookingConfig)}</span>
                   </div>
                 </div>
 
@@ -172,7 +183,7 @@ export default async function NotificheAdminPage(props: {
                     >
                       {recurringConfig?.is_active ? "ATTIVA" : "DISATTIVA"}
                     </span>
-                    <span className="badge bg-blue-100 text-blue-800">EMAIL + TELEGRAM</span>
+                    <span className="badge bg-blue-100 text-blue-800">{recurringConfig ? getChannelBadges(recurringConfig) : "N/A"}</span>
                   </div>
                 </div>
 
@@ -236,7 +247,7 @@ export default async function NotificheAdminPage(props: {
                     >
                       {attendanceRemovedConfig.is_active ? "ATTIVA" : "DISATTIVA"}
                     </span>
-                    <span className="badge bg-blue-100 text-blue-800">EMAIL + TELEGRAM</span>
+                    <span className="badge bg-blue-100 text-blue-800">{getChannelBadges(attendanceRemovedConfig)}</span>
                   </div>
                 </div>
 
