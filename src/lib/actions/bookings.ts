@@ -35,15 +35,21 @@ export async function bookSlot(formData: FormData) {
   if (error) backWithError("/calendario", error.message);
 
 
-  // Trigger asincrono per inviare notifiche (non blocca il redirect)
+  // Trigger notifiche via API endpoint (non blocca il redirect)
   if (booking?.id) {
-    const adminClient = createAdminClient();
-    console.log("[bookSlot] Admin client created:", !!adminClient);
-    if (!adminClient) {
-      console.warn("[bookSlot] SUPABASE_SERVICE_ROLE_KEY not configured, notifications will be limited");
-    }
-    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient || supabase).catch((err) => {
-      console.error("[bookSlot] Notification error (non-blocking):", err);
+    console.log("[bookSlot] Triggering notification via API");
+    // Usa fetch per chiamare l'endpoint di processamento notifiche
+    fetch("/api/internal/process-notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bookingId: booking.id,
+        slotId,
+        sessionDate,
+        userId: user.id,
+      }),
+    }).catch((err) => {
+      console.error("[bookSlot] Notification API error (non-blocking):", err);
     });
   }
 
