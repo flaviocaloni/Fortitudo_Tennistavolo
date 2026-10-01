@@ -35,22 +35,19 @@ export async function bookSlot(formData: FormData) {
   if (error) backWithError("/calendario", error.message);
 
 
-  // Trigger notifiche via API endpoint (non blocca il redirect)
+  // Trigger notifiche (non blocca il redirect, timeout breve)
   if (booking?.id) {
-    console.log("[bookSlot] Triggering notification via API");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fortitudo-tennistavolo.vercel.app";
-    // Usa fetch per chiamare l'endpoint di processamento notifiche
-    fetch(`${siteUrl}/api/internal/process-notifications`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        bookingId: booking.id,
-        slotId,
-        sessionDate,
-        userId: user.id,
-      }),
-    }).catch((err) => {
-      console.error("[bookSlot] Notification API error (non-blocking):", err);
+    console.log("[bookSlot] Triggering notification for booking:", booking.id);
+    const adminClient = createAdminClient() || supabase;
+
+    // Timeout breve: 5 secondi max per processare le notifiche
+    Promise.race([
+      sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Notification timeout")), 5000)
+      ),
+    ]).catch((err) => {
+      console.error("[bookSlot] Notification error (non-blocking):", err);
     });
   }
 
