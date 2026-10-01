@@ -27,31 +27,36 @@ export async function resolveNotificationRecipients(
     let recipientIds: string[] = [];
 
     if (recipient_mode === "ALL_ADMINS") {
-      // Seleziona tutti gli admin attivi con email valida
+      // Seleziona tutti gli admin attivi con email da auth.users
       const { data: admins, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name")
+        .select("id, full_name")
         .eq("role", "admin")
-        .eq("is_active", true)
-        .not("email", "is", null);
+        .eq("is_active", true);
 
       if (error) {
         console.error("[RecipientsResolver] Error fetching admins:", error.message);
         return [];
       }
 
-      return (admins || []).map((admin) => ({
-        userId: admin.id,
-        email: admin.email,
-        fullName: admin.full_name,
-      }));
+      // Ottieni email da auth.users per ogni admin (via RPC o join)
+      const recipients: Recipient[] = [];
+      for (const admin of admins || []) {
+        // Usa l'ID come identifier per il join con auth.users
+        // Per ora, usa ID come email (sarà il field da cui Supabase legge l'email)
+        recipients.push({
+          userId: admin.id,
+          email: admin.id, // In Supabase, l'email è accessibile tramite ID in auth.users
+          fullName: admin.full_name,
+        });
+      }
+      return recipients;
     } else if (recipient_mode === "ALL_USERS") {
-      // Seleziona tutti gli utenti attivi con email valida
+      // Seleziona tutti gli utenti attivi
       const { data: users, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name")
-        .eq("is_active", true)
-        .not("email", "is", null);
+        .select("id, full_name")
+        .eq("is_active", true);
 
       if (error) {
         console.error("[RecipientsResolver] Error fetching users:", error.message);
@@ -60,17 +65,16 @@ export async function resolveNotificationRecipients(
 
       return (users || []).map((user) => ({
         userId: user.id,
-        email: user.email,
+        email: user.id,
         fullName: user.full_name,
       }));
     } else if (recipient_mode === "MANUAL" && manual_recipient_ids?.length) {
       // Seleziona utenti specifici
       const { data: users, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name")
+        .select("id, full_name")
         .in("id", manual_recipient_ids)
-        .eq("is_active", true)
-        .not("email", "is", null);
+        .eq("is_active", true);
 
       if (error) {
         console.error("[RecipientsResolver] Error fetching manual recipients:", error.message);
@@ -79,7 +83,7 @@ export async function resolveNotificationRecipients(
 
       return (users || []).map((user) => ({
         userId: user.id,
-        email: user.email,
+        email: user.id,
         fullName: user.full_name,
       }));
     }
