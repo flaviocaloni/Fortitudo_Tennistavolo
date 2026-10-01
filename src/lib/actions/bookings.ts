@@ -38,8 +38,9 @@ export async function bookSlot(formData: FormData) {
   // Trigger notifiche via API endpoint (non blocca il redirect)
   if (booking?.id) {
     console.log("[bookSlot] Triggering notification via API");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fortitudo-tennistavolo.vercel.app";
     // Usa fetch per chiamare l'endpoint di processamento notifiche
-    fetch("/api/internal/process-notifications", {
+    fetch(`${siteUrl}/api/internal/process-notifications`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
