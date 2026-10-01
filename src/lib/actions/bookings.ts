@@ -168,22 +168,6 @@ async function sendNotificationForBooking(
     // Invia notifica Telegram se abilitata (fire-and-forget)
     if (config.telegram_enabled) {
       console.log(`[sendNotificationForBooking] Telegram enabled for ${notificationCode}, sending...`);
-      const registrationDate = new Date().toLocaleString("it-IT", {
-        timeZone: "Europe/Rome",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      console.log("[sendNotificationForBooking] Telegram payload:", {
-        userName: profile.full_name,
-        slotName: slot.title,
-        sessionDate,
-        registrationDate,
-        configId: config.id,
-      });
 
       sendNotificationTelegram(
         {
@@ -191,7 +175,7 @@ async function sendNotificationForBooking(
           userName: profile.full_name,
           slotName: slot.title,
           sessionDate: sessionDate,
-          registrationDate,
+          registrationDate: new Date().toISOString(),
           bookingId,
           notificationConfigId: config.id,
         },
