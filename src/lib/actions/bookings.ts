@@ -168,7 +168,8 @@ async function sendNotificationForBooking(
     // Invia notifica Telegram se abilitata (fire-and-forget)
     if (config.telegram_enabled) {
       console.log(`[sendNotificationForBooking] Telegram enabled for ${notificationCode}, sending...`);
-      const registrationDate = new Date().toLocaleDateString("it-IT", {
+      const registrationDate = new Date().toLocaleString("it-IT", {
+        timeZone: "Europe/Rome",
         year: "numeric",
         month: "long",
         day: "numeric",
