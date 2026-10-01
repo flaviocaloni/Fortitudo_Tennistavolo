@@ -173,13 +173,12 @@ export default function NotificationConfigForm({
             </div>
             <button
               onClick={handleTelegramToggle}
-              disabled={isLoading || !config.is_active}
+              disabled={isLoading}
               className={`px-4 py-2 rounded-md font-medium text-white transition ${
                 enableTelegram
                   ? "bg-blue-600 hover:bg-blue-700"
                   : "bg-slate-400 hover:bg-slate-500"
               } disabled:opacity-50`}
-              title={!config.is_active ? "Attiva prima le notifiche email" : ""}
             >
               {isLoading ? "..." : enableTelegram ? "Disattiva" : "Attiva"}
             </button>
