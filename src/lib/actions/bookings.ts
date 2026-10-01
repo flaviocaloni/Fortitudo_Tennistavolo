@@ -63,6 +63,16 @@ async function sendNotificationForBooking(
   try {
     console.log("[sendNotificationForBooking] START:", { bookingId, slotId, sessionDate, userId });
 
+    // Log iniziale nel database per verificare esecuzione
+    await supabase.from("notification_delivery").insert({
+      booking_id: bookingId,
+      recipient_email: "init-trace",
+      channel: "TRACE",
+      provider: "TRACE",
+      status: "pending",
+      notification_config_id: 1, // dummy, verrà aggiornato
+    }).catch(() => {}); // Ignora errori di log
+
     // Leggi lo slot per determinare se è ricorrente o evento
     const { data: slot } = await supabase
       .from("training_slots")
