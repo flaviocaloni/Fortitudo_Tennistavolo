@@ -25,24 +25,6 @@ export async function sendNotificationTelegram(
 ): Promise<TelegramResult> {
   console.log("[TelegramSender] Starting Telegram notification send...");
 
-  // Log iniziale nel database per tracciare esecuzione
-  try {
-    await supabase.from("notification_delivery").insert({
-      notification_config_id: payload.notificationConfigId,
-      booking_id: payload.bookingId,
-      recipient_user_id: null,
-      recipient_email: "telegram-broadcast",
-      channel: "TELEGRAM",
-      provider: "TELEGRAM",
-      provider_message_id: "pending",
-      status: "pending",
-      sent_at: null,
-    });
-    console.log("[TelegramSender] Initial log created with pending status");
-  } catch (logError) {
-    console.error("[TelegramSender] Initial log failed:", logError);
-  }
-
   // Verifica configurazione
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
     console.error("[TelegramSender] Configuration missing:", {
