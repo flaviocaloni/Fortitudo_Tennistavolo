@@ -14,7 +14,7 @@ interface NotificationConfig {
 
 interface NotificationConfigFormProps {
   config: NotificationConfig;
-  notificationCode: "EVENT_NON_RECURRING_BOOKING";
+  notificationCode: "EVENT_NON_RECURRING_BOOKING" | "RECURRING_SLOT_BOOKING";
 }
 
 export default function NotificationConfigForm({
