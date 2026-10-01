@@ -25,6 +25,24 @@ export async function sendNotificationTelegram(
 ): Promise<TelegramResult> {
   console.log("[TelegramSender] Starting Telegram notification send...");
 
+  // Log iniziale nel database per tracciare esecuzione
+  try {
+    await supabase.from("notification_delivery").insert({
+      notification_config_id: payload.notificationConfigId,
+      booking_id: payload.bookingId,
+      recipient_user_id: null,
+      recipient_email: "telegram-broadcast",
+      channel: "TELEGRAM",
+      provider: "TELEGRAM",
+      provider_message_id: "pending",
+      status: "pending",
+      sent_at: null,
+    });
+    console.log("[TelegramSender] Initial log created with pending status");
+  } catch (logError) {
+    console.error("[TelegramSender] Initial log failed:", logError);
+  }
+
   // Verifica configurazione
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
     console.error("[TelegramSender] Configuration missing:", {
@@ -74,22 +92,21 @@ export async function sendNotificationTelegram(
     const messageId = result.result.message_id;
     console.log("[TelegramSender] Message sent successfully:", messageId);
 
-    // Log a notification_delivery
+    // Aggiorna log con status='sent' e message_id
     try {
-      await supabase.from("notification_delivery").insert({
-        notification_config_id: payload.notificationConfigId,
-        booking_id: payload.bookingId,
-        recipient_user_id: null, // broadcast a canale
-        recipient_email: "telegram-broadcast", // placeholder
-        channel: "TELEGRAM",
-        provider: "TELEGRAM",
-        provider_message_id: messageId.toString(),
-        status: "sent",
-        sent_at: new Date().toISOString(),
-      });
-      console.log("[TelegramSender] Database log created");
+      await supabase
+        .from("notification_delivery")
+        .update({
+          provider_message_id: messageId.toString(),
+          status: "sent",
+          sent_at: new Date().toISOString(),
+        })
+        .eq("booking_id", payload.bookingId)
+        .eq("channel", "TELEGRAM")
+        .eq("status", "pending");
+      console.log("[TelegramSender] Log updated to sent status");
     } catch (logError) {
-      console.error("[TelegramSender] Log error (non-blocking):", logError);
+      console.error("[TelegramSender] Log update error (non-blocking):", logError);
     }
 
     return {
