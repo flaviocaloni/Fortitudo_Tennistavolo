@@ -772,7 +772,8 @@ export async function updateMyAttendance(formData: FormData) {
 
     // Invia notifica se lo status è cambiato da PRESENT a ABSENT (rimozione)
     if (previousStatus === "PRESENT" && status === "ABSENT") {
-      sendNotificationForAttendanceRemoved(matchId, profile.id, supabase).catch((err) => {
+      const adminClient = createAdminClient() || supabase;
+      sendNotificationForAttendanceRemoved(matchId, profile.id, adminClient).catch((err) => {
         console.error("[updateMyAttendance] Notification error (non-blocking):", err);
       });
     }
@@ -850,7 +851,8 @@ export async function updateAdminAttendance(formData: FormData) {
 
     // Invia notifica se lo status è cambiato da PRESENT a ABSENT (rimozione)
     if (previousStatus === "PRESENT" && status === "ABSENT") {
-      sendNotificationForAttendanceRemoved(matchId, userId, supabase).catch((err) => {
+      const adminClient = createAdminClient() || supabase;
+      sendNotificationForAttendanceRemoved(matchId, userId, adminClient).catch((err) => {
         console.error("[updateAdminAttendance] Notification error (non-blocking):", err);
       });
     }

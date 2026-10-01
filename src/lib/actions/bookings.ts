@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { toISODate } from "@/lib/dates";
 import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";
 import { sendNotificationTelegram } from "@/lib/services/telegram-sender";
@@ -36,7 +37,8 @@ export async function bookSlot(formData: FormData) {
   // Trigger asincrono per inviare notifiche email (non blocca il redirect)
   if (booking?.id) {
     console.log("[bookSlot] Triggering notification for booking:", booking.id);
-    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, supabase).catch((err) => {
+    const adminClient = createAdminClient() || supabase;
+    sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient).catch((err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
     });
   }
