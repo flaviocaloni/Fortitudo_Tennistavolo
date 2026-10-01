@@ -31,6 +31,8 @@ export default function NotificationConfigForm({
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [enableTelegram, setEnableTelegram] = useState(config.enable_telegram || false);
+  const [sendingTestMessage, setSendingTestMessage] = useState(false);
+  const [testMessageStatus, setTestMessageStatus] = useState<"success" | "error" | null>(null);
 
   const handleToggle = async () => {
     setIsLoading(true);
@@ -61,6 +63,34 @@ export default function NotificationConfigForm({
       alert("Errore nel salvataggio");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSendTestMessage = async () => {
+    setSendingTestMessage(true);
+    setTestMessageStatus(null);
+    try {
+      const response = await fetch("/api/notifications/send-test-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notificationConfigId: config.id,
+        }),
+      });
+
+      if (response.ok) {
+        setTestMessageStatus("success");
+        setTimeout(() => setTestMessageStatus(null), 5000);
+      } else {
+        setTestMessageStatus("error");
+        setTimeout(() => setTestMessageStatus(null), 5000);
+      }
+    } catch (error) {
+      console.error("Error sending test message:", error);
+      setTestMessageStatus("error");
+      setTimeout(() => setTestMessageStatus(null), 5000);
+    } finally {
+      setSendingTestMessage(false);
     }
   };
 
@@ -162,26 +192,45 @@ export default function NotificationConfigForm({
           )}
 
           {/* Telegram Toggle */}
-          <div className="flex items-center justify-between rounded-lg bg-blue-50 p-4 border border-blue-200">
-            <div>
-              <p className="font-medium">📱 Telegram</p>
-              <p className="text-sm text-slate-600">
-                {enableTelegram
-                  ? "Notifiche verranno inviate anche sul canale Telegram"
-                  : "Notifiche Telegram disattivate"}
-              </p>
+          <div className="rounded-lg bg-blue-50 p-4 border border-blue-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">📱 Telegram</p>
+                <p className="text-sm text-slate-600">
+                  {enableTelegram
+                    ? "Notifiche verranno inviate anche sul canale Telegram"
+                    : "Notifiche Telegram disattivate"}
+                </p>
+              </div>
+              <button
+                onClick={handleTelegramToggle}
+                disabled={isLoading}
+                className={`px-4 py-2 rounded-md font-medium text-white transition ${
+                  enableTelegram
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-slate-400 hover:bg-slate-500"
+                } disabled:opacity-50`}
+              >
+                {isLoading ? "..." : enableTelegram ? "Disattiva" : "Attiva"}
+              </button>
             </div>
-            <button
-              onClick={handleTelegramToggle}
-              disabled={isLoading}
-              className={`px-4 py-2 rounded-md font-medium text-white transition ${
-                enableTelegram
-                  ? "bg-blue-600 hover:bg-blue-700"
-                  : "bg-slate-400 hover:bg-slate-500"
-              } disabled:opacity-50`}
-            >
-              {isLoading ? "..." : enableTelegram ? "Disattiva" : "Attiva"}
-            </button>
+
+            {/* Test Message Button */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSendTestMessage}
+                disabled={sendingTestMessage || isLoading}
+                className="px-3 py-1 text-sm rounded-md bg-blue-500 hover:bg-blue-600 text-white font-medium transition disabled:opacity-50"
+              >
+                {sendingTestMessage ? "Invio..." : "📨 Invia Messaggio d'Esempio"}
+              </button>
+              {testMessageStatus === "success" && (
+                <span className="text-sm text-green-700 font-medium">✅ Messaggio inviato!</span>
+              )}
+              {testMessageStatus === "error" && (
+                <span className="text-sm text-red-700 font-medium">❌ Errore nell'invio</span>
+              )}
+            </div>
           </div>
         </div>
       )}
