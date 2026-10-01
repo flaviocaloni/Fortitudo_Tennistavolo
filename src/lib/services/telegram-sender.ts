@@ -105,12 +105,22 @@ export async function sendNotificationTelegram(
 }
 
 function buildTelegramMessage(payload: TelegramPayload): string {
+  // Formatta data con fuso orario di Roma (Europe/Rome)
+  const registrationDateFormatted = new Date(payload.registrationDate).toLocaleString("it-IT", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return `🎾 <b>Prenotazione Confermata</b>
 
 <b>Giocatore:</b> ${payload.userName}
 <b>Slot:</b> ${payload.slotName}
 <b>Data Evento:</b> ${payload.sessionDate}
-<b>Data Registrazione:</b> ${payload.registrationDate}
+<b>Data Registrazione:</b> ${registrationDateFormatted}
 
 ✅ La prenotazione è confermata!`;
 }
