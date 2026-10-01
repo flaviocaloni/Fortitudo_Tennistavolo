@@ -5,6 +5,7 @@ export interface TelegramPayload {
   userName: string;
   slotName: string;
   sessionDate: string;
+  registrationDate: string; // data di registrazione della prenotazione
   bookingId: string;
   notificationConfigId: number;
 }
@@ -94,7 +95,8 @@ function buildTelegramMessage(payload: TelegramPayload): string {
 
 <b>Giocatore:</b> ${payload.userName}
 <b>Slot:</b> ${payload.slotName}
-<b>Data:</b> ${payload.sessionDate}
+<b>Data Evento:</b> ${payload.sessionDate}
+<b>Data Registrazione:</b> ${payload.registrationDate}
 
 ✅ La prenotazione è confermata!`;
 }
