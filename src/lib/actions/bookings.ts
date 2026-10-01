@@ -61,17 +61,21 @@ export async function bookSlot(formData: FormData) {
     const notificationPromise = sendNotificationForBooking(booking.id, slotId, sessionDate, user.id, adminClient);
     console.log("[bookSlot] Notification promise created");
 
-    notificationPromise.catch((err) => {
+    notificationPromise.catch(async (err) => {
       console.error("[bookSlot] Notification error (non-blocking):", err);
       // Log errore al database (fire-and-forget)
-      adminClient.from("notification_delivery").insert({
-        booking_id: booking.id,
-        recipient_email: "error-notification",
-        channel: "ERROR",
-        provider: "ERROR",
-        status: "failed",
-        error_code: String(err),
-      }).then().catch((e: any) => console.error("[bookSlot] Error log failed:", e));
+      try {
+        await adminClient.from("notification_delivery").insert({
+          booking_id: booking.id,
+          recipient_email: "error-notification",
+          channel: "ERROR",
+          provider: "ERROR",
+          status: "failed",
+          error_code: String(err),
+        });
+      } catch (e) {
+        console.error("[bookSlot] Error log failed:", e);
+      }
     });
   }
 
