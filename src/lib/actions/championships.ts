@@ -126,22 +126,13 @@ async function sendNotificationForAttendanceRemoved(
 
     // Invia Telegram se abilitata
     if (config.telegram_enabled) {
-      const registrationDate = new Date().toLocaleString("it-IT", {
-        timeZone: "Europe/Rome",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
       sendNotificationTelegram(
         {
           bookingTitle: `${user.full_name} - ${teamName}`,
           userName: user.full_name,
           slotName: championshipName,
           sessionDate: eventDate,
-          registrationDate,
+          registrationDate: new Date().toISOString(),
           bookingId: matchId,
           notificationConfigId: config.id,
           teamName,
