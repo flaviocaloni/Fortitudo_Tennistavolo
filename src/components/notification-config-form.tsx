@@ -300,23 +300,6 @@ export default function NotificationConfigForm({
             {testMessageStatus === "error" && (
               <span className="mt-2 block text-sm text-red-700 font-medium">❌ Errore nell'invio</span>
             )}
-
-            {/* Test Message Button */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleSendTestMessage}
-                disabled={sendingTestMessage || isLoading}
-                className="px-3 py-1 text-sm rounded-md bg-blue-500 hover:bg-blue-600 text-white font-medium transition disabled:opacity-50"
-              >
-                {sendingTestMessage ? "Invio..." : "📨 Invia Messaggio d'Esempio"}
-              </button>
-              {testMessageStatus === "success" && (
-                <span className="text-sm text-green-700 font-medium">✅ Messaggio inviato!</span>
-              )}
-              {testMessageStatus === "error" && (
-                <span className="text-sm text-red-700 font-medium">❌ Errore nell'invio</span>
-              )}
-            </div>
           </div>
         </div>
       )}
