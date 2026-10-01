@@ -34,6 +34,24 @@ export async function bookSlot(formData: FormData) {
 
   if (error) backWithError("/calendario", error.message);
 
+  // Log booking confirmation to debug table
+  if (booking?.id) {
+    const adminClient = createAdminClient() || supabase;
+    try {
+      await adminClient.from("notification_delivery").insert({
+        booking_id: booking.id,
+        recipient_email: "debug-booking-created",
+        channel: "DEBUG",
+        provider: "DEBUG",
+        status: "sent",
+        sent_at: new Date().toISOString(),
+      });
+      console.log("[bookSlot] Debug log created for booking:", booking.id);
+    } catch (debugError) {
+      console.error("[bookSlot] Debug log failed:", debugError);
+    }
+  }
+
   // Trigger asincrono per inviare notifiche email (non blocca il redirect)
   if (booking?.id) {
     console.log("[bookSlot] Triggering notification for booking:", booking.id);
