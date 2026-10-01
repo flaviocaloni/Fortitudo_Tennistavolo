@@ -220,45 +220,65 @@ export default function NotificationConfigForm({
           )}
 
           {/* Email Channel Toggle */}
-          <div className="rounded-lg bg-amber-50 p-4 border border-amber-200 space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="rounded-lg bg-amber-50 p-4 border border-amber-200">
+            <div className="mb-3 flex items-start justify-between">
               <div>
                 <p className="font-medium">📧 Email</p>
                 <p className="text-sm text-slate-600">
-                  {enableEmail
-                    ? "Notifiche verranno inviate via Email"
-                    : "Notifiche Email disattivate"}
+                  Notifiche verranno inviate via Email
                 </p>
               </div>
-              <button
-                onClick={handleEmailToggle}
-                disabled={isLoading}
-                className={`px-4 py-2 rounded-md font-medium text-white transition ${
-                  enableEmail
-                    ? "bg-amber-600 hover:bg-amber-700"
-                    : "bg-slate-400 hover:bg-slate-500"
-                } disabled:opacity-50`}
-              >
-                {isLoading ? "..." : enableEmail ? "Disattiva" : "Attiva"}
-              </button>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`badge ${
+                    enableEmail
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {enableEmail ? "ATTIVA" : "DISATTIVA"}
+                </span>
+              </div>
             </div>
+            <button
+              onClick={handleEmailToggle}
+              disabled={isLoading}
+              className={`w-full px-4 py-2 rounded-md font-medium text-white transition ${
+                enableEmail
+                  ? "bg-amber-600 hover:bg-amber-700"
+                  : "bg-slate-400 hover:bg-slate-500"
+              } disabled:opacity-50`}
+            >
+              {isLoading ? "..." : enableEmail ? "Disattiva" : "Attiva"}
+            </button>
           </div>
 
           {/* Telegram Toggle */}
-          <div className="rounded-lg bg-blue-50 p-4 border border-blue-200 space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
+            <div className="mb-3 flex items-start justify-between">
               <div>
                 <p className="font-medium">📱 Telegram</p>
                 <p className="text-sm text-slate-600">
-                  {enableTelegram
-                    ? "Notifiche verranno inviate anche sul canale Telegram"
-                    : "Notifiche Telegram disattivate"}
+                  Notifiche verranno inviate sul canale Telegram
                 </p>
               </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`badge ${
+                    enableTelegram
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {enableTelegram ? "ATTIVA" : "DISATTIVA"}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
               <button
                 onClick={handleTelegramToggle}
                 disabled={isLoading}
-                className={`px-4 py-2 rounded-md font-medium text-white transition ${
+                className={`flex-1 px-4 py-2 rounded-md font-medium text-white transition ${
                   enableTelegram
                     ? "bg-blue-600 hover:bg-blue-700"
                     : "bg-slate-400 hover:bg-slate-500"
@@ -266,7 +286,20 @@ export default function NotificationConfigForm({
               >
                 {isLoading ? "..." : enableTelegram ? "Disattiva" : "Attiva"}
               </button>
+              <button
+                onClick={handleSendTestMessage}
+                disabled={sendingTestMessage || isLoading}
+                className="flex-1 px-3 py-2 text-sm rounded-md bg-blue-500 hover:bg-blue-600 text-white font-medium transition disabled:opacity-50"
+              >
+                {sendingTestMessage ? "Invio..." : "📨 Esempio"}
+              </button>
             </div>
+            {testMessageStatus === "success" && (
+              <span className="mt-2 block text-sm text-green-700 font-medium">✅ Messaggio inviato!</span>
+            )}
+            {testMessageStatus === "error" && (
+              <span className="mt-2 block text-sm text-red-700 font-medium">❌ Errore nell'invio</span>
+            )}
 
             {/* Test Message Button */}
             <div className="flex items-center gap-2">
