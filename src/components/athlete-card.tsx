@@ -8,10 +8,12 @@ interface AthleteCardProps {
 }
 
 export default function AthleteCard({ athlete }: AthleteCardProps) {
-  const age = getAge(athlete.dateOfBirth);
-  const birthDate = formatBirthDate(athlete.dateOfBirth);
   const genderLabel = athlete.gender === "M" ? "Maschile" : "Femminile";
   const fitetUrl = getFitetProfileUrl(athlete);
+
+  // Gestisci caso quando dateOfBirth non è disponibile (da API FITET)
+  const birthDate = athlete.dateOfBirth ? formatBirthDate(athlete.dateOfBirth) : null;
+  const age = athlete.dateOfBirth ? getAge(athlete.dateOfBirth) : null;
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-lg transition">
@@ -39,11 +41,17 @@ export default function AthleteCard({ athlete }: AthleteCardProps) {
 
       {/* INFO */}
       <div className="space-y-1 text-center text-sm text-slate-600 mb-4">
-        <div>
-          📅 {birthDate}
-          <br />
-          <span className="text-xs text-slate-500">({age} anni)</span>
-        </div>
+        {birthDate && age ? (
+          <div>
+            📅 {birthDate}
+            <br />
+            <span className="text-xs text-slate-500">({age} anni)</span>
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400">
+            📅 Data non disponibile
+          </div>
+        )}
       </div>
 
       {/* CATEGORIA */}

@@ -7,6 +7,7 @@ export type Athlete = {
   gender: "M" | "F";
   category: string;
   source: "mock" | "fitet_live" | "fitet_fallback";
+  dateOfBirth?: string; // YYYY-MM-DD
 };
 
 export function useAthletesSearch() {

@@ -99,6 +99,7 @@ function parseAthletesFromHTML(
           gender: gender || "M",
           category: "GENERALE",
           source: "fitet",
+          dateOfBirth: undefined, // FITET HTML non include DOB
         });
       }
     }
