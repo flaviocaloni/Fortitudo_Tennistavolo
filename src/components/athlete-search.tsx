@@ -1,36 +1,29 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { searchAthletes, type Athlete } from "@/lib/fitet-data";
+import { useAthletesSearch } from "@/hooks/use-athletes-search";
 import AthleteCard from "./athlete-card";
 
 export default function AthleteSearch() {
   const [query, setQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState<"M" | "F" | undefined>();
-  const [results, setResults] = useState<Athlete[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { results, isLoading, error, search } = useAthletesSearch();
 
-  // Ricerca con debounce
+  // Ricerca live con debounce
   useEffect(() => {
-    if (query.length < 2) {
-      setResults([]);
+    if (query.length < 4) {
       return;
     }
 
-    setIsLoading(true);
-    // Simula delay di ricerca (in futuro sarà API call)
     const timer = setTimeout(() => {
-      const athletes = searchAthletes(query, genderFilter);
-      setResults(athletes);
-      setIsLoading(false);
-    }, 300);
+      search(query, genderFilter);
+    }, 400); // debounce 400ms
 
     return () => clearTimeout(timer);
-  }, [query, genderFilter]);
+  }, [query, genderFilter, search]);
 
   const handleClearSearch = useCallback(() => {
     setQuery("");
-    setResults([]);
   }, []);
 
   return (
@@ -102,21 +95,20 @@ export default function AthleteSearch() {
       </div>
 
       {/* RISULTATI */}
-      {query.length >= 2 && (
+      {query.length >= 4 && (
         <div className="space-y-4">
           {isLoading ? (
             <div className="py-12 text-center text-slate-600">
-              ⏳ Ricerca in corso...
+              ⏳ Ricerca su portale FITET in corso...
             </div>
-          ) : results.length === 0 ? (
+          ) : error ? (
             <div className="rounded-lg bg-amber-50 p-4 text-center text-amber-800 border border-amber-200">
-              ⚠️ Nessun atleta trovato per "{query}"
-              {genderFilter && ` (${genderFilter === "M" ? "Maschile" : "Femminile"})`}
+              ⚠️ {error}
             </div>
-          ) : (
+          ) : results.length > 0 ? (
             <>
               <div className="mb-4 text-sm text-slate-600">
-                <strong>{results.length}</strong> atleta{results.length !== 1 ? "i" : ""} trovato{results.length !== 1 ? "i" : ""}
+                <strong>{results.length}</strong> atleta{results.length !== 1 ? "i" : ""} trovato{results.length !== 1 ? "i" : ""} · Fonte: {results[0]?.source === "fitet_live" ? "🔴 FITET Live" : "📦 Cache"}
               </div>
 
               {/* GRID RISULTATI */}
@@ -126,7 +118,7 @@ export default function AthleteSearch() {
                 ))}
               </div>
             </>
-          )}
+          ) : null}
         </div>
       )}
 
@@ -134,11 +126,18 @@ export default function AthleteSearch() {
       {query.length === 0 && (
         <div className="rounded-lg bg-blue-50 p-6 text-center border border-blue-200">
           <p className="text-slate-600 mb-2">
-            Digita almeno 2 caratteri per iniziare la ricerca
+            Digita almeno 4 caratteri per cercare dal portale FITET
           </p>
           <p className="text-sm text-slate-500">
-            Esempi: "FANTONI", "MATTEO", "WANG"
+            Esempi: "FANTONI", "MATTEO", "WANG", "ROSSI"
           </p>
+        </div>
+      )}
+
+      {/* WARNING: query 2-3 caratteri */}
+      {query.length > 0 && query.length < 4 && (
+        <div className="rounded-lg bg-slate-50 p-4 text-center text-slate-600 border border-slate-200">
+          Digita altri {4 - query.length} carattere{4 - query.length > 1 ? "i" : ""} per avviare la ricerca...
         </div>
       )}
     </div>
