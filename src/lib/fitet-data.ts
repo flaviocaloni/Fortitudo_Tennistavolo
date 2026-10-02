@@ -249,6 +249,31 @@ export const mockAthletes: Athlete[] = [
     gender: "F",
     category: "GENERALE",
   },
+  // CALONI athletes
+  {
+    id: "847362",
+    name: "CALONI FLAVIO",
+    dateOfBirth: "1985-06-15",
+    ranking: 16,
+    gender: "M",
+    category: "GENERALE",
+  },
+  {
+    id: "954723",
+    name: "CALONI GIULIA",
+    dateOfBirth: "1992-11-22",
+    ranking: 15,
+    gender: "F",
+    category: "GENERALE",
+  },
+  {
+    id: "738291",
+    name: "CALONI ANDREA",
+    dateOfBirth: "2003-02-10",
+    ranking: 17,
+    gender: "M",
+    category: "GENERALE",
+  },
 ];
 
 /**
