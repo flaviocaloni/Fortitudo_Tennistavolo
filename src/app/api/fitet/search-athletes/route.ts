@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(`[FITET API] Response status: ${response.status}`);
+    console.log(`[FITET API] Content-Type: ${response.headers.get("content-type")}`);
 
     if (!response.ok) {
       console.error(`[FITET API] HTTP Error ${response.status}`);
@@ -44,15 +45,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get raw text first
+    const rawText = await response.text();
+    console.log(`[FITET API] Raw response (first 500 chars):`, rawText.substring(0, 500));
+    console.log(`[FITET API] Response length: ${rawText.length}`);
+
     // Parse JSON
     let rawResults: any;
     try {
-      rawResults = await response.json();
-      console.log(`[FITET API] Raw JSON:`, JSON.stringify(rawResults).substring(0, 500));
+      rawResults = JSON.parse(rawText);
+      console.log(`[FITET API] Parsed JSON array length:`, Array.isArray(rawResults) ? rawResults.length : "not an array");
     } catch (parseError) {
       console.error(`[FITET API] JSON parse error:`, parseError);
+      console.error(`[FITET API] Raw text was:`, rawText);
       return NextResponse.json(
-        { error: "Failed to parse FITET response", athletes: [] },
+        { error: "Failed to parse FITET response", athletes: [], debug: { rawTextLength: rawText.length, rawText: rawText.substring(0, 200) } },
         { status: 500 }
       );
     }
