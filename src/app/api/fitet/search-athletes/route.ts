@@ -27,7 +27,14 @@ export async function POST(request: NextRequest) {
     const response = await fetch(fitetUrl, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept-Language": "it-IT,it;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://portale.fitet.org/risultati/new_rank/testaclassifica_comit.php?ID_CLASS=247&ID=1&PASS=20&COMIT=4",
+        "X-Requested-With": "XMLHttpRequest",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
       },
       // Disable SSL verification for FITET (certificate issue)
       // @ts-ignore - Node.js specific option
