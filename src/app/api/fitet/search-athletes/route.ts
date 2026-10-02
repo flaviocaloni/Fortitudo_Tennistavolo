@@ -8,15 +8,20 @@ export async function POST(request: NextRequest) {
   try {
     const { query, gender } = await request.json();
 
+    console.log(`[FITET API] START - Query: "${query}", Gender: ${gender || "all"}`);
+
     // Minimo 4 caratteri
     if (!query || query.length < 4) {
-      return NextResponse.json({ athletes: [], source: "none" });
+      console.log(`[FITET API] Query too short (${query.length} chars)`);
+      return NextResponse.json(
+        { error: "Query must be at least 4 characters", athletes: [] },
+        { status: 400 }
+      );
     }
-
-    console.log(`[FITET Search] Query: "${query}", Gender: ${gender || "all"}`);
 
     // Usa l'API AJAX di FITET (endpoint autocomplete)
     const fitetUrl = `https://portale.fitet.org/risultati/new_rank/ajax.php?term=${encodeURIComponent(query)}`;
+    console.log(`[FITET API] Fetching: ${fitetUrl}`);
 
     // Fetch da API FITET
     const response = await fetch(fitetUrl, {
@@ -26,45 +31,51 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log(`[FITET API] Response status: ${response.status}`);
+
     if (!response.ok) {
-      console.warn(`[FITET Search] API returned ${response.status}, falling back`);
+      console.error(`[FITET API] HTTP Error ${response.status}`);
+      return NextResponse.json(
+        { error: `FITET API error: ${response.status}`, athletes: [] },
+        { status: 503 }
+      );
     }
 
-    let athletes: any[] = [];
-
-    if (response.ok) {
-      try {
-        const results = await response.json();
-        athletes = parseFitetApiResults(results, gender);
-        console.log(`[FITET Search] API returned ${athletes.length} athletes`);
-      } catch (parseError) {
-        console.warn("[FITET Search] JSON parse error:", parseError);
-      }
+    // Parse JSON
+    let rawResults: any;
+    try {
+      rawResults = await response.json();
+      console.log(`[FITET API] Raw JSON:`, JSON.stringify(rawResults).substring(0, 500));
+    } catch (parseError) {
+      console.error(`[FITET API] JSON parse error:`, parseError);
+      return NextResponse.json(
+        { error: "Failed to parse FITET response", athletes: [] },
+        { status: 500 }
+      );
     }
 
-    // Fallback: se nessun risultato, importa mock data
+    // Parse results
+    const athletes = parseFitetApiResults(rawResults, gender);
+    console.log(`[FITET API] Parsed ${athletes.length} athletes`);
+
     if (athletes.length === 0) {
-      console.log("[FITET Search] No results from API, falling back to mock data");
-      const { searchAthletes } = await import("@/lib/fitet-data");
-      const mockResults = searchAthletes(query, gender);
-      athletes = mockResults.map((a) => ({
-        ...a,
-        source: "mock_fallback",
-      }));
-      console.log(`[FITET Search] Mock fallback returned ${athletes.length} athletes`);
+      console.warn(`[FITET API] No results found for query: "${query}"`);
     }
 
     return NextResponse.json({
       athletes: athletes.slice(0, 15),
-      source: athletes[0]?.source || "unknown",
+      source: "fitet_live",
       query,
       count: athletes.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[FITET Search] Error:", error);
+    console.error("[FITET API] Unhandled error:", error);
     return NextResponse.json(
-      { error: "Search failed", athletes: [] },
+      {
+        error: error instanceof Error ? error.message : "Search failed",
+        athletes: [],
+      },
       { status: 500 }
     );
   }
@@ -79,18 +90,31 @@ function parseFitetApiResults(
   results: any[],
   gender?: string
 ): any[] {
-  if (!Array.isArray(results)) return [];
+  console.log(`[FITET Parse] Input type: ${typeof results}, isArray: ${Array.isArray(results)}`);
+
+  if (!Array.isArray(results)) {
+    console.warn(`[FITET Parse] Results is not an array:`, results);
+    return [];
+  }
+
+  console.log(`[FITET Parse] Array length: ${results.length}`);
 
   const athletes: any[] = [];
   const processedIds = new Set<string>();
 
-  for (const result of results) {
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
     const id = result.id;
     const name = result.value || "";
     const label = result.label || "";
 
+    console.log(`[FITET Parse] Item ${i}: id=${id}, name=${name}, label=${label.substring(0, 50)}`);
+
     // Evita duplicati per ID
-    if (!id || processedIds.has(id)) continue;
+    if (!id || processedIds.has(id)) {
+      console.log(`[FITET Parse] Item ${i} skipped: no id or duplicate`);
+      continue;
+    }
     processedIds.add(id);
 
     // Estrai data di nascita da label: "NOME (DD/MM/YYYY) [ID]"
@@ -99,6 +123,7 @@ function parseFitetApiResults(
     if (dateMatch) {
       const [_, day, month, year] = dateMatch;
       dateOfBirth = `${year}-${month}-${day}`;
+      console.log(`[FITET Parse] Item ${i}: extracted DOB=${dateOfBirth}`);
     }
 
     athletes.push({
@@ -112,5 +137,6 @@ function parseFitetApiResults(
     });
   }
 
+  console.log(`[FITET Parse] Total athletes parsed: ${athletes.length}`);
   return athletes;
 }
