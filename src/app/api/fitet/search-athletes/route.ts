@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
+      // Disable SSL verification for FITET (certificate issue)
+      // @ts-ignore - Node.js specific option
+      rejectUnauthorized: false,
     });
 
     console.log(`[FITET API] Response status: ${response.status}`);
