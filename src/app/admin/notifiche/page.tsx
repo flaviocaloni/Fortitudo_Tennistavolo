@@ -71,7 +71,7 @@ export default async function NotificheAdminPage(props: {
     <div>
       <h1 className="mb-1 text-2xl font-bold">Configurazione Notifiche</h1>
       <p className="mb-6 text-sm text-slate-600">
-        Gestisci le notifiche email per gli eventi
+        Gestisci le notifiche email e Telegram per gli eventi
       </p>
 
       <ErrorBanner message={searchParams.error} />
@@ -81,6 +81,39 @@ export default async function NotificheAdminPage(props: {
           ✓ {searchParams.success}
         </div>
       )}
+
+      {/* CHANNEL STATUS NOTES */}
+      <div className="mb-8 grid gap-4 grid-cols-1 md:grid-cols-2">
+        {/* EMAIL STATUS */}
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">📧</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900">Email</h3>
+              <ul className="mt-2 space-y-1 text-sm text-amber-800">
+                <li>✅ Sviluppo: pronto</li>
+                <li>⚠️ Configurazione: non configurata</li>
+                <li>🔧 Requisito: serve dominio custom per Gmail OAuth</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* TELEGRAM STATUS */}
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">📱</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-900">Telegram</h3>
+              <ul className="mt-2 space-y-1 text-sm text-blue-800">
+                <li>✅ Sviluppo: completato</li>
+                <li>✅ Canale: <a href="https://web.telegram.org/k/#@fortitudotennistavolo" target="_blank" rel="noopener noreferrer" className="font-semibold underline">@fortitudotennistavolo</a></li>
+                <li>ℹ️ Per aggiungere membri: invitare manualmente dal gruppo</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* TABS */}
       <div className="mb-6 flex gap-2 border-b border-slate-200">
