@@ -25,21 +25,26 @@ export default async function Navbar() {
     impersonatedName = data?.full_name ?? "Utente";
   }
 
-  const links: NavLink[] = profile
-    ? [
-        { href: "/calendario", label: "Calendario" },
-        { href: "/prenotazioni", label: "Le mie prenotazioni" },
-        { href: "/campionato", label: "Campionato" },
-        { href: "/statistiche", label: "Statistiche" },
-        ...(isAdmin(profile.role)
-          ? [{ href: "/admin", label: "Admin", highlight: true }]
-          : []),
-        ...(isSuperAdmin(profile.role)
-          ? [{ href: "/sys", label: "🔧 SYS", highlight: true }]
-          : []),
-        { href: "/profilo", label: "👤 Il mio profilo" },
-      ]
-    : [];
+  const links: NavLink[] = [
+    ...(profile
+      ? [
+          { href: "/calendario", label: "Calendario" },
+          { href: "/prenotazioni", label: "Le mie prenotazioni" },
+          { href: "/campionato", label: "Campionato" },
+          { href: "/statistiche", label: "Statistiche" },
+        ]
+      : []),
+    { href: "/risultati", label: "🏓 Risultati Atleti" },
+    ...(isAdmin(profile?.role)
+      ? [{ href: "/admin", label: "Admin", highlight: true }]
+      : []),
+    ...(isSuperAdmin(profile?.role)
+      ? [{ href: "/sys", label: "🔧 SYS", highlight: true }]
+      : []),
+    ...(profile
+      ? [{ href: "/profilo", label: "👤 Il mio profilo" }]
+      : []),
+  ];
 
   return (
     <header>
@@ -75,19 +80,26 @@ export default async function Navbar() {
           <div className="flex items-center gap-4 text-sm">
             {/* link estesi: solo da tablet in su */}
             <div className="hidden items-center gap-4 md:flex">
-              <Link href="/calendario" className="hover:text-crimson-500">
-                Calendario
+              {profile && (
+                <>
+                  <Link href="/calendario" className="hover:text-crimson-500">
+                    Calendario
+                  </Link>
+                  <Link href="/prenotazioni" className="hover:text-crimson-500">
+                    Le mie prenotazioni
+                  </Link>
+                  <Link href="/campionato" className="hover:text-crimson-500">
+                    Campionato
+                  </Link>
+                  <Link href="/statistiche" className="hover:text-crimson-500">
+                    Statistiche
+                  </Link>
+                </>
+              )}
+              <Link href="/risultati" className="hover:text-crimson-500">
+                🏓 Risultati Atleti
               </Link>
-              <Link href="/prenotazioni" className="hover:text-crimson-500">
-                Le mie prenotazioni
-              </Link>
-              <Link href="/campionato" className="hover:text-crimson-500">
-                Campionato
-              </Link>
-              <Link href="/statistiche" className="hover:text-crimson-500">
-                Statistiche
-              </Link>
-              {isAdmin(profile.role) && (
+              {isAdmin(profile?.role) && (
                 <Link
                   href="/admin"
                   className="font-semibold text-amber-400 hover:text-amber-300"
@@ -95,7 +107,7 @@ export default async function Navbar() {
                   Admin
                 </Link>
               )}
-              {isSuperAdmin(profile.role) && (
+              {isSuperAdmin(profile?.role) && (
                 <Link
                   href="/sys"
                   className="font-semibold text-red-400 hover:text-red-300"
@@ -104,13 +116,15 @@ export default async function Navbar() {
                   🔧 SYS
                 </Link>
               )}
-              <Link
-                href="/profilo"
-                title="Il mio profilo"
-                className="text-navy-200 underline-offset-2 hover:text-white hover:underline"
-              >
-                👤 {profile.full_name}
-              </Link>
+              {profile && (
+                <Link
+                  href="/profilo"
+                  title="Il mio profilo"
+                  className="text-navy-200 underline-offset-2 hover:text-white hover:underline"
+                >
+                  👤 {profile.full_name}
+                </Link>
+              )}
             </div>
             <form action={signOut}>
               <button className="btn border border-white/40 text-white hover:bg-navy-700">
