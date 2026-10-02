@@ -35,7 +35,7 @@ export default function RisultatiPage() {
             <li>
               🏓 Per altre regioni: {" "}
               <a
-                href="https://portale.fitet.org/risultati/"
+                href="https://portale.fitet.org/risultati/regioni/default_reg.asp?REG=4"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-blue-600 hover:underline"
