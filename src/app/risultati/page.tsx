@@ -24,17 +24,26 @@ export default function RisultatiPage() {
               📅 Ultimo aggiornamento: 27 settembre 2026
             </li>
             <li>
-              🔗 Clicca su "Dettagli Completi" per accedere al portale FITET con informazioni complete
+              🔗 Clicca su "Dettagli Completi" per accedere alla classifica completa sul portale FITET
             </li>
             <li>
-              🏓 Per risultati di altre regioni,{" "}
+              🏓 Per altre regioni: {" "}
               <a
                 href="https://portale.fitet.org/risultati/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-blue-600 hover:underline"
               >
-                visita il portale FITET
+                Visita Portale FITET
+              </a>
+              {" "} | {" "}
+              <a
+                href="https://portale.fitet.org/risultati/new_rank/testaclassifica_comit.php?ID_CLASS=247&ID=1&PASS=20&COMIT=4"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline"
+              >
+                Classifica Lombarda
               </a>
             </li>
           </ul>
