@@ -2,14 +2,20 @@ import Link from "next/link";
 import AthleteSearch from "@/components/athlete-search";
 
 export const metadata = {
-  title: "Risultati Atleti | Fortitudo Tennistavolo",
-  description: "Ricerca atleti nella classifica regionale lombarda",
+  title: "Classifica FITET | Fortitudo Tennistavolo",
+  description: "Ricerca atleti nella classifica regionale lombarda FITET",
 };
 
 export default function RisultatiPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 py-8">
       <div className="mx-auto max-w-6xl px-4">
+        {/* BETA BANNER */}
+        <div className="mb-6 rounded-lg bg-amber-100 border border-amber-300 px-4 py-2 text-center">
+          <span className="inline-block rounded-full bg-amber-500 text-white text-xs font-bold px-2 py-1 mr-2">BETA</span>
+          <span className="text-sm text-amber-900">Ricerca live dal portale FITET - Feedback benvenuti!</span>
+        </div>
+
         {/* MAIN CONTENT */}
         <AthleteSearch />
 

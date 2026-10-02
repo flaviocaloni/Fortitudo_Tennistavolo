@@ -30,9 +30,9 @@ export default function AthleteSearch() {
     <div className="space-y-6">
       {/* HEADER */}
       <div className="text-center">
-        <h1 className="mb-2 text-3xl font-bold">🏓 Risultati Atleti</h1>
+        <h1 className="mb-2 text-3xl font-bold">🏓 Classifica FITET</h1>
         <p className="text-slate-600">
-          Cerca un atleta nella classifica regionale lombarda
+          Ricerca live nella classifica regionale lombarda
         </p>
       </div>
 

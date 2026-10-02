@@ -38,13 +38,26 @@ export async function POST(request: NextRequest) {
     const html = await response.text();
 
     // Parsing manual (senza dipendenze esterne)
-    const athletes = parseAthletesFromHTML(html, query, gender);
+    let athletes = parseAthletesFromHTML(html, query, gender);
 
-    console.log(`[FITET Search] Found ${athletes.length} athletes`);
+    console.log(`[FITET Search] Found ${athletes.length} athletes from scraping`);
+
+    // Fallback: se nessun risultato, importa mock data come fallback
+    if (athletes.length === 0) {
+      console.log("[FITET Search] No results from FITET, falling back to mock data");
+      // Importa mock data - nota: questo è un fallback temporaneo
+      const { searchAthletes } = await import("@/lib/fitet-data");
+      const mockResults = searchAthletes(query, gender);
+      athletes = mockResults.map((a) => ({
+        ...a,
+        source: "mock_fallback",
+      }));
+      console.log(`[FITET Search] Mock fallback returned ${athletes.length} athletes`);
+    }
 
     return NextResponse.json({
       athletes: athletes.slice(0, 15),
-      source: "fitet_live",
+      source: athletes[0]?.source || "unknown",
       query,
       count: athletes.length,
       timestamp: new Date().toISOString(),
