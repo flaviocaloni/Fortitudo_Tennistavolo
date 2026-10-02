@@ -44,7 +44,7 @@ export default function RisultatiPage() {
               </a>
               {" "} | {" "}
               <a
-                href="https://portale.fitet.org/"
+                href="https://portale.fitet.org/risultati/new_rank/testaclassifica_comit.php?ID_CLASS=247&ID=1&PASS=20&COMIT=4"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-blue-600 hover:underline"
