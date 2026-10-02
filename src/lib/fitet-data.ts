@@ -4,11 +4,12 @@
 export type Athlete = {
   id: string;
   name: string;
-  dateOfBirth: string; // YYYY-MM-DD
+  dateOfBirth?: string; // YYYY-MM-DD (opzionale per risultati FITET)
   ranking: number;
   gender: "M" | "F"; // Maschile/Femminile
   category: "GENERALE" | "MASTER" | "GIOVANILI" | "PARALIMPICI";
   photoUrl?: string; // Da FITET CDN
+  source?: "mock" | "fitet_live" | "fitet_fallback"; // Dove viene l'atleta
 };
 
 // Mock data - categoria Generale Maschile e Femminile

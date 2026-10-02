@@ -1,14 +1,5 @@
 import { useState, useCallback } from "react";
-
-export type Athlete = {
-  id: string;
-  name: string;
-  ranking: number;
-  gender: "M" | "F";
-  category: string;
-  source: "mock" | "fitet_live" | "fitet_fallback";
-  dateOfBirth?: string; // YYYY-MM-DD
-};
+import { type Athlete } from "@/lib/fitet-data";
 
 export function useAthletesSearch() {
   const [results, setResults] = useState<Athlete[]>([]);
