@@ -34,7 +34,7 @@ export default async function Navbar() {
           { href: "/statistiche", label: "Statistiche" },
         ]
       : []),
-    { href: "/risultati", label: "🏓 Risultati Atleti" },
+    { href: "/risultati", label: "🏓 Classifica FITET" },
     ...(isAdmin(profile?.role)
       ? [{ href: "/admin", label: "Admin", highlight: true }]
       : []),
@@ -97,7 +97,7 @@ export default async function Navbar() {
                 </>
               )}
               <Link href="/risultati" className="hover:text-crimson-500">
-                🏓 Risultati Atleti
+                🏓 Classifica FITET
               </Link>
               {isAdmin(profile?.role) && (
                 <Link
