@@ -13,40 +13,51 @@ export interface PizzaStats {
  */
 export async function getPizzaStats(supabase: SupabaseClient): Promise<PizzaStats> {
   try {
+    const today = new Date().toISOString().split("T")[0];
+
     // Conta slot pizza totali
     const { count: totalPizzas } = await supabase
       .from("training_slots")
       .select("*", { count: "exact", head: true })
       .not("pizza_date", "is", null);
 
-    // Conta prenotazioni pizza totali
-    const { count: totalBookings } = await supabase
-      .from("bookings")
-      .select("b.id", { count: "exact", head: true })
-      .eq("b.status", "active")
-      .join("training_slots as ts", "b.slot_id", "ts.id")
-      .not("ts.pizza_date", "is", null);
+    // Primo: ottieni tutti gli slot pizza ID
+    const { data: pizzaSlots } = await supabase
+      .from("training_slots")
+      .select("id")
+      .not("pizza_date", "is", null);
 
-    // Media partecipanti per prenotazione pizza
-    const { data: avgData } = await supabase
-      .from("bookings")
-      .select("selected_participants")
-      .eq("status", "active")
-      .not("selected_participants", "is", null)
-      .in("slot_id",
-        // Subquery: slot pizza
-        supabase
-          .from("training_slots")
-          .select("id")
-          .not("pizza_date", "is", null)
-      );
+    const pizzaSlotIds = (pizzaSlots || []).map((s: any) => s.id);
+
+    // Conta prenotazioni pizza totali
+    let totalBookings = 0;
+    let avgData: any[] = [];
+
+    if (pizzaSlotIds.length > 0) {
+      const { count: bookingCount } = await supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active")
+        .in("slot_id", pizzaSlotIds);
+
+      totalBookings = bookingCount || 0;
+
+      // Media partecipanti per prenotazione pizza
+      const { data: participantData } = await supabase
+        .from("bookings")
+        .select("selected_participants")
+        .eq("status", "active")
+        .not("selected_participants", "is", null)
+        .in("slot_id", pizzaSlotIds);
+
+      avgData = participantData || [];
+    }
 
     const avgParticipants = avgData && avgData.length > 0
       ? avgData.reduce((sum: number, b: any) => sum + (b.selected_participants || 0), 0) / avgData.length
       : 0;
 
     // Conta pizza future (pizza_date > today)
-    const today = new Date().toISOString().split("T")[0];
     const { count: upcomingPizzas } = await supabase
       .from("training_slots")
       .select("*", { count: "exact", head: true })
@@ -62,7 +73,7 @@ export async function getPizzaStats(supabase: SupabaseClient): Promise<PizzaStat
 
     return {
       totalPizzas: totalPizzas || 0,
-      totalBookings: totalBookings || 0,
+      totalBookings,
       avgParticipants: Math.round(avgParticipants * 10) / 10,
       upcomingPizzas: upcomingPizzas || 0,
       pastPizzas: pastPizzas || 0,
