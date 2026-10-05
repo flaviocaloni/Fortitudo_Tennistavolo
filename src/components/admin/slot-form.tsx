@@ -16,8 +16,8 @@ export default function SlotForm({
   slot?: TrainingSlot;
   submitLabel?: string;
 }) {
-  const [kind, setKind] = useState<"recurring" | "event">(
-    slot?.event_date ? "event" : "recurring"
+  const [kind, setKind] = useState<"recurring" | "event" | "pizza">(
+    slot?.pizza_date ? "pizza" : slot?.event_date ? "event" : "recurring"
   );
 
   return (
@@ -40,6 +40,13 @@ export default function SlotForm({
             onClick={() => setKind("event")}
           >
             Extra / evento
+          </button>
+          <button
+            type="button"
+            className={kind === "pizza" ? "btn-primary" : "btn-ghost"}
+            onClick={() => setKind("pizza")}
+          >
+            🍕 Pizza
           </button>
         </div>
         <input type="hidden" name="kind" value={kind} />
@@ -87,7 +94,7 @@ export default function SlotForm({
             />
           </div>
         </>
-      ) : (
+      ) : kind === "event" ? (
         <>
           <div>
             <label className="label">Data evento</label>
@@ -106,6 +113,29 @@ export default function SlotForm({
           <div className="sm:col-span-2 lg:col-span-4">
             <label className="label">URL (opzionale)</label>
             <input name="url" defaultValue={slot?.url ?? ""} className="input" />
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <label className="label">Data pizza</label>
+            <input
+              name="pizza_date"
+              type="date"
+              defaultValue={slot?.pizza_date ?? ""}
+              required
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="label">Max partecipanti</label>
+            <select name="max_participants" className="input" defaultValue={slot?.max_participants ?? 1}>
+              <option value={1}>1 persona</option>
+              <option value={2}>2 persone</option>
+              <option value={3}>3 persone</option>
+              <option value={4}>4 persone</option>
+              <option value={5}>5 persone</option>
+            </select>
           </div>
         </>
       )}

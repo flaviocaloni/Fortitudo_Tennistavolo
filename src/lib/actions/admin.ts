@@ -29,17 +29,26 @@ export async function createSlot(formData: FormData) {
   const eventDate = String(formData.get("event_date") ?? "");
   const startDate = String(formData.get("start_date") ?? "");
   const endDate = String(formData.get("end_date") ?? "");
+  const pizzaDate = String(formData.get("pizza_date") ?? "");
 
   const seasonId = String(formData.get("season_id") ?? "");
   if (!seasonId) backWithError("/admin/slot", "Seleziona una stagione");
   if (kind === "recurring" && (!startDate || !endDate)) {
     backWithError("/admin/slot", "Data inizio e data fine sono obbligatorie per gli slot ricorrenti");
   }
+  if (kind === "event" && !eventDate) {
+    backWithError("/admin/slot", "Data evento è obbligatoria per gli slot evento");
+  }
+  if (kind === "pizza" && !pizzaDate) {
+    backWithError("/admin/slot", "Data pizza è obbligatoria per gli slot pizza");
+  }
 
   const payload = {
-    title: String(formData.get("title") || "Allenamento"),
-    weekday: kind === "event" ? null : Number(formData.get("weekday")),
+    slot_type: kind === "pizza" ? "PIZZA" : kind === "event" ? "EVENT" : "RECURRING",
+    title: String(formData.get("title") || (kind === "pizza" ? "Pizza" : kind === "event" ? "Evento speciale" : "Allenamento")),
+    weekday: kind === "recurring" ? Number(formData.get("weekday")) : null,
     event_date: kind === "event" ? eventDate : null,
+    pizza_date: kind === "pizza" ? pizzaDate : null,
     start_date: kind === "recurring" ? startDate : null,
     end_date: kind === "recurring" ? endDate : null,
     start_time: String(formData.get("start_time")),
@@ -47,6 +56,7 @@ export async function createSlot(formData: FormData) {
     audience: String(formData.get("audience") ?? "misto"),
     min_capacity: Number(formData.get("min_capacity") ?? 2),
     max_capacity: Number(formData.get("max_capacity") ?? 12),
+    max_participants: kind === "pizza" ? Number(formData.get("max_participants") ?? 1) : null,
     notes: String(formData.get("notes") ?? "") || null,
     season_id: seasonId,
     sede_evento: kind === "event" ? (String(formData.get("sede_evento") ?? "") || null) : null,
@@ -59,7 +69,7 @@ export async function createSlot(formData: FormData) {
   revalidatePath("/calendario");
 }
 
-/** Modifica tutti i campi di uno slot esistente (ricorrente o evento). */
+/** Modifica tutti i campi di uno slot esistente (ricorrente, evento, o pizza). */
 export async function updateSlot(formData: FormData) {
   const supabase = await requireAdmin();
 
@@ -68,6 +78,7 @@ export async function updateSlot(formData: FormData) {
   const eventDate = String(formData.get("event_date") ?? "");
   const startDate = String(formData.get("start_date") ?? "");
   const endDate = String(formData.get("end_date") ?? "");
+  const pizzaDate = String(formData.get("pizza_date") ?? "");
 
   const seasonId = String(formData.get("season_id") ?? "");
   if (!seasonId) backWithError("/admin/slot", "Seleziona una stagione");
@@ -77,11 +88,19 @@ export async function updateSlot(formData: FormData) {
   if (kind === "recurring" && endDate <= startDate) {
     backWithError("/admin/slot", "La data fine deve essere successiva alla data inizio");
   }
+  if (kind === "event" && !eventDate) {
+    backWithError("/admin/slot", "Data evento è obbligatoria per gli slot evento");
+  }
+  if (kind === "pizza" && !pizzaDate) {
+    backWithError("/admin/slot", "Data pizza è obbligatoria per gli slot pizza");
+  }
 
   const payload = {
-    title: String(formData.get("title") || "Allenamento"),
-    weekday: kind === "event" ? null : Number(formData.get("weekday")),
+    slot_type: kind === "pizza" ? "PIZZA" : kind === "event" ? "EVENT" : "RECURRING",
+    title: String(formData.get("title") || (kind === "pizza" ? "Pizza" : kind === "event" ? "Evento speciale" : "Allenamento")),
+    weekday: kind === "recurring" ? Number(formData.get("weekday")) : null,
     event_date: kind === "event" ? eventDate : null,
+    pizza_date: kind === "pizza" ? pizzaDate : null,
     start_date: kind === "recurring" ? startDate : null,
     end_date: kind === "recurring" ? endDate : null,
     start_time: String(formData.get("start_time")),
@@ -89,6 +108,7 @@ export async function updateSlot(formData: FormData) {
     audience: String(formData.get("audience") ?? "misto"),
     min_capacity: Number(formData.get("min_capacity") ?? 2),
     max_capacity: Number(formData.get("max_capacity") ?? 12),
+    max_participants: kind === "pizza" ? Number(formData.get("max_participants") ?? 1) : null,
     notes: String(formData.get("notes") ?? "") || null,
     season_id: seasonId,
     sede_evento: kind === "event" ? (String(formData.get("sede_evento") ?? "") || null) : null,

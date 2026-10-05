@@ -1,6 +1,7 @@
 export type UserRole = "admin" | "agonista" | "amatore";
 export type SlotAudience = "agonisti" | "amatori" | "misto";
 export type BookingStatus = "active" | "cancelled";
+export type SlotType = "RECURRING" | "EVENT" | "PIZZA";
 
 export interface Profile {
   id: string;
@@ -18,14 +19,17 @@ export interface Profile {
 
 export interface TrainingSlot {
   id: string;
-  weekday: number | null; // 0=domenica … 6=sabato; null per slot evento
+  slot_type?: SlotType; // RECURRING, EVENT, PIZZA
+  weekday: number | null; // 0=domenica … 6=sabato; null per slot evento/pizza
   event_date: string | null; // valorizzato solo per slot extra/evento
+  pizza_date: string | null; // valorizzato solo per slot pizza
   title: string;
   start_time: string;
   end_time: string;
   audience: SlotAudience;
   min_capacity: number;
   max_capacity: number;
+  max_participants: number | null; // 1-5 per slot pizza
   is_active: boolean;
   notes: string | null;
   season_id: string;
@@ -41,6 +45,7 @@ export interface Booking {
   user_id: string;
   session_date: string;
   status: BookingStatus;
+  selected_participants: number | null; // 1-5 per slot pizza
   created_at: string;
   cancelled_at: string | null;
   season_id: string | null;
