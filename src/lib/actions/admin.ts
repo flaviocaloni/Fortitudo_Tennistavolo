@@ -80,19 +80,23 @@ export async function updateSlot(formData: FormData) {
   const endDate = String(formData.get("end_date") ?? "");
   const pizzaDate = String(formData.get("pizza_date") ?? "");
 
+  // Determina il path corretto per il redirect degli errori
+  const errorPath =
+    kind === "pizza" ? "/admin/slot/pizza" : kind === "event" ? "/admin/slot/eventi" : "/admin/slot/ricorrenti";
+
   const seasonId = String(formData.get("season_id") ?? "");
-  if (!seasonId) backWithError("/admin/slot", "Seleziona una stagione");
+  if (!seasonId) backWithError(errorPath, "Seleziona una stagione");
   if (kind === "recurring" && (!startDate || !endDate)) {
-    backWithError("/admin/slot", "Data inizio e data fine sono obbligatorie per gli slot ricorrenti");
+    backWithError(errorPath, "Data inizio e data fine sono obbligatorie per gli slot ricorrenti");
   }
   if (kind === "recurring" && endDate <= startDate) {
-    backWithError("/admin/slot", "La data fine deve essere successiva alla data inizio");
+    backWithError(errorPath, "La data fine deve essere successiva alla data inizio");
   }
   if (kind === "event" && !eventDate) {
-    backWithError("/admin/slot", "Data evento è obbligatoria per gli slot evento");
+    backWithError(errorPath, "Data evento è obbligatoria per gli slot evento");
   }
   if (kind === "pizza" && !pizzaDate) {
-    backWithError("/admin/slot", "Data pizza è obbligatoria per gli slot pizza");
+    backWithError(errorPath, "Data pizza è obbligatoria per gli slot pizza");
   }
 
   const payload = {
@@ -116,7 +120,10 @@ export async function updateSlot(formData: FormData) {
   };
 
   const { error } = await supabase.from("training_slots").update(payload).eq("id", slotId);
-  if (error) backWithError("/admin/slot", error.message);
+  if (error) backWithError(errorPath, error.message);
+
+  // Revalidate appropriate paths
+  revalidatePath(errorPath);
   revalidatePath("/admin/slot");
   revalidatePath("/calendario");
 }
