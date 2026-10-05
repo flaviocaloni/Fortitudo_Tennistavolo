@@ -1,14 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSessionProfile } from "@/lib/supabase/server";
+import { getSessionProfile, createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/utils/roles";
+import { getPizzaStats } from "@/lib/supabase/pizza-stats";
+import PizzaStatsCard from "@/components/admin/pizza-stats-card";
 
 export default async function AdminDashboard() {
-  const { profile } = await getSessionProfile();
+  const { profile, supabase } = await getSessionProfile();
 
   if (!profile || !isAdmin(profile.role)) {
     redirect("/calendario");
   }
+
+  const pizzaStats = await getPizzaStats(supabase);
 
   const sections = [
     {
@@ -53,6 +57,10 @@ export default async function AdminDashboard() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Amministrazione</h1>
+
+      <div className="mb-8 max-w-md">
+        <PizzaStatsCard stats={pizzaStats} />
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {sections.map((section: any) => (
