@@ -30,10 +30,10 @@ export default async function CalendarioPubblicPage(
 
   const supabasePublic = await createClient();
   const season = await getCurrentSeason(supabasePublic);
+  const DAYS_AHEAD = await getCalendarDaysAhead(supabasePublic);
 
   const today = toISODate(new Date());
   const windowStart = season && today < season.start_date ? season.start_date : today;
-  const DAYS_AHEAD = 90;
   const cutoffDate = toISODate(
     new Date(new Date(windowStart + "T00:00:00").getTime() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
   );
