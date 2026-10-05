@@ -20,6 +20,7 @@ async function cloneSlot(formData: FormData) {
   }
 
   const payload = {
+    slot_type: "PIZZA",
     title: String(formData.get("title") || "Pizza"),
     weekday: null,
     event_date: null,
