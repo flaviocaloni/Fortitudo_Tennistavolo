@@ -32,10 +32,10 @@ export function upcomingDates(days: number): string[] {
   return out;
 }
 
-/** Slot che si svolgono in una certa data (ricorrenti per weekday + eventi).
+/** Slot che si svolgono in una certa data (ricorrenti per weekday + eventi + pizza).
  *  `recurringCutoff` (opzionale) limita la visibilità/prenotabilità dei soli
  *  slot ricorrenti (finestra "giorni visibilità calendario"): gli eventi
- *  extra restano sempre visibili se futuri, indipendentemente dal cutoff. */
+ *  extra e pizza restano sempre visibili se futuri, indipendentemente dal cutoff. */
 export function slotsForDate(
   slots: TrainingSlot[],
   isoDate: string,
@@ -45,6 +45,7 @@ export function slotsForDate(
   return slots
     .filter((s) => {
       if (s.event_date) return s.event_date === isoDate;
+      if (s.pizza_date) return s.pizza_date === isoDate;
       if (s.weekday !== dow) return false;
       if (s.start_date && isoDate < s.start_date) return false;
       if (s.end_date && isoDate > s.end_date) return false;
