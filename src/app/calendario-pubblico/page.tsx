@@ -121,7 +121,7 @@ export default async function CalendarioPubblicPage(
   const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }, championshipMatches] = results as any;
 
   const closureFor = (date: string) =>
-    (closures ?? []).find((c) => date >= c.start_date && date <= c.end_date);
+    (closures ?? []).find((c: any) => date >= c.start_date && date <= c.end_date);
 
   const booked = new Map<string, number>();
   for (const o of occupancy ?? []) {
@@ -185,8 +185,8 @@ export default async function CalendarioPubblicPage(
         {dates.map((date) => {
           // Championship matches for this date - ALL
           const dayMatches: Array<GroupedMatches> = Object.values(championshipMatches).filter(
-            (match) => match.date === date
-          );
+            (match) => (match as any).date === date
+          ) as any;
 
           const daySlots = slotsForDate(slots ?? [], date, cutoffDate);
           const closure = closureFor(date);
