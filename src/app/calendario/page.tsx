@@ -261,8 +261,8 @@ export default async function CalendarioPage(
                                 <label className="label text-xs">Numero partecipanti</label>
                                 <select name="selected_participants" className="input text-sm" defaultValue="1">
                                   {[1, 2, 3, 4, 5].map((n) => (
-                                    <option key={n} value={n} disabled={n > (slot.max_participants ?? 1)}>
-                                      {n === 1 ? "1 persona" : `${n} persone`} {n > (slot.max_participants ?? 1) ? "(non disponibile)" : ""}
+                                    <option key={n} value={n}>
+                                      {n === 1 ? "1 persona" : `${n} persone`}
                                     </option>
                                   ))}
                                 </select>

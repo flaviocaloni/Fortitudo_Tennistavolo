@@ -75,11 +75,6 @@ begin
 
   -- Validazione specifica per slot PIZZA
   if v_slot.pizza_date is not null then
-    -- Controllo che selected_participants non superi max_participants
-    if new.selected_participants is not null and new.selected_participants > v_slot.max_participants then
-      raise exception 'Numero partecipanti (%) supera il massimo consentito (%)',
-        new.selected_participants, v_slot.max_participants;
-    end if;
     -- Se non è specificato, default a 1
     if new.selected_participants is null then
       new.selected_participants := 1;
