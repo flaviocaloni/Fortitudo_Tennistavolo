@@ -7,6 +7,7 @@ import {
 import { formatTime } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
 import SlotEditToggle from "@/components/admin/slot-edit-toggle";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -40,26 +41,23 @@ export default async function PizzaSlotPage() {
         {slots_data.map((s: TrainingSlot) => (
           <div
             key={s.id}
-            className={`card flex flex-wrap items-center justify-between gap-3 ${
-              s.is_active ? "" : "opacity-60"
-            }`}
+            className={`card ${s.is_active ? "" : "opacity-60"}`}
           >
-            <div>
+            <div className="mb-3">
               <p className="font-medium">
-                🍕 {s.title} · {formatTime(s.start_time)}–
-                {formatTime(s.end_time)}
+                🍕 {s.title} · {s.pizza_date ? new Date(s.pizza_date + "T00:00:00").toLocaleDateString("it-IT") : "—"} · {formatTime(s.start_time)}–{formatTime(s.end_time)}
               </p>
               <p className="text-sm text-slate-600">
-                Data: {s.pizza_date ? new Date(s.pizza_date + "T00:00:00").toLocaleDateString("it-IT") : "—"} · Max partecipanti:{" "}
-                {s.max_participants ?? "—"} · Destinatari: {AUDIENCE_LABEL[s.audience]} · Posti: min {s.min_capacity} – max{" "}
-                {s.max_capacity} · Stagione: {seasonNameById.get(s.season_id) ?? "—"} · Stato:{" "}
-                {s.is_active ? "Attivo" : "DISATTIVATO"}
+                N. partecipanti: {s.max_participants ?? "—"} · Destinatari: {AUDIENCE_LABEL[s.audience]} · Posti: min {s.min_capacity} – max {s.max_capacity} · Stagione: {seasonNameById.get(s.season_id) ?? "—"} · Stato: {s.is_active ? "Attivo" : "DISATTIVATO"}
               </p>
               {s.notes && <p className="text-sm text-slate-600">Note: {s.notes}</p>}
               <p className="text-xs text-slate-400">ID: {s.id}</p>
-              <SlotEditToggle slot={s} action={updateSlot} seasons={seasons ?? []} />
             </div>
             <div className="flex gap-2">
+              <SlotEditToggle slot={s} action={updateSlot} seasons={seasons ?? []} />
+              <Link href={`/admin/slot/pizza/${s.id}/clone`} className="btn-ghost">
+                🔄 Clona
+              </Link>
               <form action={toggleSlotActive}>
                 <input type="hidden" name="slot_id" value={s.id} />
                 <input type="hidden" name="is_active" value={String(!s.is_active)} />
