@@ -255,6 +255,20 @@ export default async function CalendarioPage(
                           <form action={bookSlot}>
                             <input type="hidden" name="slot_id" value={slot.id} />
                             <input type="hidden" name="session_date" value={date} />
+
+                            {slot.pizza_date && (
+                              <div className="mb-3">
+                                <label className="label text-xs">Numero partecipanti</label>
+                                <select name="selected_participants" className="input text-sm" defaultValue="1">
+                                  {[1, 2, 3, 4, 5].map((n) => (
+                                    <option key={n} value={n} disabled={n > (slot.max_participants ?? 1)}>
+                                      {n === 1 ? "1 persona" : `${n} persone`} {n > (slot.max_participants ?? 1) ? "(non disponibile)" : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
                             <button className="btn-navy w-full" disabled={full && !!slot.event_date}>
                               {full && !!slot.event_date ? "Completo" : full && !slot.event_date ? "Prenota in overbooking" : !!slot.event_date ? "Partecipa" : "Prenota"}
                             </button>

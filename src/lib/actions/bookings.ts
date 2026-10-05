@@ -19,6 +19,7 @@ function backWithError(path: string, message: string): never {
 export async function bookSlot(formData: FormData) {
   const slotId = String(formData.get("slot_id") ?? "");
   const sessionDate = String(formData.get("session_date") ?? "");
+  const selectedParticipants = formData.get("selected_participants");
   const supabase = await createClient();
 
   const {
@@ -30,6 +31,7 @@ export async function bookSlot(formData: FormData) {
     slot_id: slotId,
     user_id: user.id,
     session_date: sessionDate,
+    selected_participants: selectedParticipants ? Number(selectedParticipants) : null,
   }).select("id").single();
 
   if (error) backWithError("/calendario", error.message);

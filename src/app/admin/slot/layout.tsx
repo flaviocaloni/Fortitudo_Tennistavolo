@@ -15,6 +15,7 @@ export default async function SlotLayout({
     { href: "/admin/slot/nuovo", label: "➕ Nuovo slot" },
     { href: "/admin/slot/ricorrenti", label: "🔄 Ricorrenti" },
     { href: "/admin/slot/eventi", label: "📅 Eventi" },
+    { href: "/admin/slot/pizza", label: "🍕 Pizza" },
     { href: "/admin/slot/chiusure", label: "🚫 Chiusure" },
     { href: "/admin/slot/visibilita", label: "👁️ Visibilità" },
   ];
