@@ -128,7 +128,7 @@ export default function SlotForm({
             />
           </div>
           <div>
-            <label className="label">Max partecipanti</label>
+            <label className="label">N. partecipanti</label>
             <select name="max_participants" className="input" defaultValue={slot?.max_participants ?? 1}>
               <option value={1}>1 persona</option>
               <option value={2}>2 persone</option>
