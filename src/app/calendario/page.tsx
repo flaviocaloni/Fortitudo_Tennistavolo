@@ -208,9 +208,7 @@ export default async function CalendarioPage(
 
                   {/* Training slots section */}
                   {daySlots.length > 0 && (
-                    <>
-                      <h3 className="mb-3 font-semibold text-yellow-900">☀️ ALLENAMENTI</h3>
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {daySlots.filter(canView).map((slot) => {
                           const count = booked.get(`${slot.id}|${date}`) ?? 0;
                           const myBookingId = mine.get(`${slot.id}|${date}`);
@@ -318,8 +316,7 @@ export default async function CalendarioPage(
                             </div>
                           );
                         })}
-                      </div>
-                    </>
+                    </div>
                   )}
                 </>
               )}
