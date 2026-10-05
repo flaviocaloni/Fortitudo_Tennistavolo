@@ -50,6 +50,18 @@ export default async function AdminStatistichePage() {
             Visualizza trend prenotazioni per stagione e periodo.
           </p>
         </Link>
+
+        {/* Pizza */}
+        <Link
+          href="/admin/statistiche/pizza"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-orange-600"
+        >
+          <div className="text-2xl font-bold text-orange-600 mb-2">🍕</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Statistiche Pizza</h2>
+          <p className="text-sm text-gray-600">
+            Visualizza slot pizza, prenotazioni e statistiche partecipanti.
+          </p>
+        </Link>
       </div>
     </div>
   );
