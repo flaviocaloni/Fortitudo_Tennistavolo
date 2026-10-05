@@ -13,6 +13,7 @@ import {
   toISODate,
 } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
+import { getChampionshipMatches, type ChampionshipMatch, type GroupedMatches } from "@/lib/supabase/championship-calendar";
 import ErrorBanner from "@/components/error-banner";
 import SlotParticipantsModal from "@/components/slot-participants-modal";
 import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
@@ -70,7 +71,7 @@ export default async function CalendarioPage(
     year: "numeric",
   });
 
-  const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }] =
+  const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }, championshipMatches] =
     dates.length > 0
       ? await Promise.all([
           // Load only slots from current season (not all slots in the system)
@@ -94,8 +95,9 @@ export default async function CalendarioPage(
             .select("start_date, end_date, reason")
             .lte("start_date", rangeTo)
             .gte("end_date", rangeFrom),
+          getChampionshipMatches(supabase, rangeFrom, rangeTo),
         ])
-      : [{ data: null }, { data: null }, { data: null }, { data: null }];
+      : [{ data: null }, { data: null }, { data: null }, { data: null }, {}];
 
   const closureFor = (date: string) =>
     (closures ?? []).find((c) => date >= c.start_date && date <= c.end_date);
@@ -154,135 +156,173 @@ export default async function CalendarioPage(
 
       <div className="space-y-6">
         {dates.map((date) => {
+          // Championship matches for this date
+          const dayMatches: Array<GroupedMatches> = Object.values(championshipMatches).filter(
+            (match) => match.date === date
+          );
+
           const daySlots = slotsForDate(slots ?? [], date, cutoffDate);
-          if (daySlots.length === 0) return null;
           const closure = closureFor(date);
-          if (closure) {
-            return (
-              <section key={date}>
-                <h2 className="mb-2 font-semibold capitalize text-slate-700">
-                  {formatDateIT(date)}
-                </h2>
-                <div className="card border-crimson-100 bg-crimson-50 text-sm text-crimson-800">
-                  🔒 Centro chiuso — {closure.reason}
-                </div>
-              </section>
-            );
-          }
+
+          if (daySlots.length === 0 && dayMatches.length === 0) return null;
+
           return (
             <section key={date}>
               <h2 className="mb-2 font-semibold capitalize text-slate-700">
                 {formatDateIT(date)}
               </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {daySlots.filter(canView).map((slot) => {
-                  const count = booked.get(`${slot.id}|${date}`) ?? 0;
-                  const myBookingId = mine.get(`${slot.id}|${date}`);
-                  const full = count >= slot.max_capacity;
-                  const minReached = count >= slot.min_capacity;
-                  return (
-                    <div key={slot.id} className="card">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-semibold">
-                            {slot.title}
-                            {slot.event_date && (
-                              <span className="badge ml-2 bg-purple-100 text-purple-800">
-                                Evento
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
-                          </p>
-                          {slot.event_date && slot.notes && (
-                            <p className="mt-1 text-xs text-slate-500">{slot.notes}</p>
-                          )}
-                          {slot.event_date && slot.sede_evento && (
-                            <p className="mt-1 text-xs text-slate-600">📍 {slot.sede_evento}</p>
-                          )}
-                          {slot.event_date && slot.url && (
-                            <p className="mt-1 text-xs">
-                              <a href={slot.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                Link evento
-                              </a>
-                            </p>
-                          )}
-                        </div>
-                        <span
-                          className={`badge ${
-                            slot.audience === "agonisti"
-                              ? "bg-blue-100 text-blue-800"
-                              : slot.audience === "amatori"
-                                ? "bg-navy-100 text-navy-800"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {AUDIENCE_LABEL[slot.audience]}
-                        </span>
-                      </div>
 
-                      <p className="mt-2 text-sm">
-                        <span className={full ? "font-semibold text-red-600" : ""}>
-                          <SlotParticipantsModal
-                            slotId={slot.id}
-                            sessionDate={date}
-                            maxCapacity={slot.max_capacity}
-                            occupiedSeats={count}
-                          />
-                          {" posti occupati"}
-                        </span>
-                        {minReached && (
-                          <span className="ml-2 text-sm text-green-600">✓ Confermato</span>
-                        )}
-                        {!minReached && (
-                          <span className="ml-2 text-xs text-amber-600">
-                            (minimo {slot.min_capacity} per confermare)
-                          </span>
-                        )}
-                      </p>
-
-                      <div className="mt-3">
-                        {myBookingId ? (
-                          <form action={cancelBooking}>
-                            <input type="hidden" name="booking_id" value={myBookingId} />
-                            <input type="hidden" name="from" value="/calendario" />
-                            <button className="btn-danger w-full">
-                              Cancella prenotazione
-                            </button>
-                          </form>
-                        ) : canJoin(slot) ? (
-                          <form action={bookSlot}>
-                            <input type="hidden" name="slot_id" value={slot.id} />
-                            <input type="hidden" name="session_date" value={date} />
-
-                            {slot.pizza_date && (
-                              <div className="mb-3">
-                                <label className="label text-xs">Numero partecipanti</label>
-                                <select name="selected_participants" className="input text-sm" defaultValue="1">
-                                  {[1, 2, 3, 4, 5].map((n) => (
-                                    <option key={n} value={n}>
-                                      {n === 1 ? "1 persona" : `${n} persone`}
-                                    </option>
-                                  ))}
-                                </select>
+              {closure ? (
+                <div className="card border-crimson-100 bg-crimson-50 text-sm text-crimson-800">
+                  🔒 Centro chiuso — {closure.reason}
+                </div>
+              ) : (
+                <>
+                  {/* Championship matches section */}
+                  {dayMatches.length > 0 && (
+                    <div className="mb-4 space-y-2 border-l-4 border-red-600 bg-red-50 p-4">
+                      <h3 className="font-semibold text-red-900">🏐 CAMPIONATO</h3>
+                      {dayMatches.map((timeGroup) => (
+                        <div key={`${timeGroup.date}|${timeGroup.time}`} className="space-y-2">
+                          {timeGroup.matches.map((match: ChampionshipMatch) => (
+                            <div key={match.id} className="bg-white rounded-lg p-3 border border-red-200">
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1">
+                                  <p className="font-medium text-gray-900">
+                                    <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded mr-2">
+                                      {match.is_home ? "Casa" : "Trasferta"} · {match.location} · {formatTime(match.start_time)}
+                                    </span>
+                                  </p>
+                                  <p className="mt-1 font-semibold text-gray-800">{match.team_name}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {match.series} | {match.round_name} vs {match.opponent}
+                                  </p>
+                                </div>
                               </div>
-                            )}
-
-                            <button className="btn-navy w-full" disabled={full && !!slot.event_date}>
-                              {full && !!slot.event_date ? "Completo" : full && !slot.event_date ? "Prenota in overbooking" : !!slot.event_date ? "Partecipa" : "Prenota"}
-                            </button>
-                          </form>
-                        ) : (
-                          <p className="text-center text-xs text-slate-400">
-                            Riservato: {AUDIENCE_LABEL[slot.audience]}
-                          </p>
-                        )}
-                      </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+
+                  {/* Training slots section */}
+                  {daySlots.length > 0 && (
+                    <>
+                      <h3 className="mb-3 font-semibold text-yellow-900">☀️ ALLENAMENTI</h3>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {daySlots.filter(canView).map((slot) => {
+                          const count = booked.get(`${slot.id}|${date}`) ?? 0;
+                          const myBookingId = mine.get(`${slot.id}|${date}`);
+                          const full = count >= slot.max_capacity;
+                          const minReached = count >= slot.min_capacity;
+                          return (
+                            <div key={slot.id} className="card">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-semibold">
+                                    {slot.title}
+                                    {slot.event_date && (
+                                      <span className="badge ml-2 bg-purple-100 text-purple-800">
+                                        Evento
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-sm text-slate-600">
+                                    {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
+                                  </p>
+                                  {slot.event_date && slot.notes && (
+                                    <p className="mt-1 text-xs text-slate-500">{slot.notes}</p>
+                                  )}
+                                  {slot.event_date && slot.sede_evento && (
+                                    <p className="mt-1 text-xs text-slate-600">📍 {slot.sede_evento}</p>
+                                  )}
+                                  {slot.event_date && slot.url && (
+                                    <p className="mt-1 text-xs">
+                                      <a href={slot.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                        Link evento
+                                      </a>
+                                    </p>
+                                  )}
+                                </div>
+                                <span
+                                  className={`badge ${
+                                    slot.audience === "agonisti"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : slot.audience === "amatori"
+                                        ? "bg-navy-100 text-navy-800"
+                                        : "bg-slate-100 text-slate-700"
+                                  }`}
+                                >
+                                  {AUDIENCE_LABEL[slot.audience]}
+                                </span>
+                              </div>
+
+                              <p className="mt-2 text-sm">
+                                <span className={full ? "font-semibold text-red-600" : ""}>
+                                  <SlotParticipantsModal
+                                    slotId={slot.id}
+                                    sessionDate={date}
+                                    maxCapacity={slot.max_capacity}
+                                    occupiedSeats={count}
+                                  />
+                                  {" posti occupati"}
+                                </span>
+                                {minReached && (
+                                  <span className="ml-2 text-sm text-green-600">✓ Confermato</span>
+                                )}
+                                {!minReached && (
+                                  <span className="ml-2 text-xs text-amber-600">
+                                    (minimo {slot.min_capacity} per confermare)
+                                  </span>
+                                )}
+                              </p>
+
+                              <div className="mt-3">
+                                {myBookingId ? (
+                                  <form action={cancelBooking}>
+                                    <input type="hidden" name="booking_id" value={myBookingId} />
+                                    <input type="hidden" name="from" value="/calendario" />
+                                    <button className="btn-danger w-full">
+                                      Cancella prenotazione
+                                    </button>
+                                  </form>
+                                ) : canJoin(slot) ? (
+                                  <form action={bookSlot}>
+                                    <input type="hidden" name="slot_id" value={slot.id} />
+                                    <input type="hidden" name="session_date" value={date} />
+
+                                    {slot.pizza_date && (
+                                      <div className="mb-3">
+                                        <label className="label text-xs">Numero partecipanti</label>
+                                        <select name="selected_participants" className="input text-sm" defaultValue="1">
+                                          {[1, 2, 3, 4, 5].map((n) => (
+                                            <option key={n} value={n}>
+                                              {n === 1 ? "1 persona" : `${n} persone`}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    )}
+
+                                    <button className="btn-navy w-full" disabled={full && !!slot.event_date}>
+                                      {full && !!slot.event_date ? "Completo" : full && !slot.event_date ? "Prenota in overbooking" : !!slot.event_date ? "Partecipa" : "Prenota"}
+                                    </button>
+                                  </form>
+                                ) : (
+                                  <p className="text-center text-xs text-slate-400">
+                                    Riservato: {AUDIENCE_LABEL[slot.audience]}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </section>
           );
         })}
