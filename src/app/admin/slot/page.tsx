@@ -34,6 +34,14 @@ export default function SlotOverview() {
         </Link>
 
         <Link
+          href="/admin/slot/pizza"
+          className="card block transition-all hover:border-navy-400 hover:shadow-md"
+        >
+          <h2 className="font-semibold text-navy-800">🍕 Pizza</h2>
+          <p className="text-sm text-slate-600">Gestisci gli slot pizza e partecipanti</p>
+        </Link>
+
+        <Link
           href="/admin/slot/chiusure"
           className="card block transition-all hover:border-navy-400 hover:shadow-md"
         >
