@@ -106,6 +106,8 @@ export async function getChampionshipMatchesAll(
     return {};
   }
 
+  console.log(`[getChampionshipMatchesAll] Fetched ${data?.length || 0} matches from ${fromDate} to ${toDate}`);
+
   if (!data) return {};
 
   const seriesOrder: Record<string, number> = {

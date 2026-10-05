@@ -120,6 +120,8 @@ export default async function CalendarioPubblicPage(
 
   const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }, championshipMatches] = results as any;
 
+  console.log("[calendario-pubblico] Championship matches found:", Object.keys(championshipMatches).length);
+
   const closureFor = (date: string) =>
     (closures ?? []).find((c: any) => date >= c.start_date && date <= c.end_date);
 
