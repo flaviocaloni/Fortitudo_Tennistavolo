@@ -5,6 +5,17 @@ import { useState, useEffect } from "react";
 import { formatTime } from "@/lib/dates";
 import type { PizzaSlotDetail } from "@/lib/supabase/pizza-stats";
 
+interface BookingDetail {
+  id: string;
+  user_name: string;
+  user_email: string;
+  session_date: string;
+  selected_participants: number;
+  slot_title: string;
+  start_time: string;
+  end_time: string;
+}
+
 export const dynamic = "force-dynamic";
 
 export default function PizzaStatistichePage({
@@ -14,31 +25,42 @@ export default function PizzaStatistichePage({
 }) {
   const [slots, setSlots] = useState<PizzaSlotDetail[]>([]);
   const [filteredSlots, setFilteredSlots] = useState<PizzaSlotDetail[]>([]);
+  const [bookings, setBookings] = useState<BookingDetail[]>([]);
   const [searchName, setSearchName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadSlots = async () => {
+    const loadData = async () => {
+      setLoading(true);
       try {
-        const res = await fetch(`/api/admin/pizza-details?name=${encodeURIComponent(searchName)}&date=${encodeURIComponent(searchDate)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setSlots(data);
-          setFilteredSlots(data);
+        const [slotsRes, bookingsRes] = await Promise.all([
+          fetch(`/api/admin/pizza-details?name=${encodeURIComponent(searchName)}&date=${encodeURIComponent(searchDate)}`),
+          fetch(`/api/admin/pizza-bookings?name=${encodeURIComponent(searchName)}&date=${encodeURIComponent(searchDate)}`),
+        ]);
+
+        if (slotsRes.ok) {
+          const slotsData = await slotsRes.json();
+          setSlots(slotsData);
+          setFilteredSlots(slotsData);
+        }
+
+        if (bookingsRes.ok) {
+          const bookingsData = await bookingsRes.json();
+          setBookings(bookingsData);
         }
       } catch (error) {
-        console.error("Error loading pizza slots:", error);
+        console.error("Error loading pizza data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadSlots();
+    loadData();
   }, [searchName, searchDate]);
 
-  const totalBookings = filteredSlots.reduce((sum, s) => sum + s.bookings_count, 0);
-  const totalParticipants = filteredSlots.reduce((sum, s) => sum + s.total_participants, 0);
+  const totalBookings = bookings.length;
+  const totalParticipants = bookings.reduce((sum, b) => sum + (b.selected_participants || 1), 0);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -50,19 +72,7 @@ export default function PizzaStatistichePage({
         <p className="text-gray-600 mt-2">Dettaglio slot pizza, prenotazioni e partecipanti</p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-4 border-l-4 border-orange-600">
-          <p className="text-sm text-orange-700">Prenotazioni</p>
-          <p className="text-3xl font-bold text-orange-800">{totalBookings}</p>
-        </div>
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg shadow p-4 border-l-4 border-amber-600">
-          <p className="text-sm text-amber-700">N. Partecipanti</p>
-          <p className="text-3xl font-bold text-amber-800">{totalParticipants}</p>
-        </div>
-      </div>
-
-      {/* Search Filters */}
+      {/* Search Filters - FIRST */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 border-l-4 border-orange-600">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Ricerca</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -88,8 +98,20 @@ export default function PizzaStatistichePage({
         </div>
       </div>
 
-      {/* Detailed Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-orange-600">
+      {/* Summary Cards - Connected to search */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-4 border-l-4 border-orange-600">
+          <p className="text-sm text-orange-700">Prenotazioni</p>
+          <p className="text-3xl font-bold text-orange-800">{totalBookings}</p>
+        </div>
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg shadow p-4 border-l-4 border-amber-600">
+          <p className="text-sm text-amber-700">N. Partecipanti</p>
+          <p className="text-3xl font-bold text-amber-800">{totalParticipants}</p>
+        </div>
+      </div>
+
+      {/* Slot Details Table */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-orange-600 mb-8">
         <div className="px-6 py-4 bg-orange-50 border-b border-orange-200">
           <h2 className="text-lg font-semibold text-gray-900">Dettaglio Slot Pizza</h2>
         </div>
@@ -130,6 +152,54 @@ export default function PizzaStatistichePage({
                     <td className="px-6 py-3 text-sm text-center">
                       <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
                         {slot.total_participants}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Bookings Details Table */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-blue-600 mb-8">
+        <div className="px-6 py-4 bg-blue-50 border-b border-blue-200">
+          <h2 className="text-lg font-semibold text-gray-900">Elenco Prenotazioni</h2>
+        </div>
+
+        {loading ? (
+          <div className="p-6 text-center text-gray-600">Caricamento...</div>
+        ) : bookings.length === 0 ? (
+          <div className="p-6 text-center text-gray-600">Nessuna prenotazione trovata</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-100 border-b border-gray-300">
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Utente</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Slot Pizza</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Orario</th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Partecipanti</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking, idx) => (
+                  <tr key={booking.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    <td className="px-6 py-3 text-sm text-gray-900 font-medium">{booking.user_name}</td>
+                    <td className="px-6 py-3 text-sm text-gray-700">{booking.user_email}</td>
+                    <td className="px-6 py-3 text-sm text-gray-900 font-medium">{booking.slot_title}</td>
+                    <td className="px-6 py-3 text-sm text-gray-700">
+                      {new Date(booking.session_date + "T00:00:00").toLocaleDateString("it-IT")}
+                    </td>
+                    <td className="px-6 py-3 text-sm text-gray-700">
+                      {formatTime(booking.start_time)}–{formatTime(booking.end_time)}
+                    </td>
+                    <td className="px-6 py-3 text-sm text-center">
+                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
+                        {booking.selected_participants || 1}
                       </span>
                     </td>
                   </tr>
