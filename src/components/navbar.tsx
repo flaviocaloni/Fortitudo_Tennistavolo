@@ -34,6 +34,7 @@ export default async function Navbar() {
           { href: "/statistiche", label: "Statistiche" },
         ]
       : []),
+    { href: "/calendario-pubblico", label: "📅 Calendario Pubblico" },
     { href: "/risultati", label: "🏓 Classifica FITET" },
     ...(isAdmin(profile?.role)
       ? [{ href: "/admin", label: "Admin", highlight: true }]
@@ -96,6 +97,9 @@ export default async function Navbar() {
                   </Link>
                 </>
               )}
+              <Link href="/calendario-pubblico" className="hover:text-crimson-500">
+                📅 Calendario Pubblico
+              </Link>
               <Link href="/risultati" className="hover:text-crimson-500">
                 🏓 Classifica FITET
               </Link>
