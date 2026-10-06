@@ -28,7 +28,7 @@ export default async function Navbar() {
   const links: NavLink[] = [
     ...(profile
       ? [
-          { href: "/calendario", label: "Calendario" },
+          { href: "/calendario-pubblico", label: "Calendario" },
           { href: "/prenotazioni", label: "Le mie prenotazioni" },
           { href: "/campionato", label: "Campionato" },
           { href: "/statistiche", label: "Statistiche" },
@@ -39,7 +39,10 @@ export default async function Navbar() {
       ? [{ href: "/admin", label: "Admin", highlight: true }]
       : []),
     ...(isSuperAdmin(profile?.role)
-      ? [{ href: "/sys", label: "🔧 SYS", highlight: true }]
+      ? [
+          { href: "/calendario", label: "📋 Calendario Avanzato", highlight: true },
+          { href: "/sys", label: "🔧 SYS", highlight: true }
+        ]
       : []),
     ...(profile
       ? [{ href: "/profilo", label: "👤 Il mio profilo" }]
@@ -82,7 +85,7 @@ export default async function Navbar() {
             <div className="hidden items-center gap-4 md:flex">
               {profile && (
                 <>
-                  <Link href="/calendario" className="hover:text-crimson-500">
+                  <Link href="/calendario-pubblico" className="hover:text-crimson-500">
                     Calendario
                   </Link>
                   <Link href="/prenotazioni" className="hover:text-crimson-500">
@@ -94,6 +97,14 @@ export default async function Navbar() {
                   <Link href="/statistiche" className="hover:text-crimson-500">
                     Statistiche
                   </Link>
+                  {isSuperAdmin(profile?.role) && (
+                    <Link
+                      href="/calendario"
+                      className="font-semibold text-amber-400 hover:text-amber-300"
+                    >
+                      📋 Calendario Avanzato
+                    </Link>
+                  )}
                 </>
               )}
               <Link href="/risultati" className="hover:text-crimson-500">

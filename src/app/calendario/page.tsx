@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { bookSlot, cancelBooking } from "@/lib/actions/bookings";
-import { isAdmin } from "@/lib/utils/roles";
+import { isAdmin, isSuperAdmin } from "@/lib/utils/roles";
 import {
   datesBetween,
   formatDateIT,
@@ -28,6 +28,11 @@ export default async function CalendarioPage(
   const searchParams = await props.searchParams;
   const { supabase, user, profile } = await getSessionProfile();
   if (!user || !profile) redirect("/login");
+
+  // Solo superadmin possono accedere a questo calendario
+  if (!isSuperAdmin(profile.role)) {
+    redirect("/calendario-pubblico");
+  }
 
   const DAYS_AHEAD = await getCalendarDaysAhead(supabase);
   const season = await getCurrentSeason(supabase);
