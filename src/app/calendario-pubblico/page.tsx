@@ -111,7 +111,14 @@ export default async function CalendarioPubblicPage(
   );
 
   // Championship matches - grouped by date
-  queries.push(getChampionshipMatchesByDate(supabasePublic, rangeFrom, rangeTo));
+  let championshipError: string | null = null;
+  try {
+    const chResult = await getChampionshipMatchesByDate(supabasePublic, rangeFrom, rangeTo);
+    queries.push(Promise.resolve(chResult));
+  } catch (error) {
+    championshipError = error instanceof Error ? error.message : "Unknown error";
+    queries.push(Promise.resolve(new Map()));
+  }
 
   const results =
     dates.length > 0
@@ -179,11 +186,23 @@ export default async function CalendarioPubblicPage(
         </Link>
       </div>
 
+      {championshipError && (
+        <div className="card border-red-200 bg-red-50 text-sm text-red-700 mb-4">
+          ⚠️ Errore caricamento partite campionato: {championshipError}
+        </div>
+      )}
+
       {dates.length === 0 && (
         <div className="card text-sm text-slate-600">
           {season
             ? `Nessuna data disponibile in questo mese per la stagione ${season.name}.`
             : "Nessuna stagione corrente configurata: contatta l'amministratore."}
+        </div>
+      )}
+
+      {dates.length > 0 && (
+        <div className="card bg-blue-50 border-blue-200 text-sm text-blue-700 mb-4">
+          📊 Debug: Date range {rangeFrom} to {rangeTo} | Championship dates: {championshipMatchesByDate?.size || 0}
         </div>
       )}
 
