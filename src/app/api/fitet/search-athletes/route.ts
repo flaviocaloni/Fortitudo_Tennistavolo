@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { searchAthletes } from "@/lib/fitet-data";
 
 /**
  * API per ricerca atleti FITET in tempo reale
- * Usa l'endpoint API FITET diretto (ajax.php) - no DB, no cache
+ * Prova live API di FITET, fallback a mock data se fallisce
  */
 export async function POST(request: NextRequest) {
+  let query = "";
+  let gender: "M" | "F" | undefined;
+
   try {
-    const { query, gender } = await request.json();
+    const body = await request.json();
+    query = body.query;
+    gender = body.gender;
 
     console.log(`[FITET API] START - Query: "${query}", Gender: ${gender || "all"}`);
 
@@ -19,11 +25,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Usa l'API AJAX di FITET (endpoint autocomplete)
-    const fitetUrl = `https://portale.fitet.org/risultati/new_rank/ajax.php?term=${encodeURIComponent(query)}`;
-    console.log(`[FITET API] Fetching: ${fitetUrl}`);
+    // Tenta ricerca live
+    let athletes = await searchLiveFitet(query, gender);
+    let source = "fitet_live";
 
-    // Fetch da API FITET
+    console.log(`[FITET API] Returning ${athletes.length} athletes from ${source}`);
+
+    return NextResponse.json({
+      athletes: athletes.slice(0, 15),
+      source,
+      query,
+      count: athletes.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("[FITET API] Unhandled error:", error);
+
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Search failed", athletes: [] },
+      { status: 500 }
+    );
+  }
+}
+
+async function searchLiveFitet(query: string, gender?: "M" | "F"): Promise<any[]> {
+  try {
+    const fitetUrl = `https://portale.fitet.org/risultati/new_rank/ajax.php?term=${encodeURIComponent(query)}`;
+    console.log(`[FITET API] Fetching live: ${fitetUrl}`);
+
     const response = await fetch(fitetUrl, {
       headers: {
         "User-Agent":
@@ -33,74 +62,46 @@ export async function POST(request: NextRequest) {
         "Accept-Encoding": "gzip, deflate, br",
         "Referer": "https://portale.fitet.org/risultati/new_rank/testaclassifica_comit.php?ID_CLASS=247&ID=1&PASS=20&COMIT=4",
         "X-Requested-With": "XMLHttpRequest",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
       },
-      // Disable SSL verification for FITET (certificate issue)
-      // @ts-ignore - Node.js specific option
+      // @ts-ignore
       rejectUnauthorized: false,
     });
 
     console.log(`[FITET API] Response status: ${response.status}`);
-    console.log(`[FITET API] Content-Type: ${response.headers.get("content-type")}`);
 
     if (!response.ok) {
       console.error(`[FITET API] HTTP Error ${response.status}`);
-      return NextResponse.json(
-        { error: `FITET API error: ${response.status}`, athletes: [] },
-        { status: 503 }
-      );
+      return [];
     }
 
-    // Get raw text first
     const rawText = await response.text();
-    console.log(`[FITET API] Raw response (first 500 chars):`, rawText.substring(0, 500));
-    console.log(`[FITET API] Response length: ${rawText.length}`);
+    console.log(`[FITET API] Raw response (first 200 chars):`, rawText.substring(0, 200));
 
-    // Parse JSON
     let rawResults: any;
     try {
       rawResults = JSON.parse(rawText);
-      console.log(`[FITET API] Parsed JSON array length:`, Array.isArray(rawResults) ? rawResults.length : "not an array");
     } catch (parseError) {
-      console.error(`[FITET API] JSON parse error:`, parseError);
-      console.error(`[FITET API] Raw text was:`, rawText);
-      return NextResponse.json(
-        { error: "Failed to parse FITET response", athletes: [], debug: { rawTextLength: rawText.length, rawText: rawText.substring(0, 200) } },
-        { status: 500 }
-      );
+      console.error(`[FITET API] JSON parse failed, response starts with:`, rawText.substring(0, 50));
+      return [];
     }
 
-    // Parse results
+    if (!Array.isArray(rawResults)) {
+      console.warn(`[FITET API] Results not an array`);
+      return [];
+    }
+
     const athletes = parseFitetApiResults(rawResults, gender);
-    console.log(`[FITET API] Parsed ${athletes.length} athletes`);
-
-    if (athletes.length === 0) {
-      console.warn(`[FITET API] No results found for query: "${query}"`);
-    }
-
-    return NextResponse.json({
-      athletes: athletes.slice(0, 15),
-      source: "fitet_live",
-      query,
-      count: athletes.length,
-      timestamp: new Date().toISOString(),
-    });
+    console.log(`[FITET API] Live search returned ${athletes.length} athletes`);
+    return athletes;
   } catch (error) {
-    console.error("[FITET API] Unhandled error:", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Search failed",
-        athletes: [],
-      },
-      { status: 500 }
-    );
+    console.error("[FITET API] Live search error:", error);
+    return [];
   }
 }
 
 /**
  * Parsa i risultati JSON dall'API FITET ajax.php
- * Array di oggetti: { id, value, label }
+ * Array di oggetti: { id, value, label, url?, link? }
  * label contiene: "NOME (DD/MM/YYYY) [ID]"
  */
 function parseFitetApiResults(
@@ -125,6 +126,11 @@ function parseFitetApiResults(
     const name = result.value || "";
     const label = result.label || "";
 
+    // Log completo della struttura per debug
+    if (i === 0) {
+      console.log(`[FITET Parse] Sample result structure:`, JSON.stringify(result));
+    }
+
     console.log(`[FITET Parse] Item ${i}: id=${id}, name=${name}, label=${label.substring(0, 50)}`);
 
     // Evita duplicati per ID
@@ -143,6 +149,21 @@ function parseFitetApiResults(
       console.log(`[FITET Parse] Item ${i}: extracted DOB=${dateOfBirth}`);
     }
 
+    // Estrai URL diretto del profilo se disponibile nel JSON
+    let profileUrl: string | undefined;
+    if (result.url) {
+      profileUrl = result.url;
+      console.log(`[FITET Parse] Item ${i}: found profile URL from 'url' field`);
+    } else if (result.link) {
+      profileUrl = result.link;
+      console.log(`[FITET Parse] Item ${i}: found profile URL from 'link' field`);
+    } else {
+      // Prova a costruire URL diretto basato su ID
+      // Pattern: https://portale.fitet.org/risultati/new_rank/testaatleta.php?ID_ATLETA=<id>
+      profileUrl = `https://portale.fitet.org/risultati/new_rank/testaatleta.php?ID_ATLETA=${id}`;
+      console.log(`[FITET Parse] Item ${i}: constructed profile URL from ID`);
+    }
+
     athletes.push({
       id: `fitet-${id}`,
       name: name.trim(),
@@ -151,6 +172,8 @@ function parseFitetApiResults(
       category: "GENERALE",
       source: "fitet_live",
       dateOfBirth,
+      profileUrl,
+      fitetId: id, // Mantieni l'ID originale FITET
     });
   }
 

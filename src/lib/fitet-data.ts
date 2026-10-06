@@ -10,6 +10,8 @@ export type Athlete = {
   category: "GENERALE" | "MASTER" | "GIOVANILI" | "PARALIMPICI";
   photoUrl?: string; // Da FITET CDN
   source?: "mock" | "fitet_live" | "fitet_fallback"; // Dove viene l'atleta
+  profileUrl?: string; // URL diretto al profilo atleta nel portale FITET
+  fitetId?: string; // ID originale FITET (non prefissato con 'fitet-')
 };
 
 // Mock data - categoria Generale Maschile e Femminile
@@ -323,9 +325,15 @@ export function getAge(dateStr: string): number {
 
 /**
  * URL al portale FITET per un atleta
+ * Preferisce l'URL diretto al profilo se disponibile, altrimenti fallback a ricerca per nome
  */
 export function getFitetProfileUrl(athlete: Athlete): string {
-  // URL di ricerca sul portale FITET
+  // Se abbiamo un URL diretto al profilo, usalo
+  if (athlete.profileUrl) {
+    return athlete.profileUrl;
+  }
+
+  // Altrimenti, URL di ricerca sul portale FITET
   const genderId = athlete.gender === "M" ? "1" : "2";
   return `https://portale.fitet.org/risultati/new_rank/testaclassifica_comit.php?ID_CLASS=247&ID=${genderId}&PASS=20&COMIT=4&search=${encodeURIComponent(athlete.name)}`;
 }
