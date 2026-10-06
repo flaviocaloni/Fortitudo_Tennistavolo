@@ -105,7 +105,7 @@ export async function getChampionshipMatchesByDate(
     .select(`
       id,
       scheduled_start_at,
-      leg_type,
+      venue_type,
       opponent_name,
       venue_name,
       championship_teams!inner(
@@ -130,7 +130,7 @@ export async function getChampionshipMatchesByDate(
 
   for (const match of data as any) {
     const dateStr = match.scheduled_start_at.split("T")[0];
-    const isHome = match.leg_type === "HOME";
+    const isHome = match.venue_type === "HOME";
 
     if (!byDate.has(dateStr)) {
       byDate.set(dateStr, {
@@ -176,7 +176,7 @@ export async function getChampionshipMatchesAll(
     .select(`
       id,
       scheduled_start_at,
-      leg_type,
+      venue_type,
       opponent_name,
       venue_name,
       championship_teams!inner(
