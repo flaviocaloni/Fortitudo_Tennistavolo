@@ -34,7 +34,9 @@ export default async function Navbar() {
           { href: "/statistiche", label: "Statistiche" },
         ]
       : []),
-    { href: "/risultati", label: "🏓 Classifica FITET" },
+    ...(isSuperAdmin(profile?.role)
+      ? [{ href: "/risultati", label: "🏓 Classifica FITET" }]
+      : []),
     ...(isAdmin(profile?.role)
       ? [{ href: "/admin", label: "Admin", highlight: true }]
       : []),
@@ -107,9 +109,11 @@ export default async function Navbar() {
                   )}
                 </>
               )}
-              <Link href="/risultati" className="hover:text-crimson-500">
-                🏓 Classifica FITET
-              </Link>
+              {isSuperAdmin(profile?.role) && (
+                <Link href="/risultati" className="hover:text-crimson-500">
+                  🏓 Classifica FITET
+                </Link>
+              )}
               {isAdmin(profile?.role) && (
                 <Link
                   href="/admin"

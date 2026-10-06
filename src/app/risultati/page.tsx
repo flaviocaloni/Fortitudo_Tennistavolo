@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSessionProfile } from "@/lib/supabase/server";
+import { isSuperAdmin } from "@/lib/utils/roles";
 import AthleteSearch from "@/components/athlete-search";
 
 export const metadata = {
@@ -6,7 +9,14 @@ export const metadata = {
   description: "Ricerca atleti nella classifica regionale lombarda FITET",
 };
 
-export default function RisultatiPage() {
+export default async function RisultatiPage() {
+  const { profile } = await getSessionProfile();
+
+  // Solo superadmin possono accedere a questa pagina
+  if (!isSuperAdmin(profile?.role)) {
+    redirect("/calendario-pubblico");
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 py-8">
       <div className="mx-auto max-w-6xl px-4">
