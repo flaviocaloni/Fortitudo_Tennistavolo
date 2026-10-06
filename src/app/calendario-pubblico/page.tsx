@@ -200,12 +200,6 @@ export default async function CalendarioPubblicPage(
         </div>
       )}
 
-      {dates.length > 0 && (
-        <div className="card bg-blue-50 border-blue-200 text-sm text-blue-700 mb-4">
-          📊 Debug: Date range {rangeFrom} to {rangeTo} | Championship dates: {championshipMatchesByDate?.size || 0}
-        </div>
-      )}
-
       <div className="space-y-6">
         {dates.map((date) => {
           const daySlots = slotsForDate(slots ?? [], date, cutoffDate);
