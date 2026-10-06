@@ -59,6 +59,7 @@ export default async function ChampionshipDetailsPage(
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Avversario</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Luogo</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Indirizzo</th>
               </tr>
             </thead>
             <tbody>
@@ -92,6 +93,9 @@ export default async function ChampionshipDetailsPage(
                   </td>
                   <td className="px-6 py-3 text-sm text-gray-700">
                     {match.location}
+                  </td>
+                  <td className="px-6 py-3 text-sm text-gray-700">
+                    {match.address || "-"}
                   </td>
                 </tr>
               ))}

@@ -9,6 +9,7 @@ export interface ChampionshipMatch {
   round_name: string;
   opponent: string;
   location: string;
+  address?: string;
   is_home: boolean;
 }
 
@@ -108,6 +109,7 @@ export async function getChampionshipMatchesByDate(
       venue_type,
       opponent_name,
       venue_name,
+      address,
       championship_teams!inner(
         id,
         name,
@@ -159,6 +161,7 @@ export async function getChampionshipMatchesByDate(
       round_name: match.championship_teams?.group_code || "",
       opponent: match.opponent_name,
       location: match.venue_name,
+      address: match.address,
       is_home: isHome,
     });
   }
@@ -179,6 +182,7 @@ export async function getChampionshipMatchesAll(
       venue_type,
       opponent_name,
       venue_name,
+      address,
       championship_teams!inner(
         id,
         name,
