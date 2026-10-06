@@ -120,7 +120,11 @@ export default async function CalendarioPubblicPage(
 
   const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }, championshipMatchesByDate] = results as any;
 
-  console.log("[calendario-pubblico] Championship dates found:", championshipMatchesByDate.size);
+  console.log("[calendario-pubblico] Date range:", rangeFrom, "to", rangeTo);
+  console.log("[calendario-pubblico] Championship dates found:", championshipMatchesByDate?.size || 0);
+  if (championshipMatchesByDate?.size > 0) {
+    console.log("[calendario-pubblico] Championship dates:", Array.from(championshipMatchesByDate.keys()));
+  }
 
   const closureFor = (date: string) =>
     (closures ?? []).find((c: any) => date >= c.start_date && date <= c.end_date);
@@ -188,6 +192,10 @@ export default async function CalendarioPubblicPage(
           const daySlots = slotsForDate(slots ?? [], date, cutoffDate);
           const closure = closureFor(date);
           const championshipInfo = championshipMatchesByDate.get(date);
+
+          if (championshipInfo) {
+            console.log(`[calendario-pubblico] Date ${date} has ${championshipInfo.matchCount} championship matches`);
+          }
 
           if (daySlots.length === 0 && !championshipInfo) return null;
 
