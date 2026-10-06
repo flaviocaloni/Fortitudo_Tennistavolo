@@ -12,7 +12,7 @@ import {
   toISODate,
 } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
-import { getChampionshipMatchesAll, type ChampionshipMatch, type GroupedMatches } from "@/lib/supabase/championship-calendar";
+import { getChampionshipMatchesByDate, type ChampionshipMatchByDate } from "@/lib/supabase/championship-calendar";
 import { createClient } from "@/lib/supabase/server";
 import ErrorBanner from "@/components/error-banner";
 import SlotParticipantsModal from "@/components/slot-participants-modal";
@@ -110,17 +110,17 @@ export default async function CalendarioPubblicPage(
       .gte("end_date", rangeFrom)
   );
 
-  // Championship matches - ALL (no team filter)
-  queries.push(getChampionshipMatchesAll(supabasePublic, rangeFrom, rangeTo));
+  // Championship matches - grouped by date
+  queries.push(getChampionshipMatchesByDate(supabasePublic, rangeFrom, rangeTo));
 
   const results =
     dates.length > 0
       ? await Promise.all(queries)
-      : [{ data: null }, { data: null }, { data: null }, { data: null }, {}];
+      : [{ data: null }, { data: null }, { data: null }, { data: null }, new Map()];
 
-  const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }, championshipMatches] = results as any;
+  const [{ data: slots }, { data: occupancy }, { data: myBookings }, { data: closures }, championshipMatchesByDate] = results as any;
 
-  console.log("[calendario-pubblico] Championship matches found:", Object.keys(championshipMatches).length);
+  console.log("[calendario-pubblico] Championship dates found:", championshipMatchesByDate.size);
 
   const closureFor = (date: string) =>
     (closures ?? []).find((c: any) => date >= c.start_date && date <= c.end_date);
@@ -185,15 +185,11 @@ export default async function CalendarioPubblicPage(
 
       <div className="space-y-6">
         {dates.map((date) => {
-          // Championship matches for this date - ALL
-          const dayMatches: Array<GroupedMatches> = Object.values(championshipMatches).filter(
-            (match) => (match as any).date === date
-          ) as any;
-
           const daySlots = slotsForDate(slots ?? [], date, cutoffDate);
           const closure = closureFor(date);
+          const championshipInfo = championshipMatchesByDate.get(date);
 
-          if (daySlots.length === 0 && dayMatches.length === 0) return null;
+          if (daySlots.length === 0 && !championshipInfo) return null;
 
           return (
             <section key={date}>
@@ -206,39 +202,41 @@ export default async function CalendarioPubblicPage(
                   🔒 Centro chiuso — {closure.reason}
                 </div>
               ) : (
-                <>
-                  {/* Championship matches section - ALWAYS read-only */}
-                  {dayMatches.length > 0 && (
-                    <div className="mb-4 space-y-2 border-l-4 border-red-600 bg-red-50 p-4">
-                      <h3 className="font-semibold text-red-900">🏐 CAMPIONATO</h3>
-                      {dayMatches.map((timeGroup) => (
-                        <div key={`${timeGroup.date}|${timeGroup.time}`} className="space-y-2">
-                          {timeGroup.matches.map((match: ChampionshipMatch) => (
-                            <div key={match.id} className="bg-white rounded-lg p-3 border border-red-200">
-                              <div className="flex items-start gap-3">
-                                <div className="flex-1">
-                                  <p className="font-medium text-gray-900">
-                                    <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded mr-2">
-                                      {match.is_home ? "Casa" : "Trasferta"} · {match.location} · {formatTime(match.start_time)}
-                                    </span>
-                                  </p>
-                                  <p className="mt-1 font-semibold text-gray-800">{match.team_name}</p>
-                                  <p className="text-sm text-gray-600">
-                                    {match.series} | {match.round_name} vs {match.opponent}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {/* Championship slot - virtual slot for all matches of this date */}
+                  {championshipInfo && (
+                    <div className="card border-l-4 border-red-600 bg-red-50">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold">
+                            CAMPIONATO
+                            <span className="badge ml-2 bg-red-100 text-red-800">
+                              {championshipInfo.hasHome && championshipInfo.hasAway
+                                ? "Casa+Trasferta"
+                                : championshipInfo.hasHome
+                                  ? "Casa"
+                                  : "Trasferta"}
+                            </span>
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {championshipInfo.matchCount} {championshipInfo.matchCount === 1 ? "partita" : "partite"}
+                          </p>
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="mt-3">
+                        <Link
+                          href={`/calendario-pubblico/campionato/${date}`}
+                          className="btn-navy w-full"
+                        >
+                          Visualizza dettagli
+                        </Link>
+                      </div>
                     </div>
                   )}
 
                   {/* Training slots section */}
-                  {daySlots.length > 0 && (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {daySlots.filter(canView).map((slot) => {
+                  {daySlots.filter(canView).map((slot) => {
                         const count = booked.get(`${slot.id}|${date}`) ?? 0;
                         const myBookingId = mine.get(`${slot.id}|${date}`);
                         const full = count >= slot.max_capacity;
@@ -350,9 +348,7 @@ export default async function CalendarioPubblicPage(
                           </div>
                         );
                       })}
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </section>
           );

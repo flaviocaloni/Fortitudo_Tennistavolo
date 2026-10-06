@@ -87,6 +87,72 @@ export async function getChampionshipMatches(
   return grouped;
 }
 
+export interface ChampionshipMatchByDate {
+  date: string;
+  hasHome: boolean;
+  hasAway: boolean;
+  matchCount: number;
+  matches: ChampionshipMatch[];
+}
+
+export async function getChampionshipMatchesByDate(
+  supabase: SupabaseClient,
+  fromDate: string,
+  toDate: string
+): Promise<Map<string, ChampionshipMatchByDate>> {
+  const { data, error } = await supabase
+    .from("campionato_calendario")
+    .select("id, data, ora_inizio, nome_squadra, serie, girone, avversario, sede, in_casa")
+    .gte("data", fromDate)
+    .lte("data", toDate)
+    .eq("is_active", true)
+    .order("data", { ascending: true })
+    .order("ora_inizio", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching championship matches by date:", error);
+    return new Map();
+  }
+
+  if (!data) return new Map();
+
+  const byDate = new Map<string, ChampionshipMatchByDate>();
+
+  for (const match of data) {
+    if (!byDate.has(match.data)) {
+      byDate.set(match.data, {
+        date: match.data,
+        hasHome: false,
+        hasAway: false,
+        matchCount: 0,
+        matches: [],
+      });
+    }
+
+    const dateEntry = byDate.get(match.data)!;
+    dateEntry.matchCount++;
+    if (match.in_casa) {
+      dateEntry.hasHome = true;
+    } else {
+      dateEntry.hasAway = true;
+    }
+
+    dateEntry.matches.push({
+      id: match.id,
+      date: match.data,
+      start_time: match.ora_inizio,
+      team_name: match.nome_squadra,
+      series: match.serie,
+      round_name: match.girone,
+      opponent: match.avversario,
+      location: match.sede,
+      is_home: match.in_casa,
+    });
+  }
+
+  return byDate;
+}
+
 export async function getChampionshipMatchesAll(
   supabase: SupabaseClient,
   fromDate: string,
