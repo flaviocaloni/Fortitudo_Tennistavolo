@@ -346,6 +346,7 @@ export default async function CalendarioPubblicPage(
                                 <form action={bookSlot}>
                                   <input type="hidden" name="slot_id" value={slot.id} />
                                   <input type="hidden" name="session_date" value={date} />
+                                  <input type="hidden" name="from" value="/calendario-pubblico" />
 
                                   {slot.pizza_date && (
                                     <div className="mb-3">

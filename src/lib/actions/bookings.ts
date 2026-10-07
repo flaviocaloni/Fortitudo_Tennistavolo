@@ -20,6 +20,7 @@ export async function bookSlot(formData: FormData) {
   const slotId = String(formData.get("slot_id") ?? "");
   const sessionDate = String(formData.get("session_date") ?? "");
   const selectedParticipants = formData.get("selected_participants");
+  const from = String(formData.get("from") ?? "/calendario");
   const supabase = await createClient();
 
   const {
@@ -34,7 +35,7 @@ export async function bookSlot(formData: FormData) {
     selected_participants: selectedParticipants ? Number(selectedParticipants) : null,
   }).select("id").single();
 
-  if (error) backWithError("/calendario", error.message);
+  if (error) backWithError(from, error.message);
 
 
   // Trigger notifiche (non blocca il redirect, timeout breve)
@@ -54,8 +55,9 @@ export async function bookSlot(formData: FormData) {
   }
 
   revalidatePath("/calendario");
+  revalidatePath("/calendario-pubblico");
   revalidatePath("/prenotazioni");
-  redirect("/calendario");
+  redirect(from);
 }
 
 /** Invia notifiche email per una prenotazione (fire-and-forget) */
