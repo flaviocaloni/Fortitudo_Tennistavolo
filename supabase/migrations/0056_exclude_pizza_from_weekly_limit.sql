@@ -1,6 +1,6 @@
 -- ============================================================
--- Applica limite settimanale solo ai slot ricorrenti, non agli eventi.
--- Eseguire nel SQL Editor di Supabase.
+-- Escludi gli slot pizza dal conteggio del limite settimanale
+-- Il limite settimanale si applica solo agli slot ricorrenti degli allenamenti
 -- ============================================================
 
 create or replace function public.check_booking_valid()
