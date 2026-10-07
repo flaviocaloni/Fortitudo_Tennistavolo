@@ -36,14 +36,14 @@ begin
     end if;
 
     -- limite settimanale: applica solo per slot ricorrenti, non per eventi o pizza
-    if v_slot.event_date is null and not v_slot.pizza_date then
+    if v_slot.event_date is null and v_slot.pizza_date is null then
       select count(*) into v_count
       from public.bookings b
       join public.training_slots ts on b.slot_id = ts.id
       where b.user_id = new.user_id
         and b.status = 'active'
         and ts.event_date is null
-        and not ts.pizza_date
+        and ts.pizza_date is null
         and date_trunc('week', b.session_date) = date_trunc('week', new.session_date)
         and b.id <> new.id;
 
