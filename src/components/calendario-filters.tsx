@@ -154,7 +154,7 @@ export default function CalendarioFilters({
 
   const formatDateCompact = (dateStr: string) => {
     const date = new Date(dateStr);
-    console.log("DEBUG formatDateCompact:", { dateStr, getHours: date.getHours(), getUTCHours: date.getUTCHours() });
+    console.log(`DEBUG: dateStr="${dateStr}" getHours=${date.getHours()} getUTCHours=${date.getUTCHours()}`);
     const day = String(date.getDate()).padStart(2, "0");
     const month = date.toLocaleDateString("it-IT", { month: "short" });
     const year = date.getFullYear();
