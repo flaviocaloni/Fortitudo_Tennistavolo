@@ -6,7 +6,7 @@
 CREATE OR REPLACE FUNCTION get_slot_participants(slot_id_param UUID, session_date_param DATE)
 RETURNS json
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE
   result json;
@@ -25,8 +25,8 @@ BEGIN
     )
     ORDER BY b.is_overbooking ASC, b.created_at ASC
   ) INTO result
-  FROM bookings b
-  LEFT JOIN profiles p ON b.user_id = p.id
+  FROM public.bookings b
+  LEFT JOIN public.profiles p ON b.user_id = p.id
   WHERE b.slot_id = slot_id_param
     AND b.session_date = session_date_param
     AND b.status = 'active';
