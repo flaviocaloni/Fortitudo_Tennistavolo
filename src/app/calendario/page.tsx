@@ -268,6 +268,7 @@ export default async function CalendarioPage(
                                     sessionDate={date}
                                     maxCapacity={slot.max_capacity}
                                     occupiedSeats={count}
+                                    isPizza={!!slot.pizza_date}
                                   />
                                   {" posti occupati"}
                                 </span>

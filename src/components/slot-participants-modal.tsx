@@ -7,6 +7,7 @@ interface Participant {
   full_name: string;
   role: string;
   is_overbooking: boolean;
+  selected_participants?: number;
 }
 
 export default function SlotParticipantsModal({
@@ -14,11 +15,13 @@ export default function SlotParticipantsModal({
   sessionDate,
   maxCapacity,
   occupiedSeats,
+  isPizza = false,
 }: {
   slotId: string;
   sessionDate: string;
   maxCapacity: number;
   occupiedSeats: number;
+  isPizza?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -41,6 +44,7 @@ export default function SlotParticipantsModal({
           full_name: b.full_name || "—",
           role: b.role || "—",
           is_overbooking: b.is_overbooking,
+          selected_participants: b.selected_participants || 1,
         }))
       );
     }
@@ -94,7 +98,12 @@ export default function SlotParticipantsModal({
                       {confirmed.map((p, i) => (
                         <div key={i} className="flex items-center justify-between text-xs">
                           <span>{p.full_name}</span>
-                          <span className="text-slate-500">{p.role}</span>
+                          <div className="flex items-center gap-2">
+                            {isPizza && p.selected_participants && (
+                              <span className="text-slate-400">({p.selected_participants})</span>
+                            )}
+                            <span className="text-slate-500">{p.role}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -110,7 +119,12 @@ export default function SlotParticipantsModal({
                       {waitlist.map((p, i) => (
                         <div key={i} className="flex items-center justify-between text-xs opacity-75">
                           <span>{p.full_name}</span>
-                          <span className="text-slate-500">{p.role}</span>
+                          <div className="flex items-center gap-2">
+                            {isPizza && p.selected_participants && (
+                              <span className="text-slate-400">({p.selected_participants})</span>
+                            )}
+                            <span className="text-slate-500">{p.role}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
