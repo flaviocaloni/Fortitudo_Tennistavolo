@@ -154,12 +154,11 @@ export default function CalendarioFilters({
 
   const formatDateCompact = (dateStr: string) => {
     const date = new Date(dateStr);
-    console.log(`DEBUG: dateStr="${dateStr}" getHours=${date.getHours()} getUTCHours=${date.getUTCHours()}`);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = date.toLocaleDateString("it-IT", { month: "short" });
-    const year = date.getFullYear();
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minute = String(date.getMinutes()).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const month = new Date(dateStr + "Z").toLocaleDateString("it-IT", { month: "short" });
+    const year = date.getUTCFullYear();
+    const hour = String(date.getUTCHours()).padStart(2, "0");
+    const minute = String(date.getUTCMinutes()).padStart(2, "0");
     return `${day} ${month} ${year} ${hour}:${minute}`;
   };
 
