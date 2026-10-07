@@ -142,24 +142,35 @@ export default function CalendarioFilters({
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("it-IT", {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat("it-IT", {
+      timeZone: "Europe/Rome",
       weekday: "short",
       day: "numeric",
       month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
+    }).format(date);
   };
 
   const formatDateCompact = (dateStr: string) => {
     const date = new Date(dateStr);
-    const day = date.getDate();
-    const month = date.toLocaleDateString("it-IT", { month: "short" });
-    const year = date.getFullYear();
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minute = String(date.getMinutes()).padStart(2, "0");
-    return `${day} ${month} ${year} ${hour}:${minute}`;
+    const formatter = new Intl.DateTimeFormat("it-IT", {
+      timeZone: "Europe/Rome",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const parts = formatter.formatToParts(date);
+    const dayPart = parts.find(p => p.type === "day")?.value;
+    const monthPart = parts.find(p => p.type === "month")?.value;
+    const yearPart = parts.find(p => p.type === "year")?.value;
+    const hourPart = parts.find(p => p.type === "hour")?.value;
+    const minutePart = parts.find(p => p.type === "minute")?.value;
+    return `${dayPart} ${monthPart} ${yearPart} ${hourPart}:${minutePart}`;
   };
 
   const uniqueSeriesValues = [...new Set(enrichedMatches.map((m) => m.series).filter((s) => s !== "—"))];
