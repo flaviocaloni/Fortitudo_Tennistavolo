@@ -22,31 +22,13 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const searchName = searchParams.get("name") || undefined;
-    const searchDate = searchParams.get("date") || undefined;
+    const slotId = searchParams.get("slot_id") || undefined;
 
-    // Ottieni slot pizza che corrispondono ai filtri
-    let slotQuery = supabase
-      .from("training_slots")
-      .select("id")
-      .not("pizza_date", "is", null);
-
-    if (searchName) {
-      slotQuery = slotQuery.ilike("title", `%${searchName}%`);
-    }
-
-    if (searchDate) {
-      slotQuery = slotQuery.eq("pizza_date", searchDate);
-    }
-
-    const { data: pizzaSlots } = await slotQuery;
-    const slotIds = (pizzaSlots || []).map((s: any) => s.id);
-
-    if (slotIds.length === 0) {
+    if (!slotId) {
       return NextResponse.json([]);
     }
 
-    // Ottieni prenotazioni per questi slot
+    // Ottieni prenotazioni per lo slot specifico
     const { data: bookings } = await supabase
       .from("bookings")
       .select(
@@ -61,7 +43,7 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq("status", "active")
-      .in("slot_id", slotIds)
+      .eq("slot_id", slotId)
       .order("session_date", { ascending: false });
 
     const result: BookingDetail[] = (bookings || []).map((b: any) => ({

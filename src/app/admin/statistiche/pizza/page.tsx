@@ -68,13 +68,11 @@ export default function PizzaStatistichePage({
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/admin/pizza-bookings?name=${encodeURIComponent(selectedSlot.title)}`
+          `/api/admin/pizza-bookings?slot_id=${selectedSlot.id}`
         );
         if (res.ok) {
           const data = await res.json();
-          // Filtra solo le prenotazioni dello slot selezionato
-          const filtered = data.filter((b: BookingDetail) => b.slot_title === selectedSlot.title);
-          setBookings(filtered);
+          setBookings(data);
         }
       } catch (error) {
         console.error("Error loading bookings:", error);
