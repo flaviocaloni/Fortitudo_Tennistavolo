@@ -154,6 +154,10 @@ export default async function CalendarioPubblicPage(
   const canJoin = (slot: TrainingSlot) => {
     if (!user || !profile) return false; // Not authenticated
     if (isAdmin(profile.role)) return true;
+
+    // Pizza slots sono sempre prenotabili da tutti
+    if (slot.pizza_date) return true;
+
     return (
       slot.audience === "misto" ||
       (slot.audience === "agonisti" && profile.role === "agonista") ||
