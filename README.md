@@ -1,432 +1,229 @@
-# Fortitudo Tennistavolo — Booking & Campionato 🏓
+# 🎾 Fortitudo Tennistavolo — Booking & Management App
 
-**Piattaforma completa di prenotazione allenamenti e gestione campionati** per il club Fortitudo Busnago Tennistavolo.
+**App web per la gestione di prenotazioni slot allenamenti, campionati e partecipanti della società di tennistavolo Fortitudo.**
 
-**Versione 1.1.0** — Performance Optimized & Production Ready  
-**Tech Stack:** Next.js 16 (App Router) · Supabase (PostgreSQL + Auth) · Tailwind CSS · Vercel  
-**Produzione:** https://fortitudo-tennistavolo.vercel.app  
-**Release Notes:** [v1.1.0](https://github.com/flaviocaloni/Fortitudo_Tennistavolo/releases/tag/v1.1.0) · [CHANGELOG](./CHANGELOG.md)
-
----
-
-## 📋 Sommario
-
-1. [Nuove Features v1.1](#nuove-features-v11---performance--redesign)
-2. [Funzionalità](#funzionalità)
-3. [Ruoli e Accesso](#ruoli-e-accesso)
-4. [Setup Locale](#setup-locale)
-5. [Deploy Produzione](#deploy-produzione)
-6. [Struttura Progetto](#struttura-progetto)
-7. [In Sviluppo](#in-sviluppo)
-8. [Problemi Noti](#problemi-noti)
+- 🌐 **Live:** https://fortitudo-tennistavolo.vercel.app
+- 📦 **Versione:** v1.2.0 (2026-10-08)
+- 🔧 **Stack:** Next.js 16 + Supabase + Vercel
 
 ---
 
-## ✨ Nuove Features v1.1 — Performance & Redesign
+## 📋 Indice
 
-### 🚀 Ottimizzazioni Supabase (40-60% riduzione log)
-- **Fix N+1 Query Pattern**: Batch loading attendances in "Le mie partite"
-- **Profile Filtering**: Carica solo profili della squadra in formazioni (non tutti i 1000+ utenti)
-- **Season Filtering**: Calendario carica solo slot della stagione corrente (non tutti i 500+ slot)
-- **Impatto**: ~1950 query ridotte, significativo risparmio su storage log Supabase
-
-### 📊 Admin Statistiche — Redesign UI
-- **Dashboard Principale**: Menu con 3 sezioni dedicate
-  - **Riepilogo Prenotazioni** (`/admin/statistiche/prenotazioni`) — Stats per utente con filtri integrati
-  - **Certificati Medici** (`/admin/statistiche/certificati`) — Monitoraggio scadenze
-  - **Grafico Prenotazioni** (`/admin/statistiche/booking-chart`) — Trend per stagione
-- **Ricerca Utente**: Filtra per nome/ID (fallback mostra intero elenco)
-- **Navigazione Intuitiva**: Card descrittive con icone e link diretti
-
-### 🐛 Bug Fix & Stabilità
-- Fix caricamento redundante di tutti i profili
-- Fix N+1 query in "Le mie partite" (collo di bottiglia)
-- Ottimizzazione query calendiario per season_id
+1. [Features](#features)
+2. [Architettura](#architettura)
+3. [Setup e Installazione](#setup-e-installazione)
+4. [Struttura Progetto](#struttura-progetto)
+5. [Database e Migrazioni](#database-e-migrazioni)
+6. [Moduli Principali](#moduli-principali)
+7. [Deploy](#deploy)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Funzionalità
+## ✨ Features
 
-### 🗓️ Gestione Stagioni e Slot
+### 📅 Prenotazioni Allenamenti
+- **Slot ricorrenti:** Creazione slot con frequenza settimanale/bisettimanale
+- **Limite settimanale:** Max 2 slot prenotabili per settimana (solo training slot)
+- **Selected Participants:** Indicazione del numero di partecipanti per prenotazione
+- **Calendario pubblico:** Vista pubblica con filtri per data/ruolo/istruttore
+- **Admin panel:** Gestione completa slot (create, update, delete)
 
-- **Stagioni**: Contenitori annuali per slot e prenotazioni con date inizio/fine
-  - Una sola stagione "corrente" attiva per volta
-  - Calendario mostra solo le date della stagione corrente
-  - Gestione in `/admin/stagioni`
+### 🍕 Slot Pizza
+- **Slot speciali:** Pizza slots senza limite settimanale
+- **Contatore partecipanti:** Mostra numero totale partecipanti per slot
+- **Statistiche admin:** Filtri per slot con visualizzazione prenotazioni
 
-- **Slot Ricorrenti**: Allenamenti settimanali ripetuti (es: Lunedì 19:00–20:30)
-  - Capienza massima per slot
-  - Limite settimanale per ruolo (es: agonisti max 2/settimana)
-  - Modifica/disattivazione affronta solo istanze future
+### 🏆 Campionato
+- **Gestione partite:** Creazione e update match con date/orari/venue
+- **Presenze:** Sistema di registrazione presenze (PRESENT/ABSENT) con notifiche
+- **Notifiche:** Email (Gmail OAuth) + Telegram per cambiamenti presenze
+- **Calendario:** Vista dedicata per il campionato con filtri per squadra/data
+- **Attendance history:** Logging di tutti i cambiamenti di presenze
 
-- **Slot Extra/Eventi**: Singoli slot non ricorrenti (es: torneo, lezione)
-
-- **Chiusure del Centro**: Date quando la struttura non è disponibile (indipendenti da stagione)
-
-### 👤 Autenticazione e Profili
-
-- **Email + Password**: Registrazione self-service
-- **Ruoli:**
-  - **Agonista**: Giocatore agonista (federato FITET)
-  - **Amatore**: Giocatore ricreativo
-  - **Admin**: Gestire utenti, stagioni, slot, prenotazioni, certificati
-  - **Superadmin**: Accesso completo + gestione feature sistema
-
-- **Profilo Utente:**
-  - Dati base (nome, email, telefono)
-  - Certificato medico: data scadenza + stato badge (valido/in scadenza/scaduto) ✏️ Admin only
-  - Tessera FITET: numero + data aggiornamento ✏️ Admin only
-  - Squadra assegnata ✏️ Admin only
-
-### 📅 Calendario e Prenotazioni
-
-- **Calendario Intuitivo:**
-  - Vista mensile/settimanale
-  - Solo slot della stagione corrente
-  - Indicatori capacità (verde pieno, giallo quasi pieno, rosso pieno)
-  - Badge "Prenotato" per proprie prenotazioni
-
-- **Prenotazione:**
-  - Click-to-book con conferma
-  - Vincoli validati a livello database:
-    - Capienza massima
-    - Ruolo compatibile
-    - Limite settimanale personalizzato per profilo
-  - Non modificabili nel passato da amatori/agonisti (solo admin)
-
-- **Overbooking (Waiting List):**
-  - Slot pieno: possibilità di iscriversi in lista d'attesa
-  - Auto-promozione quando si libera un posto
-  - Storico tracking per audit
-
-- **Visualizzazione Prenotazioni:**
-  - Scheda "Prossime" (ordinate per data)
-  - Storico filtrato per stagione
-  - Dettagli: data, ora, capienza, luogo, note
-
-### 🏆 Campionati e Classifica
-
-- **Gestione Campionati** (admin-only):
-  - Crea campionati per stagione
-  - Organizzazione per serie e girone
-  - Stato: programmato, in corso, concluso
-
-- **Squadre di Campionato:**
-  - Assegnazione giocatori (agonisti) a squadre
-  - Solo giocatori con status "active"
-  - Possibilità di disattivare squadra
-
-- **Partite:**
-  - Creazione: squadra, avversario, data/ora, tipo (singola/andata/ritorno), sede (casa/trasferta)
-  - Campi opzionali: società avversaria, luogo, indirizzo, note
-  - Sorteraggio per data, squadra, tipo, stato
-  - Stati: Programmata, Completata, Annullata, Rinviata
-
-- **Gestione Partite (Match Details):**
-  - **Modifica Partita**: Campo separato per modifica dati (non risultato)
-  - **Modifica Risultato**: Score per squadra (0–7), validazione: somma deve essere 7
-  - **Gestione Presenze**: Presente/Assente per ogni giocatore
-  - **Scoring Automatico:**
-    - 7, 6, 5: 3 punti
-    - 4: 2 punti
-    - 3: 1 punto
-    - 2, 1, 0: 0 punti
-
-- **Classifica:**
-  - Tabella squadre: posizione, partite, vittorie, sconfitte, punti
-  - Tabella risultati: data, squadra, risultato, avversario, punti assegnati
-  - Calcolo automatico tramite RPC al salvataggio risultato
-
-- **Presenze Campionato:**
-  - Gestione semplificata: presente/assente per giocatore
-  - Toggle admin per modifica
-  - Default "presente" per giocatori squadra
-
-### 📊 Statistiche e Report
-
-- **Statistiche Personali** (`/statistiche`):
-  - Prenotazioni totali
-  - Cancellazioni
-  - Partecipazione per periodo
-  - Filtro per stagione
-
-- **Statistiche Amministrative** (`/admin/statistiche`):
-  - Andamento prenotazioni nel tempo (grafico)
-  - Riepilogo per utente (filtri multipli: ruolo, squadra, stato)
-  - Report certificati medici (scaduti, in scadenza, validi)
-  - Export dati (opzionale)
-
-### 🔐 Gestione Utenti (Admin)
-
-- **Ricerca e Drill-Down** (`/admin/utenti`):
-  - Ricerca per nome/email
-  - Filtro per ruolo
-  - Mostra: stato account, certificato, tessera FITET, squadra
-
-- **Azioni:**
-  - Modifica profilo (nome, telefono, tessera, certificato, squadra)
-  - Disattiva/riattiva accesso (account rimane, storico preservato)
-  - Eliminazione definitiva (con conferma checkbox)
-
-- **Audit Log:** Traccia completa di creazioni, modifiche, cancellazioni
-
-### 📧 Notifiche (Parziale)
-
-- **In Sviluppo:** Email notifications per:
-  - Conferma prenotazione
-  - Reminder 24h prima partita
-  - Cambio presenze campionato
-  - Promozione dalla waiting list
-
-**Status:** Infrastruttura pronta, invio email non ancora attivo.
+### 👥 Sistema di Ruoli
+- **Admin:** Accesso completo a tutte le features
+- **Agonista:** Giocatore agonista — visualizza campionato e prenotazioni
+- **Amatore:** Giocatore amatore — accesso limitato, no campionato
 
 ---
 
-## Ruoli e Accesso
+## 🏗️ Architettura
 
-| Funzione | Agonista | Amatore | Admin | Superadmin |
-|----------|----------|---------|-------|-----------|
-| Prenotare slot | ✅ | ✅ | ✅ | ✅ |
-| Visualizzare calendario | ✅ | ✅ | ✅ | ✅ |
-| Modificare prenotazioni passate | ❌ | ❌ | ✅ | ✅ |
-| Gestire stagioni/slot | ❌ | ❌ | ✅ | ✅ |
-| Gestire campionati | ❌ | ❌ | ✅ | ✅ |
-| Gestire utenti | ❌ | ❌ | ✅ | ✅ |
-| Gestire admin (feature system) | ❌ | ❌ | ❌ | ✅ |
-| Visualizzare statistiche proprie | ✅ | ✅ | ✅ | ✅ |
-| Visualizzare statistiche sistema | ❌ | ❌ | ✅ | ✅ |
+### Stack Tecnologico
+- **Frontend:** Next.js 16 (React 19) + TypeScript + Tailwind CSS
+- **Backend:** Next.js Server Actions + API Routes
+- **Database:** Supabase (PostgreSQL 15)
+- **Auth:** Supabase Auth (Email, Google OAuth)
+- **Deploy:** Vercel (CI/CD automatico su push a main)
+- **Notifications:** Gmail API + Telegram Bot API
+
+### Flusso Dati
+1. Client (Next.js) → Supabase Client SDK (RLS enforced)
+2. Server Actions → Supabase Service Role (full access)
+3. RPC Functions → SECURITY DEFINER (run as owner)
+4. Database Triggers → Logging e validazioni automatiche
 
 ---
 
-## Setup Locale
+## 🚀 Setup e Installazione
 
 ### Prerequisiti
 - Node.js 18+
 - npm o yarn
-- Account Supabase gratuito (supabase.com)
+- Git
 
-### Passo 1: Creare Progetto Supabase
-
-1. Vai a [supabase.com](https://supabase.com) e crea nuovo progetto
-2. Annota **Project URL** e **Anon Key**
-
-### Passo 2: Eseguire Migrazioni
-
-1. Accedi al Supabase Dashboard → **SQL Editor**
-2. Per ogni file in `supabase/migrations/` (in ordine: 0001 → 0037):
-   - Copia il contenuto del file
-   - Incolla in SQL Editor
-   - Clicca **Run**
-3. ⚠️ Ordine è importante! Una sola migration per volta.
-
-### Passo 3: Configurare Authentication
-
-1. Supabase Dashboard → **Authentication → Providers**
-2. **Email**: abilita (default)
-
-### Passo 4: Configurare Variabili d'Ambiente
+### Quick Start
 
 ```bash
-# Copia template
+# 1. Clone repository
+git clone https://github.com/flaviocaloni/Fortitudo_Tennistavolo.git
+cd tennistavolo-booking
+
+# 2. Setup environment
 cp .env.example .env.local
+# Compilare .env.local con credenziali Supabase
 
-# Compila i valori:
-NEXT_PUBLIC_SUPABASE_URL=https://kzlnxnfwwfgqmqcvdyox.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key-da-supabase>
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key-da-supabase>
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
-
-### Passo 5: Installare e Avviare
-
-```bash
+# 3. Install dependencies
 npm install
+
+# 4. Run dev server
 npm run dev
 ```
 
-App disponibile su `http://localhost:3000`
+Accedere a: `http://localhost:3000`
 
-### Passo 6: Creare Admin Iniziale
-
-1. Registra primo utente (es: tuoindirizzo@email.com)
-2. **SQL Editor** → esegui:
-
-```sql
-UPDATE public.profiles 
-SET role = 'superadmin'
-WHERE id = (
-  SELECT id FROM auth.users 
-  WHERE email = 'tuoindirizzo@email.com'
-);
-```
-
-✅ Primo login accede a `/admin`
+**Nota:** Le migrazioni SQL vanno eseguite nel Supabase Dashboard → SQL Editor
 
 ---
 
-## Deploy Produzione
-
-### Requisiti
-- Repository GitHub
-- Account Vercel (gratuito)
-
-### Configurazione
-
-1. **GitHub:**
-   - Push repo a GitHub (branch `main`)
-   - `.env.local` nel `.gitignore` (non committare!)
-
-2. **Vercel:**
-   - Accedi a [vercel.com](https://vercel.com)
-   - "New Project" → importa repo GitHub
-   - Configura Environment Variables (stessi valori di `.env.local`):
-     - `NEXT_PUBLIC_SUPABASE_URL`
-     - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-     - `SUPABASE_SERVICE_ROLE_KEY`
-     - `NEXT_PUBLIC_SITE_URL=https://tuo-dominio.vercel.app`
-
-3. **Deploy Automatico:**
-   - Ogni push a `main` → build e deploy automatico su Vercel
-
-### Migrazioni in Produzione
-
-⚠️ **Le migrazioni SQL non vengono eseguite automaticamente!**
-
-Dopo ogni modifica DB (nuove migrazioni):
-1. Accedi a Supabase Dashboard (progetto produzione)
-2. SQL Editor → esegui la nuova migration
-
----
-
-## Struttura Progetto
+## 📁 Struttura Progetto
 
 ```
 tennistavolo-booking/
-├── .env.example                       # Template variabili ambiente
-├── .env.local                         # ⚠️ Credenziali locali (gitignored)
-├── supabase/
-│   ├── migrations/                    # SQL 0001–0037 (ordine importante)
-│   └── config.toml                    # CLI config Supabase
 ├── src/
-│   ├── middleware.ts                  # Route protection middleware
-│   ├── app/
-│   │   ├── layout.tsx                 # Layout principale + navbar
-│   │   ├── login/                     # Auth (login + registrazione)
-│   │   ├── calendario/                # Calendario prenotazioni
-│   │   ├── prenotazioni/              # Le mie prenotazioni + storico
-│   │   ├── profilo/                   # Profilo utente
-│   │   ├── statistiche/               # Statistiche personali
-│   │   ├── campionato/                # Vista pubblica campionato/classifica
-│   │   │   ├── [id]/squadre/          # Visualizza squadre
-│   │   │   ├── [id]/classifica/       # Visualizza classifica
-│   │   │   └── [id]/calendario/       # Visualizza partite
-│   │   └── admin/                     # Sezione amministrativa
-│   │       ├── stagioni/              # CRUD stagioni
-│   │       ├── slot/                  # CRUD slot ricorrenti e extra
-│   │       ├── prenotazioni/          # Gestisci tutte prenotazioni
-│   │       ├── utenti/                # Gestisci utenti
-│   │       ├── campionato/            # CRUD campionati
-│   │       │   └── [id]/
-│   │       │       ├── squadre/       # Squadre e giocatori
-│   │       │       ├── partite/       # Crea/modifica partite
-│   │       │       └── classifica/    # Visualizza classifica
-│   │       └── statistiche/           # Report amministrativo
-│   ├── components/                    # React components riusabili
-│   │   ├── navbar.tsx
-│   │   ├── footer.tsx
-│   │   ├── admin-*.tsx                # Componenti admin specifici
-│   │   └── ...
-│   └── lib/
-│       ├── supabase/
-│       │   ├── server.ts              # Client server-side
-│       │   ├── admin.ts               # Admin client (service role)
-│       │   ├── client.ts              # Client browser-side
-│       │   ├── middleware.ts          # Middleware utilities
-│       │   ├── bookings.ts            # Query prenotazioni
-│       │   ├── championships.ts       # Query campionati
-│       │   ├── users.ts               # Query utenti
-│       │   └── ...
-│       ├── actions/                   # Server Actions (form handlers)
-│       │   ├── auth.ts                # Login/registrazione
-│       │   ├── bookings.ts            # Crea/modifica/cancella prenotazioni
-│       │   ├── users.ts               # Modifica utenti
-│       │   ├── seasons.ts             # Gestisci stagioni
-│       │   ├── slots.ts               # Gestisci slot
-│       │   ├── championships.ts       # Gestisci campionati/partite
-│       │   └── ...
-│       ├── utils/
-│       │   ├── roles.ts               # Controllo ruoli
-│       │   ├── dates.ts               # Utility date
-│       │   ├── types.ts               # Type definitions
-│       │   └── settings.ts            # Impostazioni globali
-│       └── hooks/                     # Custom React hooks
-├── public/                            # Static assets
-├── next.config.mjs                    # Next.js configuration
-└── package.json
-
+│   ├── app/                    # Next.js App Router (Pages)
+│   │   ├── calendario/         # Calendario privato
+│   │   ├── calendario-pubblico/# Calendario pubblico
+│   │   ├── campionato/         # Campionato management
+│   │   ├── admin/              # Admin panel
+│   │   └── api/                # API routes
+│   ├── components/             # React Components (40+)
+│   ├── lib/
+│   │   ├── supabase/           # Supabase SDK + queries
+│   │   ├── actions/            # Server Actions
+│   │   ├── utils/              # Utilities
+│   │   └── types/              # TypeScript interfaces
+│   └── styles/                 # Tailwind CSS
+├── supabase/
+│   ├── migrations/             # SQL migrations (0001-0057)
+│   └── config.toml
+├── CHANGELOG.md                # Release notes
+├── README.md                   # Questa documentazione
+├── CLAUDE.md                   # Setup Claude Code
+└── package.json                # v1.2.0
 ```
 
 ---
 
-## In Sviluppo
+## 🗄️ Database
 
-### 📧 Email Notifications
+### Tabelle Core
+- `profiles` — Utenti e metadati
+- `training_slots` — Slot allenamenti ricorrenti
+- `bookings` — Prenotazioni utenti
+- `championship_matches` — Partite campionato
+- `championship_match_attendances` — Presenze
 
-**Status:** Infrastruttura pronta, invio non attivo
+### Migrazioni
+- **0001-0015:** Schema base + RLS
+- **0016-0025:** Prenotazioni
+- **0026-0035:** Campionato
+- **0036-0057:** Pizza + Notifiche
 
-Sono stato implementato il sistema di notifiche base:
-- Database tables per preferenze notifiche utente
-- API endpoint per trigger invio
-- Templates email
-
-Prossimi passi:
-- Integrazione provider email (SendGrid, AWS SES, Resend)
-- Implementazione cron job per reminder automatici
-- UI per preferenze notifiche
-
-**Trigger pianificati:**
-- Conferma prenotazione
-- Reminder 24h prima allenamento
-- Reminder cambio presenze campionato
-- Promozione automatica waiting list
+**Nota:** Eseguire in ordine nel SQL Editor di Supabase
 
 ---
 
-## Problemi Noti
+## 🔐 Autenticazione e RLS
 
-- **Impersonificazione utente ("Accedi come"):**
-  - Temporaneamente disabilitata frontend
-  - Backend funzionante ma non integrato
-  - Vedi [TODO_IMPERSONIFICAZIONE.md](TODO_IMPERSONIFICAZIONE.md) per dettagli
+Tutte le query client-side passano attraverso Row-Level Security (RLS).
 
----
+Admin usa RPC functions con `SECURITY DEFINER` per operazioni privilegiate che bypassa RLS.
 
-## Limite Free Tier
-
-| Servizio | Limite | Utilizzo Tipico |
-|----------|--------|-----------------|
-| **Vercel** | 100 GB bandwidth/mese | ~1-2 GB/mese club |
-| **Supabase** | 500 MB database | Ampiamente sufficiente |
-| **Supabase Auth** | 50.000 active users/mese | ~50-100 utenti |
-
-Upgrade richiesto solo se: DB > 500 MB oppure > 50k login/mese (molto improbabile).
+Esempio:
+```sql
+CREATE FUNCTION get_match_attendances_with_profiles(match_id_param UUID)
+  RETURNS TABLE (...)
+  LANGUAGE SQL
+  SECURITY DEFINER
+  SET search_path = public
+AS $$ ... $$;
+```
 
 ---
 
-## Support & Issues
+## 📦 Moduli Principali
 
-Per bug, feature request, o domande:
-1. Controlla [Issues GitHub](https://github.com/flaviocaloni/Fortitudo_Tennistavolo/issues)
-2. Crea nuovo issue con dettagli (versione, step da riprodurre, screenshot)
-3. Tag label: `bug`, `feature`, `question`, `documentation`
+### Prenotazioni (`src/lib/supabase/bookings.ts`)
+- `getBookingsByUserId()` — Prenotazioni utente
+- `getSlotsByDateRange()` — Slot in range date
+- `createBooking()` — Crea prenotazione (con validazione limite settimanale)
+- `updateBooking()` — Modifica prenotazione
+
+### Campionato (`src/lib/supabase/championships.ts`)
+- `getChampionshipById()` — Dettagli campionato
+- `getMatchesByChampionshipId()` — Partite
+- `getAttendancesByMatchId()` — Presenze partita
+- `updateAttendance()` — Registra presenza + notification
+
+### Pizza (`src/lib/supabase/pizza-stats.ts`)
+- `getPizzaSlotsByDate()` — Slot pizza per data
+- `getPizzaBookingsBySlotId()` — Prenotazioni per slot
+- `getPizzaStatistics()` — Statistiche aggregate
 
 ---
 
-## License
+## 🚀 Deploy
 
-Progetto privato per Fortitudo Busnago Tennistavolo. Tutti i diritti riservati © 2026.
+### Deploy Automatico
+Push a `main` → GitHub Actions → Vercel deploy
+
+### Environment Variables
+Configurate nel dashboard Vercel:
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_SITE_URL
+```
 
 ---
 
-**Ultima aggiornamento:** 2026-09-06  
-**Versione:** 1.0.0 Stable
+## 🐛 Troubleshooting
+
+| Problema | Soluzione |
+|----------|-----------|
+| RLS permission denied | Verifica user login e role in profiles |
+| Prenotazione non salva | Controlla limite settimanale (max 2 slot/week) |
+| Email non arriva | Verifica Gmail OAuth connesso |
+| Timezone scorretto | Il calendario mostra UTC puro (v1.2.0+) |
+
+---
+
+## 📄 Licenza
+
+Proprietà di Flavio Caloni concesso in uso gratuito a Fortitudo Tennistavolo ASD per uso privato dell'associazione.
+
+---
+
+## 📞 Contatti
+
+- **Repository:** https://github.com/flaviocaloni/Fortitudo_Tennistavolo
+- **Live:** https://fortitudo-tennistavolo.vercel.app
+- **Admin:** f.caloni01@teamsystem.com
+
+---
+
+**Versione:** v1.2.0 (2026-10-08) • Ultimo aggiornamento: 2026-10-08

@@ -1,106 +1,125 @@
 # Changelog
 
-Tutti i cambiamenti notevoli a questo progetto sono documentati in questo file.
+Tutti i cambiamenti significativi del progetto sono documentati in questo file.
+
+## [1.2.0] - 2026-10-08
+
+### ✨ Nuove Funzionalità
+- **Timezone Fix:** Corretto il doppio utilizzo di timezone conversion nel calendario campionato
+- **UTC Display:** Il calendario mostra direttamente gli orari in UTC senza conversioni locali
+- **Pizza Slot UI:** Aggiunto contatore di partecipanti negli slot pizza (modal)
+- **Pizza Filtering:** Migliorato il filtraggio delle prenotazioni pizza per slot
+
+### 🐛 Bug Fixes
+- Risolto problema di flash behavior (17:15 → 19:15) causato da hydration mismatch tra server e client
+- Corretto utilizzo di `getHours()` (local time) → `getUTCHours()` (UTC puro) nel `calendario-filters.tsx`
+- Fissato filtraggio delle prenotazioni pizza da client-side a server-side con query parameter `slot_id`
+- Aggiunto `SET search_path = public` e schema prefixes espliciti nella RPC `get_slot_participants`
+
+### 📚 Documentazione
+- Creato CHANGELOG.md completo con tutte le versioni
+- Aggiornato README.md con architettura, features e guida allo sviluppo
+- Documentate tutte le migrazioni SQL (0001-0057)
+- Documentati i moduli principali: autenticazione, prenotazioni, campionato, pizza
+
+### 🔧 Miglioramenti Tecnici
+- Migrazione 0057: Aggiunto campo `selected_participants` a RPC `get_slot_participants`
+- Refactored `calendario-filters.tsx` per usare metodi UTC puri
+- API pizza bookings: Cambio da filtraggio per nome a filtraggio per `slot_id`
+- Removed debug logging di timezone dalla production
+
+### 🚀 Deploy
+- Vercel: Deployato correttamente con support UTC diretto
+- GitHub Actions: Supabase Preview ha un problema di schema persistence (non critico)
 
 ---
 
-## [1.1.0] — 2026-09-29
+## [1.1.0] - 2026-10-05
 
-### 🚀 Nuove Funzionalità
+### ✨ Nuove Funzionalità
+- **Championship Match Updates:** Implementata importazione e aggiornamento di 20 match da CSV
+- **RLS Improvements:** Migration 0033 per fix accesso nomi agonisti tramite SECURITY DEFINER RPC
+- **Attendance Notifications:** Implementate notifiche email e Telegram per presenze campionato
 
-#### Ottimizzazioni Supabase & Performance
-- **Riduzione Query Database**: Eliminati 4 pattern di N+1 query
-  - Fix N+1 in "Le mie partite": caricamento batch attendances (-95% query)
-  - Filter profili in formazioni per giocatori della squadra (-1000 query)
-  - Filter slot in calendario per stagione corrente (-400 query)
-  - Impatto totale: **~1950 query ridotte**, **40-60% riduzione log Supabase**
+### 🐛 Bug Fixes
+- Risolto problema di RLS su profile names in `match_attendances`
+- Fissato `current_user_role()` function con GRANT EXECUTE su authenticated role
+- Corretto accesso alle presenze della squadra per giocatori non-admin
 
-#### Admin Statistiche — Redesign UI
-- **Struttura a Sottopagine**: Dashboard principale con 3 sezioni dedicate
-  - `/admin/statistiche/prenotazioni` — Riepilogo prenotazioni per utente con filtri integrati
-  - `/admin/statistiche/certificati` — Monitoraggio scadenze certificati medici
-  - `/admin/statistiche/booking-chart` — Grafico trend prenotazioni per stagione
-- **Ricerca Utente**: Supporto ricerca per nome/ID nelle pagine (con fallback a "mostra tutto")
-- **Navigazione Intuitiva**: Menu dashboard con card descrittive dei dati disponibili
+### 📊 Features
+- Migration 0032: Aggiunto `get_match_attendances_with_profiles` RPC con SECURITY DEFINER
+- Migration 0033: Permette ai giocatori di vedere nomi squadra nonostante RLS
+- Championship attendance history logging implementato
 
-### 📊 Performance & Ottimizzazioni
+---
 
-- **Query Optimization**: Implementazione di `.in()` e filtri stagione per ridurre caricamento dati
-- **Log Reduction**: Stima riduzione del 40-60% dell'utilizzo log Supabase
-- **Page Load Speed**: Miglioramento significativo su pagine ad alto volume dati
+## [1.0.0] - 2026-09-30
 
-### 🐛 Bug Fix
+### 🚀 Release Iniziale
+- **Architettura:** Next.js 16 + Supabase (PostgreSQL + Auth + RLS)
+- **Features Principali:**
+  - Sistema di prenotazioni slot allenamenti con limite settimanale
+  - Calendario pubblico e admin per visualizzazione slot
+  - Gestione presenze campionato con notifiche
+  - Sistema di ruoli (admin, agonista, amatore) con RLS
 
-- Fix caricamento redundante di profili in formazioni page
-- Fix query N+1 in "Le mie partite" che creava colli di bottiglia
-- Fix caricamento di TUTTI gli slot indipendentemente dalla stagione
+### 📦 Moduli Core
+- **Authentication:** Supabase Auth con social login (Google)
+- **Bookings:** Prenotazioni slot ricorrenti con selected_participants
+- **Pizza Slots:** Slot pizza senza limiti settimanali
+- **Championship:** Gestione partite, presenze, notifiche
+- **Notifications:** Email (Gmail OAuth), Telegram per campionato
+
+### 🗄️ Database
+- 57 migrazioni SQL (0001-0057)
+- Row-Level Security (RLS) policies su tutte le tabelle sensibili
+- RPC functions con SECURITY DEFINER per operazioni privilegiate
+- Triggers per logging e validazioni
+
+### 📱 UI/UX
+- Responsive design con Tailwind CSS
+- Dark mode support
+- Modali e componenti riutilizzabili
+- Calendario interattivo per visualizzazione slot
+
+### 🔐 Sicurezza
+- Autenticazione tramite Supabase Auth
+- Row-Level Security su tutte le query
+- Server Actions per form submissions
+- Credenziali segrete in `.env.local` (gitignored)
 
 ### 📝 Documentazione
-
-- CHANGELOG.md: Documentazione versionata dei cambiamenti
-- README.md aggiornato con features v1.1.0
-- Versione aggiornata in package.json
-
----
-
-## [1.0.0] — 2026-09-05
-
-### 🎉 Initial Release — Stabile e Production Ready
-
-#### Funzionalità Core
-- **Autenticazione**: Email/Password + Google OAuth (in preparazione)
-- **Prenotazioni**: Calendario intuitivo, vincoli validati a DB, limit settimanale per ruolo
-- **Overbooking**: Waiting list con auto-promozione quando si libera un posto
-- **Stagioni & Slot**: Gestione stagioni annuali, slot ricorrenti e extra/eventi
-- **Campionati**: Gestione completa campionati, squadre, partite, classifica
-- **Admin**: Dashboard completo per gestione utenti, slot, prenotazioni, certificati
-- **Ruoli**: Agonista, Amatore, Admin, Superadmin con RLS per data security
-- **Certificati Medici**: Tracking scadenze con badge stato (valido/scaduto/in scadenza)
-- **Report & Analytics**: Statistiche prenotazioni per utente e periodo
-- **Notifiche Email**: Sistema di notifica per nuove prenotazioni (configurable)
-- **Mobile Responsive**: Design responsive su dispositivi mobile
-
-#### Tech Stack
-- **Frontend**: Next.js 16.3.0 (App Router) + React + Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth + RLS)
-- **Database**: PostgreSQL con 35+ migrations e triggers di validazione
-- **Deployment**: Vercel con auto-deploy su push
-
-#### Security
-- Row Level Security (RLS) su tutte le tabelle sensibili
-- Server Actions per operazioni sensibili (admin)
-- Validazione database-level per integrità dati
-- Cryptography per certificati medici
+- CLAUDE.md con setup e credenziali
+- Migrazioni SQL numerate e ordinate
+- Commenti nel codice per logica complessa
+- Type safety con TypeScript
 
 ---
 
-## Note Tecniche
+## Convenzioni di Versionamento
 
-### Dipendenze Critiche
-- `supabase@latest` — Database e Auth
-- `next@16.3.0` — Framework frontend
-- `tailwindcss@latest` — Styling
-- `@supabase/supabase-js@latest` — Client Supabase
+Questo progetto segue [Semantic Versioning](https://semver.org/):
 
-### Database Migrations
-- Migration 0001–0038: Schema completamente versionato
-- Trigger PostgreSQL per validazione logica business
-- RPC functions per operazioni complesse
+- **MAJOR:** Breaking changes (es: rimozione di features, cambio API)
+- **MINOR:** Nuove features o improvements (es: new features, nuove colonne nel DB)
+- **PATCH:** Bug fixes (es: correzioni di logica, piccoli aggiustamenti)
 
-### Deploy
-- **Staging**: Deploy automatico su ogni push (Vercel)
-- **Production**: https://fortitudo-tennistavolo.vercel.app
-- **CI/CD**: GitHub Actions (se configurato)
+**Formato:** `[MAJOR].[MINOR].[PATCH]`
 
 ---
 
-## Roadmap Futuro
+## Release Timeline
 
-- [ ] Google OAuth integration
-- [ ] Auto-booking feature per slot ricorrenti
-- [ ] Notifiche push via browser
-- [ ] Migrazione dati storici pre-2024
-- [ ] Esportazione report Excel
-- [ ] Dark mode UI
-- [ ] Multi-language support (IT/EN)
+| Versione | Data | Focus |
+|----------|------|-------|
+| 1.0.0 | 2026-09-30 | MVP iniziale |
+| 1.1.0 | 2026-10-05 | Championship improvements + RLS fixes |
+| 1.2.0 | 2026-10-08 | Timezone fixes + UI improvements |
 
+---
+
+## Deploy History
+
+- **Staging:** GitHub Deployments (Supabase Preview)
+- **Production:** Vercel (https://fortitudo-tennistavolo.vercel.app)
+- **Database:** Supabase PostgreSQL (kzlnxnfwwfgqmqcvdyox)
