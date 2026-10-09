@@ -37,6 +37,16 @@ export default function ConvocazioniPage() {
     const loadChampionships = async () => {
       const { data } = await supabase.from("championships").select("id, name").order("name");
       setChampionships(data || []);
+
+      // Set "Regionale Lombardia" as default
+      if (data && data.length > 0) {
+        const regionalLombardia = data.find((c: any) => c.name === "Regionale Lombardia");
+        if (regionalLombardia) {
+          setChampionshipId(regionalLombardia.id);
+        } else if (data.length > 0) {
+          setChampionshipId(data[0].id);
+        }
+      }
     };
     loadChampionships();
   }, []);
