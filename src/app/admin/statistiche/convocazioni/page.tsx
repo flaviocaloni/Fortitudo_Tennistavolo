@@ -106,7 +106,7 @@ export default function ConvocazioniPage() {
         console.log("Loading convocations for matches:", matchIds.length);
         let convQuery = supabase
           .from("championship_match_convocations")
-          .select("id, match_id, user_id, convocated_at, notes, profiles(id, full_name)")
+          .select("id, match_id, user_id, convocated_at, notes, profiles!user_id(id, full_name)")
           .in("match_id", matchIds);
 
         const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
