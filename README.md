@@ -222,7 +222,7 @@ Proprietà di Flavio Caloni concesso in uso gratuito a Fortitudo Tennistavolo AS
 
 - **Repository:** https://github.com/flaviocaloni/Fortitudo_Tennistavolo
 - **Live:** https://fortitudo-tennistavolo.vercel.app
-- **Admin:** f.caloni01@teamsystem.com
+- **Email:** flavio.caloni@gmail.com
 
 ---
 
