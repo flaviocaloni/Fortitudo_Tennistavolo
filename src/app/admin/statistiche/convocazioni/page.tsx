@@ -9,8 +9,7 @@ interface Convocation {
   match_id: string;
   user_id: string;
   convocated_at: string;
-  notes: string | null;
-  profiles: { id: string; full_name: string } | null;
+  profiles: { id: string; full_name: string; fitet_number: string | null } | null;
   championship_matches: {
     id: string;
     scheduled_start_at: string;
@@ -23,6 +22,7 @@ export default function ConvocazioniPage() {
   const [convocations, setConvocations] = useState<Convocation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [teamId, setTeamId] = useState("");
@@ -37,16 +37,16 @@ export default function ConvocazioniPage() {
     const loadChampionships = async () => {
       const { data } = await supabase.from("championships").select("id, name").order("name");
       setChampionships(data || []);
-      if (data && data.length > 0) {
-        setChampionshipId(data[0].id);
-      }
     };
     loadChampionships();
   }, []);
 
   // Load teams when championship changes
   useEffect(() => {
-    if (!championshipId) return;
+    if (!championshipId) {
+      setTeams([]);
+      return;
+    }
     const loadTeams = async () => {
       const { data } = await supabase
         .from("championship_teams")
@@ -60,101 +60,93 @@ export default function ConvocazioniPage() {
   }, [championshipId]);
 
   // Load convocations with filters
-  useEffect(() => {
-    const loadConvocations = async () => {
-      if (!championshipId) return;
-      setLoading(true);
+  const handleSearch = async () => {
+    if (!championshipId) return;
+    setLoading(true);
+    setError(null);
 
-      try {
-        setError(null);
+    try {
+      console.log("Loading matches for championship:", championshipId);
+      let matchQuery = supabase
+        .from("championship_matches")
+        .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name)")
+        .eq("championship_id", championshipId);
 
-        // First, get all matches for this championship
-        console.log("Loading matches for championship:", championshipId);
-        let matchQuery = supabase
-          .from("championship_matches")
-          .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name)")
-          .eq("championship_id", championshipId);
-
-        if (teamId) {
-          matchQuery = matchQuery.eq("team_id", teamId);
-        }
-
-        const { data: matches, error: matchError } = await matchQuery;
-
-        if (matchError) {
-          const errorMsg = `Errore caricamento partite: ${matchError.message}`;
-          console.error(errorMsg, matchError);
-          setError(errorMsg);
-          setConvocations([]);
-          setLoading(false);
-          return;
-        }
-
-        console.log("Matches loaded:", matches?.length || 0);
-
-        // Get match IDs
-        const matchIds = (matches || []).map((m: any) => m.id);
-        if (matchIds.length === 0) {
-          console.log("No matches found for this championship");
-          setConvocations([]);
-          setError(null);
-          setLoading(false);
-          return;
-        }
-
-        // Get convocations for these matches
-        console.log("Loading convocations for matches:", matchIds.length);
-        let convQuery = supabase
-          .from("championship_match_convocations")
-          .select("id, match_id, user_id, convocated_at, notes, profiles!user_id(id, full_name)")
-          .in("match_id", matchIds);
-
-        const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
-
-        if (convError) {
-          const errorMsg = `Errore caricamento convocazioni: ${convError.message}`;
-          console.error(errorMsg, convError);
-          setError(errorMsg);
-          setConvocations([]);
-        } else {
-          console.log("Convocations loaded:", convData?.length || 0);
-
-          // Merge convocation data with match data
-          const enriched = (convData || []).map((conv: any) => {
-            const match = matches?.find((m: any) => m.id === conv.match_id);
-            return {
-              ...conv,
-              championship_matches: match,
-            };
-          });
-
-          // Filter by date if needed
-          let filtered = enriched;
-          if (startDate || endDate) {
-            filtered = enriched.filter((conv: any) => {
-              const matchDate = conv.championship_matches?.scheduled_start_at;
-              if (!matchDate) return false;
-              if (startDate && matchDate < startDate + "T00:00:00") return false;
-              if (endDate && matchDate > endDate + "T23:59:59") return false;
-              return true;
-            });
-          }
-
-          setConvocations(filtered);
-          setError(null);
-        }
-      } catch (err) {
-        const errorMsg = `Errore inaspettato: ${err instanceof Error ? err.message : String(err)}`;
-        console.error(errorMsg, err);
-        setError(errorMsg);
-        setConvocations([]);
+      if (teamId) {
+        matchQuery = matchQuery.eq("team_id", teamId);
       }
 
-      setLoading(false);
-    };
+      const { data: matches, error: matchError } = await matchQuery;
 
-    loadConvocations();
-  }, [championshipId, teamId, startDate, endDate]);
+      if (matchError) {
+        const errorMsg = `Errore caricamento partite: ${matchError.message}`;
+        console.error(errorMsg, matchError);
+        setError(errorMsg);
+        setConvocations([]);
+        setHasSearched(true);
+        setLoading(false);
+        return;
+      }
+
+      console.log("Matches loaded:", matches?.length || 0);
+
+      const matchIds = (matches || []).map((m: any) => m.id);
+      if (matchIds.length === 0) {
+        console.log("No matches found for this championship");
+        setConvocations([]);
+        setHasSearched(true);
+        setLoading(false);
+        return;
+      }
+
+      console.log("Loading convocations for matches:", matchIds.length);
+      let convQuery = supabase
+        .from("championship_match_convocations")
+        .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_number)")
+        .in("match_id", matchIds);
+
+      const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
+
+      if (convError) {
+        const errorMsg = `Errore caricamento convocazioni: ${convError.message}`;
+        console.error(errorMsg, convError);
+        setError(errorMsg);
+        setConvocations([]);
+      } else {
+        console.log("Convocations loaded:", convData?.length || 0);
+
+        const enriched = (convData || []).map((conv: any) => {
+          const match = matches?.find((m: any) => m.id === conv.match_id);
+          return {
+            ...conv,
+            championship_matches: match,
+          };
+        });
+
+        let filtered = enriched;
+        if (startDate || endDate) {
+          filtered = enriched.filter((conv: any) => {
+            const matchDate = conv.championship_matches?.scheduled_start_at;
+            if (!matchDate) return false;
+            if (startDate && matchDate < startDate + "T00:00:00") return false;
+            if (endDate && matchDate > endDate + "T23:59:59") return false;
+            return true;
+          });
+        }
+
+        setConvocations(filtered);
+        setError(null);
+      }
+    } catch (err) {
+      const errorMsg = `Errore inaspettato: ${err instanceof Error ? err.message : String(err)}`;
+      console.error(errorMsg, err);
+      setError(errorMsg);
+      setConvocations([]);
+    }
+
+    setHasSearched(true);
+    setLoading(false);
+  };
 
   // Group convocations by match
   const groupedByMatch = convocations.reduce(
@@ -170,8 +162,7 @@ export default function ConvocazioniPage() {
   );
 
   const totalConvocations = convocations.length;
-  const uniquePlayers = new Set(convocations.map((c) => c.user_id)).size;
-  const uniqueMatches = new Set(convocations.map((c) => c.match_id)).size;
+  const availablePlayers = new Set(convocations.map((c) => c.user_id)).size;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -186,12 +177,15 @@ export default function ConvocazioniPage() {
       {/* FILTERS */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtri</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Campionato</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Campionato *</label>
             <select
               value={championshipId}
-              onChange={(e) => setChampionshipId(e.target.value)}
+              onChange={(e) => {
+                setChampionshipId(e.target.value);
+                setTeamId("");
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Seleziona campionato</option>
@@ -239,22 +233,14 @@ export default function ConvocazioniPage() {
             />
           </div>
         </div>
-      </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-blue-50 rounded-lg shadow p-4 border-l-4 border-blue-600">
-          <p className="text-sm text-blue-700">Totale Convocazioni</p>
-          <p className="text-3xl font-bold text-blue-800">{totalConvocations}</p>
-        </div>
-        <div className="bg-green-50 rounded-lg shadow p-4 border-l-4 border-green-600">
-          <p className="text-sm text-green-700">Giocatori Convocati</p>
-          <p className="text-3xl font-bold text-green-800">{uniquePlayers}</p>
-        </div>
-        <div className="bg-purple-50 rounded-lg shadow p-4 border-l-4 border-purple-600">
-          <p className="text-sm text-purple-700">Partite Coperte</p>
-          <p className="text-3xl font-bold text-purple-800">{uniqueMatches}</p>
-        </div>
+        <button
+          onClick={handleSearch}
+          disabled={!championshipId || loading}
+          className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+        >
+          {loading ? "Caricamento..." : "Cerca"}
+        </button>
       </div>
 
       {/* ERROR MESSAGE */}
@@ -271,8 +257,26 @@ export default function ConvocazioniPage() {
         </div>
       )}
 
-      {/* RESULTS */}
-      {loading ? (
+      {/* STATS - Only show after search */}
+      {hasSearched && !error && (
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-blue-50 rounded-lg shadow p-4 border-l-4 border-blue-600">
+            <p className="text-sm text-blue-700">Totale Convocazioni</p>
+            <p className="text-3xl font-bold text-blue-800">{totalConvocations}</p>
+          </div>
+          <div className="bg-green-50 rounded-lg shadow p-4 border-l-4 border-green-600">
+            <p className="text-sm text-green-700">Giocatori Disponibili</p>
+            <p className="text-3xl font-bold text-green-800">{availablePlayers}</p>
+          </div>
+        </div>
+      )}
+
+      {/* RESULTS - Only show after search */}
+      {!hasSearched ? (
+        <div className="bg-gray-50 rounded-lg border-l-4 border-gray-600 p-6 text-center text-gray-800">
+          Seleziona i filtri e clicca "Cerca" per visualizzare le convocazioni
+        </div>
+      ) : loading ? (
         <div className="text-center text-gray-600 py-8">Caricamento...</div>
       ) : error ? (
         <div className="text-center text-gray-600 py-8">Impossibile caricare i dati. Controlla l'errore sopra.</div>
@@ -320,8 +324,8 @@ export default function ConvocazioniPage() {
                   <thead>
                     <tr className="bg-gray-50 border-b">
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Giocatore</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tessera FITET</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data Convocazione</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Note</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -329,6 +333,9 @@ export default function ConvocazioniPage() {
                       <tr key={conv.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                         <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                           {conv.profiles?.full_name || "Sconosciuto"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 font-mono">
+                          {conv.profiles?.fitet_number || "—"}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {new Date(conv.convocated_at).toLocaleDateString("it-IT", {
@@ -339,7 +346,6 @@ export default function ConvocazioniPage() {
                             minute: "2-digit",
                           })}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{conv.notes || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
