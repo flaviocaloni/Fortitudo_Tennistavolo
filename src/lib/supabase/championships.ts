@@ -482,3 +482,91 @@ export async function getMatchesWithScores(
 
   return { data: enriched, error: null };
 }
+
+// ============ MATCH CONVOCATIONS ============
+
+export async function getConvocationsByMatchId(
+  supabase: SupabaseClient,
+  matchId: string
+) {
+  return supabase
+    .from("championship_match_convocations")
+    .select("id, user_id, convocated_at, notes, profiles(id, full_name)")
+    .eq("match_id", matchId)
+    .order("convocated_at", { ascending: true });
+}
+
+export async function addConvocation(
+  supabase: SupabaseClient,
+  matchId: string,
+  userId: string,
+  notes?: string
+) {
+  return supabase
+    .from("championship_match_convocations")
+    .insert([
+      {
+        match_id: matchId,
+        user_id: userId,
+        notes: notes || null,
+      },
+    ])
+    .select()
+    .single();
+}
+
+export async function removeConvocation(
+  supabase: SupabaseClient,
+  matchId: string,
+  userId: string
+) {
+  return supabase
+    .from("championship_match_convocations")
+    .delete()
+    .eq("match_id", matchId)
+    .eq("user_id", userId);
+}
+
+export async function getConvocationsByDateRange(
+  supabase: SupabaseClient,
+  championshipId: string,
+  startDate?: string,
+  endDate?: string,
+  teamId?: string
+) {
+  let query = supabase
+    .from("championship_match_convocations")
+    .select(
+      `
+      id,
+      match_id,
+      user_id,
+      convocated_at,
+      notes,
+      profiles(id, full_name),
+      championship_matches:match_id(
+        id,
+        scheduled_start_at,
+        opponent_name,
+        championship_teams:team_id(id, name)
+      )
+      `
+    )
+    .eq("championship_matches.championship_id", championshipId);
+
+  if (teamId) {
+    query = query.eq("championship_matches.team_id", teamId);
+  }
+
+  if (startDate) {
+    query = query.gte("championship_matches.scheduled_start_at", startDate);
+  }
+
+  if (endDate) {
+    query = query.lte("championship_matches.scheduled_start_at", endDate);
+  }
+
+  return query.order("championship_matches.scheduled_start_at", {
+    ascending: false,
+  });
+}

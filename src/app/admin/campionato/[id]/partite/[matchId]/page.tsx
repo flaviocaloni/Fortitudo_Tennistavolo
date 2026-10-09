@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
-import { updateAdminAttendance, updateMatchResult, updateMatchDetails } from "@/lib/actions/championships";
+import { updateAdminAttendance, updateMatchResult, updateMatchDetails, addConvocationAction, removeConvocationAction } from "@/lib/actions/championships";
 import { isAdmin } from "@/lib/utils/roles";
 import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
@@ -60,6 +60,12 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
     .eq("match_id", matchId)
     .order("created_at", { ascending: true });
 
+  // Recupera convocazioni per questa partita
+  const { data: convocations } = await dbClient
+    .from("championship_match_convocations")
+    .select("user_id")
+    .eq("match_id", matchId);
+
   // Recupera giocatori della squadra
   const { data: teamPlayers } = await dbClient
     .from("championship_team_players")
@@ -81,6 +87,7 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
   const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
   const attendanceMap = new Map(attendances?.map((a: any) => [a.user_id, a]) || []);
+  const convocationSet = new Set((convocations || []).map((c: any) => c.user_id));
 
   // Combina dati: usa attendances se esistono, altrimenti usa teamPlayers
   let players: any[] = [];
@@ -95,6 +102,7 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
         full_name: profile.full_name,
         attendanceId: att.id,
         status: att.status,
+        isConvoked: convocationSet.has(att.user_id),
       });
       processedUserIds.add(att.user_id);
     }
@@ -110,6 +118,7 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
           full_name: profile.full_name,
           attendanceId: null,
           status: "PRESENT",
+          isConvoked: convocationSet.has(tp.user_id),
         });
         processedUserIds.add(tp.user_id);
       }
@@ -449,7 +458,10 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                    Azione
+                    Presenze
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                    Convoca
                   </th>
                 </tr>
               </thead>
@@ -502,6 +514,23 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                             Assente
                           </button>
                         )}
+                      </form>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <form action={player.isConvoked ? removeConvocationAction : addConvocationAction} className="inline">
+                        <input type="hidden" name="match_id" value={matchId} />
+                        <input type="hidden" name="user_id" value={player.id} />
+                        <input type="hidden" name="championship_id" value={championshipId} />
+                        <button
+                          type="submit"
+                          className={`px-3 py-1 text-white text-xs font-medium rounded transition ${
+                            player.isConvoked
+                              ? "bg-blue-600 hover:bg-blue-700"
+                              : "bg-gray-400 hover:bg-gray-500"
+                          }`}
+                        >
+                          {player.isConvoked ? "✓ Convocato" : "Convoca"}
+                        </button>
                       </form>
                     </td>
                   </tr>

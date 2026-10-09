@@ -1067,3 +1067,65 @@ export async function exportMatches(championshipId: string) {
     };
   }
 }
+
+// ============ CONVOCATIONS ============
+
+export async function addConvocationAction(formData: FormData) {
+  const supabase = await requireAdmin();
+  const matchId = String(formData.get("match_id") ?? "");
+  const userId = String(formData.get("user_id") ?? "");
+  const championshipId = String(formData.get("championship_id") ?? "");
+  const notes = formData.get("notes") ? String(formData.get("notes")) : undefined;
+
+  if (!matchId || !userId) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      "Dati mancanti"
+    );
+  }
+
+  const { error } = await championships.addConvocation(
+    supabase,
+    matchId,
+    userId,
+    notes
+  );
+
+  if (error) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      error.message
+    );
+  }
+
+  revalidatePath(`/admin/campionato/${championshipId}/partite/${matchId}`);
+}
+
+export async function removeConvocationAction(formData: FormData) {
+  const supabase = await requireAdmin();
+  const matchId = String(formData.get("match_id") ?? "");
+  const userId = String(formData.get("user_id") ?? "");
+  const championshipId = String(formData.get("championship_id") ?? "");
+
+  if (!matchId || !userId) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      "Dati mancanti"
+    );
+  }
+
+  const { error } = await championships.removeConvocation(
+    supabase,
+    matchId,
+    userId
+  );
+
+  if (error) {
+    backWithError(
+      `/admin/campionato/${championshipId}/partite/${matchId}`,
+      error.message
+    );
+  }
+
+  revalidatePath(`/admin/campionato/${championshipId}/partite/${matchId}`);
+}
