@@ -323,11 +323,11 @@ export default function ConvocazioniPage() {
             <div key={matchId} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-600">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {match?.championship_teams?.name || "—"} vs {match?.opponent_name || "—"}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {match?.championship_teams?.name || "—"} vs {match?.opponent_name || "—"}
+                  </h3>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-700 font-medium">
                       {match?.scheduled_start_at
                         ? new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
                             year: "numeric",
@@ -344,11 +344,6 @@ export default function ConvocazioniPage() {
                         : "—"}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold">
-                      {players.length} convocati
-                    </span>
-                  </div>
                 </div>
               </div>
 
@@ -358,13 +353,12 @@ export default function ConvocazioniPage() {
                     <tr className="bg-gray-50 border-b">
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Giocatore</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tessera FITET</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data Convocazione</th>
                     </tr>
                   </thead>
                   <tbody>
                     {players.length === 0 ? (
                       <tr className="bg-gray-50">
-                        <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colSpan={2} className="px-6 py-4 text-center text-sm text-gray-500">
                           Nessun convocato per questa partita
                         </td>
                       </tr>
@@ -376,17 +370,6 @@ export default function ConvocazioniPage() {
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600 font-mono">
                             {conv.profiles?.fitet_card_number || "—"}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            {conv.convocated_at
-                              ? new Date(conv.convocated_at).toLocaleDateString("it-IT", {
-                                  year: "numeric",
-                                  month: "2-digit",
-                                  day: "2-digit",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "—"}
                           </td>
                         </tr>
                       ))
