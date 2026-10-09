@@ -86,6 +86,14 @@ export default function ConvocazioniPage() {
         matchQuery = matchQuery.eq("team_id", teamId);
       }
 
+      // Apply date filter to matches
+      if (startDate) {
+        matchQuery = matchQuery.gte("scheduled_start_at", startDate + "T00:00:00");
+      }
+      if (endDate) {
+        matchQuery = matchQuery.lte("scheduled_start_at", endDate + "T23:59:59");
+      }
+
       const { data: matches, error: matchError } = await matchQuery;
 
       if (matchError) {
@@ -100,8 +108,7 @@ export default function ConvocazioniPage() {
 
       console.log("Matches loaded:", matches?.length || 0);
 
-      const matchIds = (matches || []).map((m: any) => m.id);
-      if (matchIds.length === 0) {
+      if (!matches || matches.length === 0) {
         console.log("No matches found for this championship");
         setConvocations([]);
         setHasSearched(true);
@@ -109,13 +116,15 @@ export default function ConvocazioniPage() {
         return;
       }
 
+      const matchIds = (matches || []).map((m: any) => m.id);
+
+      // Load convocations for these matches (but don't filter by convocations)
       console.log("Loading convocations for matches:", matchIds.length);
       let convQuery = supabase
         .from("championship_match_convocations")
-        .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_card_number)")
-        .in("match_id", matchIds);
+        .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_card_number)");
 
-      const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
+      const { data: convData, error: convError } = await convQuery;
 
       if (convError) {
         const errorMsg = `Errore caricamento convocazioni: ${convError.message}`;
@@ -125,26 +134,44 @@ export default function ConvocazioniPage() {
       } else {
         console.log("Convocations loaded:", convData?.length || 0);
 
-        const enriched = (convData || []).map((conv: any) => {
-          const match = matches?.find((m: any) => m.id === conv.match_id);
-          return {
-            ...conv,
-            championship_matches: match,
-          };
+        // Create a map of convocations by match_id
+        const convByMatch = new Map<string, any[]>();
+        (convData || []).forEach((conv: any) => {
+          if (matchIds.includes(conv.match_id)) {
+            if (!convByMatch.has(conv.match_id)) {
+              convByMatch.set(conv.match_id, []);
+            }
+            convByMatch.get(conv.match_id)!.push(conv);
+          }
         });
 
-        let filtered = enriched;
-        if (startDate || endDate) {
-          filtered = enriched.filter((conv: any) => {
-            const matchDate = conv.championship_matches?.scheduled_start_at;
-            if (!matchDate) return false;
-            if (startDate && matchDate < startDate + "T00:00:00") return false;
-            if (endDate && matchDate > endDate + "T23:59:59") return false;
-            return true;
-          });
-        }
+        // Create convocation entries for all matches (even without convocations)
+        const allConvocations: any[] = [];
+        matchIds.forEach((matchId: string) => {
+          const matchConvs = convByMatch.get(matchId) || [];
+          const match = matches!.find((m: any) => m.id === matchId);
 
-        setConvocations(filtered);
+          if (matchConvs.length > 0) {
+            matchConvs.forEach((conv: any) => {
+              allConvocations.push({
+                ...conv,
+                championship_matches: match,
+              });
+            });
+          } else {
+            // Add empty entry for match with no convocations
+            allConvocations.push({
+              id: `empty-${matchId}`,
+              match_id: matchId,
+              user_id: null,
+              convocated_at: null,
+              profiles: null,
+              championship_matches: match,
+            });
+          }
+        });
+
+        setConvocations(allConvocations);
         setError(null);
       }
     } catch (err) {
@@ -339,25 +366,35 @@ export default function ConvocazioniPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {players.map((conv, idx) => (
-                      <tr key={conv.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                          {conv.profiles?.full_name || "Sconosciuto"}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600 font-mono">
-                          {conv.profiles?.fitet_card_number || "—"}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(conv.convocated_at).toLocaleDateString("it-IT", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                    {players.length === 0 ? (
+                      <tr className="bg-gray-50">
+                        <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                          Nessun convocato per questa partita
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      players.map((conv, idx) => (
+                        <tr key={conv.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                          <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                            {conv.profiles?.full_name || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600 font-mono">
+                            {conv.profiles?.fitet_card_number || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {conv.convocated_at
+                              ? new Date(conv.convocated_at).toLocaleDateString("it-IT", {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
