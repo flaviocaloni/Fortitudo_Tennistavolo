@@ -9,7 +9,7 @@ interface Convocation {
   match_id: string;
   user_id: string;
   convocated_at: string;
-  profiles: { id: string; full_name: string; fitet_number: string | null } | null;
+  profiles: { id: string; full_name: string; fitet_card_number: string | null } | null;
   championship_matches: {
     id: string;
     scheduled_start_at: string;
@@ -102,7 +102,7 @@ export default function ConvocazioniPage() {
       console.log("Loading convocations for matches:", matchIds.length);
       let convQuery = supabase
         .from("championship_match_convocations")
-        .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_number)")
+        .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_card_number)")
         .in("match_id", matchIds);
 
       const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
@@ -335,7 +335,7 @@ export default function ConvocazioniPage() {
                           {conv.profiles?.full_name || "Sconosciuto"}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600 font-mono">
-                          {conv.profiles?.fitet_number || "—"}
+                          {conv.profiles?.fitet_card_number || "—"}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {new Date(conv.convocated_at).toLocaleDateString("it-IT", {
