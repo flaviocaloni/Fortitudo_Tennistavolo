@@ -64,49 +64,74 @@ export default function ConvocazioniPage() {
       if (!championshipId) return;
       setLoading(true);
 
-      let query = supabase
-        .from("championship_match_convocations")
-        .select(
-          `
-          id,
-          match_id,
-          user_id,
-          convocated_at,
-          notes,
-          profiles(id, full_name),
-          championship_matches:match_id(
-            id,
-            scheduled_start_at,
-            opponent_name,
-            championship_teams:team_id(id, name)
-          )
-          `
-        );
+      try {
+        // First, get all matches for this championship
+        let matchQuery = supabase
+          .from("championship_matches")
+          .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name)")
+          .eq("championship_id", championshipId);
 
-      if (championshipId) {
-        query = query.eq("championship_matches.championship_id", championshipId);
+        if (teamId) {
+          matchQuery = matchQuery.eq("team_id", teamId);
+        }
+
+        const { data: matches, error: matchError } = await matchQuery;
+
+        if (matchError) {
+          console.error("Error loading matches:", matchError);
+          setConvocations([]);
+          setLoading(false);
+          return;
+        }
+
+        // Get match IDs
+        const matchIds = (matches || []).map((m: any) => m.id);
+        if (matchIds.length === 0) {
+          setConvocations([]);
+          setLoading(false);
+          return;
+        }
+
+        // Get convocations for these matches
+        let convQuery = supabase
+          .from("championship_match_convocations")
+          .select("id, match_id, user_id, convocated_at, notes, profiles(id, full_name)")
+          .in("match_id", matchIds);
+
+        const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
+
+        if (convError) {
+          console.error("Error loading convocations:", convError);
+          setConvocations([]);
+        } else {
+          // Merge convocation data with match data
+          const enriched = (convData || []).map((conv: any) => {
+            const match = matches?.find((m: any) => m.id === conv.match_id);
+            return {
+              ...conv,
+              championship_matches: match,
+            };
+          });
+
+          // Filter by date if needed
+          let filtered = enriched;
+          if (startDate || endDate) {
+            filtered = enriched.filter((conv: any) => {
+              const matchDate = conv.championship_matches?.scheduled_start_at;
+              if (!matchDate) return false;
+              if (startDate && matchDate < startDate + "T00:00:00") return false;
+              if (endDate && matchDate > endDate + "T23:59:59") return false;
+              return true;
+            });
+          }
+
+          setConvocations(filtered);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setConvocations([]);
       }
 
-      if (teamId) {
-        query = query.eq("championship_matches.team_id", teamId);
-      }
-
-      if (startDate) {
-        query = query.gte("championship_matches.scheduled_start_at", startDate + "T00:00:00");
-      }
-      if (endDate) {
-        query = query.lte("championship_matches.scheduled_start_at", endDate + "T23:59:59");
-      }
-
-      const { data, error } = await query.order("championship_matches.scheduled_start_at", {
-        ascending: false,
-      });
-
-      if (error) {
-        console.error("Error loading convocations:", error);
-      } else {
-        setConvocations((data as any[]) || []);
-      }
       setLoading(false);
     };
 
