@@ -22,6 +22,7 @@ interface Convocation {
 export default function ConvocazioniPage() {
   const [convocations, setConvocations] = useState<Convocation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [teamId, setTeamId] = useState("");
@@ -65,7 +66,10 @@ export default function ConvocazioniPage() {
       setLoading(true);
 
       try {
+        setError(null);
+
         // First, get all matches for this championship
+        console.log("Loading matches for championship:", championshipId);
         let matchQuery = supabase
           .from("championship_matches")
           .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name)")
@@ -78,21 +82,28 @@ export default function ConvocazioniPage() {
         const { data: matches, error: matchError } = await matchQuery;
 
         if (matchError) {
-          console.error("Error loading matches:", matchError);
+          const errorMsg = `Errore caricamento partite: ${matchError.message}`;
+          console.error(errorMsg, matchError);
+          setError(errorMsg);
           setConvocations([]);
           setLoading(false);
           return;
         }
 
+        console.log("Matches loaded:", matches?.length || 0);
+
         // Get match IDs
         const matchIds = (matches || []).map((m: any) => m.id);
         if (matchIds.length === 0) {
+          console.log("No matches found for this championship");
           setConvocations([]);
+          setError(null);
           setLoading(false);
           return;
         }
 
         // Get convocations for these matches
+        console.log("Loading convocations for matches:", matchIds.length);
         let convQuery = supabase
           .from("championship_match_convocations")
           .select("id, match_id, user_id, convocated_at, notes, profiles(id, full_name)")
@@ -101,9 +112,13 @@ export default function ConvocazioniPage() {
         const { data: convData, error: convError } = await convQuery.order("convocated_at", { ascending: false });
 
         if (convError) {
-          console.error("Error loading convocations:", convError);
+          const errorMsg = `Errore caricamento convocazioni: ${convError.message}`;
+          console.error(errorMsg, convError);
+          setError(errorMsg);
           setConvocations([]);
         } else {
+          console.log("Convocations loaded:", convData?.length || 0);
+
           // Merge convocation data with match data
           const enriched = (convData || []).map((conv: any) => {
             const match = matches?.find((m: any) => m.id === conv.match_id);
@@ -126,9 +141,12 @@ export default function ConvocazioniPage() {
           }
 
           setConvocations(filtered);
+          setError(null);
         }
       } catch (err) {
-        console.error("Unexpected error:", err);
+        const errorMsg = `Errore inaspettato: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(errorMsg, err);
+        setError(errorMsg);
         setConvocations([]);
       }
 
@@ -239,9 +257,25 @@ export default function ConvocazioniPage() {
         </div>
       </div>
 
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="bg-red-50 rounded-lg border-l-4 border-red-600 p-6 mb-8">
+          <div className="flex items-start">
+            <div className="text-red-600 font-bold mr-3">❌</div>
+            <div>
+              <h3 className="font-semibold text-red-800">Errore</h3>
+              <p className="text-red-700 mt-1 font-mono text-sm">{error}</p>
+              <p className="text-red-600 text-xs mt-2">Apri la console (F12) per più dettagli</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* RESULTS */}
       {loading ? (
         <div className="text-center text-gray-600 py-8">Caricamento...</div>
+      ) : error ? (
+        <div className="text-center text-gray-600 py-8">Impossibile caricare i dati. Controlla l'errore sopra.</div>
       ) : Object.keys(groupedByMatch).length === 0 ? (
         <div className="bg-gray-50 rounded-lg border-l-4 border-gray-600 p-6 text-center text-gray-800">
           Nessuna convocazione trovata con i filtri selezionati
