@@ -62,6 +62,18 @@ export default async function AdminStatistichePage() {
             Visualizza slot pizza, prenotazioni e statistiche partecipanti.
           </p>
         </Link>
+
+        {/* Convocazioni */}
+        <Link
+          href="/admin/statistiche/convocazioni"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-purple-600"
+        >
+          <div className="text-2xl font-bold text-purple-600 mb-2">📋</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Riepilogo Convocazioni</h2>
+          <p className="text-sm text-gray-600">
+            Visualizza e filtra le convocazioni per partite di campionato per periodo e squadra.
+          </p>
+        </Link>
       </div>
     </div>
   );
