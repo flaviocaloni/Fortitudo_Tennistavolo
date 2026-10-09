@@ -296,14 +296,10 @@ export default function ConvocazioniPage() {
 
       {/* STATS - Only show after search */}
       {hasSearched && !error && (
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-blue-50 rounded-lg shadow p-4 border-l-4 border-blue-600">
+        <div className="mb-8">
+          <div className="bg-blue-50 rounded-lg shadow p-4 border-l-4 border-blue-600 inline-block">
             <p className="text-sm text-blue-700">Totale Convocazioni</p>
             <p className="text-3xl font-bold text-blue-800">{totalConvocations}</p>
-          </div>
-          <div className="bg-green-50 rounded-lg shadow p-4 border-l-4 border-green-600">
-            <p className="text-sm text-green-700">Giocatori Disponibili</p>
-            <p className="text-3xl font-bold text-green-800">{availablePlayers}</p>
           </div>
         </div>
       )}
