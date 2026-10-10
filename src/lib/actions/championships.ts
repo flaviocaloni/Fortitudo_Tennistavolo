@@ -9,6 +9,7 @@ import * as notifications from "@/lib/supabase/notifications";
 import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";
 import { sendNotificationTelegram } from "@/lib/services/telegram-sender";
 import { resolveNotificationRecipients, deduplicateRecipients } from "@/lib/services/recipients-resolver";
+import { getNotificationConfig } from "@/lib/supabase/notifications";
 import { isAdmin } from "@/lib/utils/roles";
 
 // ============ AUTHORIZATION ============
