@@ -72,13 +72,7 @@ export default async function CampionatoPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Campionato</h1>
-        <p className="text-gray-600 mb-4">Visualizza e gestisci il campionato della tua squadra</p>
-        <a
-          href="/campionato/convocazioni"
-          className="inline-block text-blue-600 hover:text-blue-800 font-semibold"
-        >
-          → Visualizza Convocazioni
-        </a>
+        <p className="text-gray-600">Visualizza e gestisci il campionato della tua squadra</p>
       </div>
 
       {!currentChampionship ? (
@@ -183,6 +177,13 @@ export default async function CampionatoPage() {
               >
                 <span className="mr-2">📅</span>
                 Calendario partite
+              </a>
+              <a
+                href="/campionato/convocazioni"
+                className="flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+              >
+                <span className="mr-2">📋</span>
+                Visualizza Convocazioni
               </a>
             </div>
           </div>
