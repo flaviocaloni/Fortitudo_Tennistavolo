@@ -1129,3 +1129,47 @@ export async function removeConvocationAction(formData: FormData) {
 
   revalidatePath(`/admin/campionato/${championshipId}/partite/${matchId}`);
 }
+
+export async function sendConvocationsSummaryToTelegram(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const summaryJson = String(formData.get("summary") ?? "{}");
+  let summary;
+  try {
+    summary = JSON.parse(summaryJson);
+  } catch {
+    return { error: "Dati non validi" };
+  }
+
+  try {
+    const { data: config } = await getNotificationConfig(supabase);
+
+    if (!config?.telegram_chat_id || !config?.telegram_bot_token) {
+      return { error: "Telegram non configurato" };
+    }
+
+    const messages: string[] = [];
+
+    for (const matchData of Object.values(summary)) {
+      const { teamName, series, group, players } = matchData as any;
+      const playerList = (players || [])
+        .map((p: any) => `• ${p.name}${p.fitetNumber ? ` (${p.fitetNumber})` : ""}`)
+        .join("\n");
+
+      const message = `📋 *Convocazioni*\n\n` +
+        `*${teamName}* - Serie ${series}, Girone ${group}\n\n` +
+        `*Convocati:*\n${playerList || "(nessuno)"}`;
+
+      messages.push(message);
+    }
+
+    for (const message of messages) {
+      await sendNotificationTelegram(config.telegram_chat_id, message, config.telegram_bot_token);
+    }
+
+    return { success: true, count: messages.length };
+  } catch (err) {
+    console.error("Errore invio Telegram:", err);
+    return { error: err instanceof Error ? err.message : "Errore sconosciuto" };
+  }
+}

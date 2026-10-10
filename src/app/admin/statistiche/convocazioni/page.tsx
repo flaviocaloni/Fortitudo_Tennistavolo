@@ -29,6 +29,8 @@ export default function ConvocazioniPage() {
   const [teams, setTeams] = useState<any[]>([]);
   const [championshipId, setChampionshipId] = useState("");
   const [championships, setChampionships] = useState<any[]>([]);
+  const [sendingTelegram, setSendingTelegram] = useState(false);
+  const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -79,7 +81,7 @@ export default function ConvocazioniPage() {
       console.log("Loading matches for championship:", championshipId);
       let matchQuery = supabase
         .from("championship_matches")
-        .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name)")
+        .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name, series, group_code)")
         .eq("championship_id", championshipId);
 
       if (teamId) {
@@ -200,6 +202,51 @@ export default function ConvocazioniPage() {
 
   const totalConvocations = convocations.length;
   const availablePlayers = new Set(convocations.map((c) => c.user_id)).size;
+
+  const handleSendToTelegram = async () => {
+    setSendingTelegram(true);
+    setTelegramMessage(null);
+
+    try {
+      // Formatta i dati per Telegram
+      const summary: Record<string, any> = {};
+
+      Object.entries(groupedByMatch).forEach(([matchId, { match, players }]) => {
+        summary[matchId] = {
+          teamName: match?.championship_teams?.name || "—",
+          series: match?.championship_teams?.series || "—",
+          group: match?.championship_teams?.group_code || "—",
+          players: players
+            .filter(p => p.profiles)
+            .map(p => ({
+              name: p.profiles?.full_name || "—",
+              fitetNumber: p.profiles?.fitet_card_number || null,
+            })),
+        };
+      });
+
+      const formData = new FormData();
+      formData.append("summary", JSON.stringify(summary));
+
+      const response = await fetch("/api/telegram-convocations", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTelegramMessage(`✅ Messaggio inviato su Telegram! (${result.count} convocazioni)`);
+      } else {
+        setTelegramMessage(`❌ Errore: ${result.error}`);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Errore sconosciuto";
+      setTelegramMessage(`❌ Errore: ${message}`);
+    } finally {
+      setSendingTelegram(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -379,6 +426,27 @@ export default function ConvocazioniPage() {
               </div>
             </div>
           ))}
+
+          {/* TELEGRAM SEND BUTTON */}
+          <div className="mt-8 border-t pt-6">
+            <button
+              onClick={handleSendToTelegram}
+              disabled={sendingTelegram || Object.keys(groupedByMatch).length === 0}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 font-semibold flex items-center gap-2"
+            >
+              {sendingTelegram ? "Invio in corso..." : "📤 Invia su Telegram"}
+            </button>
+
+            {telegramMessage && (
+              <div className={`mt-4 p-4 rounded-lg ${
+                telegramMessage.startsWith("✅")
+                  ? "bg-green-50 border-l-4 border-green-600 text-green-800"
+                  : "bg-red-50 border-l-4 border-red-600 text-red-800"
+              }`}>
+                {telegramMessage}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
