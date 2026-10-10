@@ -9,7 +9,6 @@ import * as notifications from "@/lib/supabase/notifications";
 import { sendNotificationEmail, buildBookingNotificationEmail } from "@/lib/services/email-sender";
 import { sendNotificationTelegram } from "@/lib/services/telegram-sender";
 import { resolveNotificationRecipients, deduplicateRecipients } from "@/lib/services/recipients-resolver";
-import { getNotificationConfig } from "@/lib/supabase/notifications";
 import { isAdmin } from "@/lib/utils/roles";
 
 // ============ AUTHORIZATION ============
@@ -1131,7 +1130,7 @@ export async function removeConvocationAction(formData: FormData) {
 }
 
 export async function sendConvocationsSummaryToTelegram(formData: FormData) {
-  const supabase = await requireAdmin();
+  await requireAdmin();
 
   const summaryJson = String(formData.get("summary") ?? "{}");
   let summary;
@@ -1142,13 +1141,9 @@ export async function sendConvocationsSummaryToTelegram(formData: FormData) {
   }
 
   try {
-    const { data: config } = await getNotificationConfig(supabase);
+    const { sendConvocationsSummaryToTelegram: sendTelegram } = await import("@/lib/services/telegram-sender");
 
-    if (!config?.telegram_chat_id || !config?.telegram_bot_token) {
-      return { error: "Telegram non configurato" };
-    }
-
-    const messages: string[] = [];
+    let messageCount = 0;
 
     for (const matchData of Object.values(summary)) {
       const { teamName, series, group, players } = matchData as any;
@@ -1160,14 +1155,18 @@ export async function sendConvocationsSummaryToTelegram(formData: FormData) {
         `*${teamName}* - Serie ${series}, Girone ${group}\n\n` +
         `*Convocati:*\n${playerList || "(nessuno)"}`;
 
-      messages.push(message);
+      const result = await sendTelegram(message);
+
+      if (result.success) {
+        messageCount++;
+      }
     }
 
-    for (const message of messages) {
-      await sendNotificationTelegram(config.telegram_chat_id, message, config.telegram_bot_token);
+    if (messageCount === 0) {
+      return { error: "Nessun messaggio inviato. Verifica configurazione Telegram." };
     }
 
-    return { success: true, count: messages.length };
+    return { success: true, count: messageCount };
   } catch (err) {
     console.error("Errore invio Telegram:", err);
     return { error: err instanceof Error ? err.message : "Errore sconosciuto" };

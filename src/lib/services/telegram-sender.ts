@@ -108,6 +108,48 @@ export async function sendNotificationTelegram(
   }
 }
 
+export async function sendConvocationsSummaryToTelegram(
+  message: string
+): Promise<TelegramResult> {
+  console.log("[TelegramSender] Sending convocations summary...");
+
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
+    console.error("[TelegramSender] Configuration missing");
+    return { success: false, error: "Telegram not configured" };
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: message,
+          parse_mode: "Markdown",
+        }),
+      }
+    );
+
+    const result = await response.json();
+    console.log("[TelegramSender] Response:", { ok: result.ok });
+
+    if (!result.ok) {
+      console.error("[TelegramSender] API error:", result.description);
+      return { success: false, error: result.description };
+    }
+
+    return { success: true, messageId: result.result.message_id };
+  } catch (error) {
+    console.error("[TelegramSender] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 function buildTelegramMessage(payload: TelegramPayload): string {
   // Formatta data con fuso orario di Roma (Europe/Rome)
   const registrationDateFormatted = new Date(payload.registrationDate).toLocaleString("it-IT", {
