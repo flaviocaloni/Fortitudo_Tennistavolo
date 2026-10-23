@@ -52,6 +52,7 @@
 ## 🏗️ Architettura
 
 ### Stack Tecnologico
+- **Runtime:** Node.js 24.x
 - **Frontend:** Next.js 16 (React 19) + TypeScript + Tailwind CSS
 - **Backend:** Next.js Server Actions + API Routes
 - **Database:** Supabase (PostgreSQL 15)
@@ -70,7 +71,7 @@
 ## 🚀 Setup e Installazione
 
 ### Prerequisiti
-- Node.js 18+
+- Node.js 24.x (vedi `.nvmrc`)
 - npm o yarn
 - Git
 
