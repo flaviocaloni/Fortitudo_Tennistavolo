@@ -2,15 +2,27 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/utils/roles";
+import { getCurrentChampionshipId } from "@/lib/settings";
 
 export default async function AdminDashboard() {
-  const { profile } = await getSessionProfile();
+  const { supabase, profile } = await getSessionProfile();
 
   if (!profile || !isAdmin(profile.role)) {
     redirect("/calendario");
   }
 
+  const currentChampionshipId = await getCurrentChampionshipId(supabase);
+
   const sections = [
+    {
+      href: currentChampionshipId
+        ? `/admin/campionato/${currentChampionshipId}`
+        : "/admin/campionato",
+      title: "🏓 Campionato in corso",
+      description: currentChampionshipId
+        ? "Partite, squadre e convocazioni del campionato in corso"
+        : "Nessun campionato in corso impostato: sceglilo in Gestione Campionato",
+    },
     {
       href: "/admin/stagioni",
       title: "🗓️ Stagioni",

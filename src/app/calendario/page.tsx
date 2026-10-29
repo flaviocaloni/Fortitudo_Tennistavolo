@@ -186,7 +186,7 @@ export default async function CalendarioPage(
                   {/* Championship matches section */}
                   {dayMatches.length > 0 && (
                     <div className="mb-4 space-y-2 border-l-4 border-red-600 bg-red-50 p-4">
-                      <h3 className="font-semibold text-red-900">🏐 CAMPIONATO</h3>
+                      <h3 className="font-semibold text-red-900">🏆 CAMPIONATO</h3>
                       {dayMatches.map((timeGroup) => (
                         <div key={`${timeGroup.date}|${timeGroup.time}`} className="space-y-2">
                           {timeGroup.matches.map((match: ChampionshipMatch) => (

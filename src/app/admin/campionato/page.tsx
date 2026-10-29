@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
-import { createChampionship, updateChampionship } from "@/lib/actions/championships";
+import { createChampionship, updateChampionship, setCurrentChampionship } from "@/lib/actions/championships";
+import { getCurrentChampionshipId } from "@/lib/settings";
 import { isAdmin } from "@/lib/utils/roles";
 
 export default async function AdminChampionatoPage() {
@@ -58,6 +59,7 @@ export default async function AdminChampionatoPage() {
 
   // Mappa stagioni per lookup
   const seasonMap = new Map((seasons || []).map((s: any) => [s.id, s.name]));
+  const currentChampionshipId = await getCurrentChampionshipId(dbClient);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -148,8 +150,21 @@ export default async function AdminChampionatoPage() {
                   <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                     {champ.status}
                   </span>
+                  {champ.id === currentChampionshipId && (
+                    <span className="ml-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                      In corso
+                    </span>
+                  )}
                 </td>
-                <td className="px-6 py-4 text-sm text-right">
+                <td className="px-6 py-4 text-sm text-right space-x-4">
+                  {champ.id !== currentChampionshipId && (
+                    <form action={setCurrentChampionship} className="inline">
+                      <input type="hidden" name="championship_id" value={champ.id} />
+                      <button type="submit" className="text-green-700 hover:underline">
+                        Imposta in corso
+                      </button>
+                    </form>
+                  )}
                   <a
                     href={`/admin/campionato/${champ.id}`}
                     className="text-blue-600 hover:underline"

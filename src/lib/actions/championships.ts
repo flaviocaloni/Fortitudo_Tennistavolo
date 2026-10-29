@@ -216,6 +216,30 @@ export async function updateChampionship(formData: FormData) {
   revalidatePath("/campionato");
 }
 
+export async function setCurrentChampionship(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const championshipId = String(formData.get("championship_id") ?? "");
+  if (!championshipId) {
+    backWithError("/admin/campionato", "Campionato obbligatorio");
+  }
+
+  const { error } = await supabase
+    .from("app_settings")
+    .upsert({
+      key: "current_championship_id",
+      value: championshipId,
+      updated_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    backWithError("/admin/campionato", error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/campionato");
+}
+
 export async function deleteChampionship(formData: FormData) {
   const supabase = await requireAdmin();
 

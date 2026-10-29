@@ -30,6 +30,18 @@ export async function getCalendarDaysAhead(
   return Number.isInteger(n) && n >= 1 && n <= 365 ? n : DEFAULT_CALENDAR_DAYS;
 }
 
+/** Campionato in corso (impostazione admin), se impostato. */
+export async function getCurrentChampionshipId(
+  supabase: SupabaseClient
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "current_championship_id")
+    .maybeSingle();
+  return data?.value || null;
+}
+
 /** Verifica se Google OAuth è abilitato (impostazione admin). */
 export async function isGoogleOAuthEnabled(
   supabase: SupabaseClient
