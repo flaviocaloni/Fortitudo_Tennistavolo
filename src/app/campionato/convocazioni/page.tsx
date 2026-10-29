@@ -83,7 +83,7 @@ export default function ConvocazioniPublicPage() {
         // Get all matches for this championship
         const { data: matches, error: matchError } = await supabase
           .from("championship_matches")
-          .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name)")
+          .select("id, championship_id, team_id, scheduled_start_at, opponent_name, championship_teams:team_id(id, name, series)")
           .eq("championship_id", championshipId);
 
         if (matchError || !matches || matches.length === 0) {
@@ -102,7 +102,12 @@ export default function ConvocazioniPublicPage() {
             nextMatchByTeam.set(m.team_id, m);
           }
         }
-        const nextMatches = Array.from(nextMatchByTeam.values());
+        const seriesRank: Record<string, number> = { D1: 1, D2: 2, D3: 3 };
+        const nextMatches = Array.from(nextMatchByTeam.values()).sort((a: any, b: any) => {
+          const byDate = new Date(a.scheduled_start_at).getTime() - new Date(b.scheduled_start_at).getTime();
+          if (byDate !== 0) return byDate;
+          return (seriesRank[a.championship_teams?.series] ?? 99) - (seriesRank[b.championship_teams?.series] ?? 99);
+        });
         setNextMatches(nextMatches);
         const nextMatchIds = nextMatches.map((m: any) => m.id);
 
