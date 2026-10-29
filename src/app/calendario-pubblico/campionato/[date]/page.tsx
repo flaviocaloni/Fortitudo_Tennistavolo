@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateIT, formatTime } from "@/lib/dates";
 import { getChampionshipMatchesByDate } from "@/lib/supabase/championship-calendar";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,23 @@ export default async function ChampionshipDetailsPage(
 
   const matchesByDate = await getChampionshipMatchesByDate(supabase, date, tomorrowStr);
   const matchInfo = matchesByDate.get(date);
+
+  const convocatiByMatch = new Map<string, string[]>();
+  if (matchInfo) {
+    const db = createAdminClient() || supabase;
+    const { data: convocations } = await db
+      .from("championship_match_convocations")
+      .select("match_id, profiles!user_id(full_name)")
+      .in("match_id", matchInfo.matches.map((m) => m.id));
+
+    for (const conv of (convocations ?? []) as any[]) {
+      const name = conv.profiles?.full_name;
+      if (!name) continue;
+      const list = convocatiByMatch.get(conv.match_id) ?? [];
+      list.push(name);
+      convocatiByMatch.set(conv.match_id, list);
+    }
+  }
 
   if (!matchInfo || matchInfo.matches.length === 0) {
     return (
@@ -51,54 +69,61 @@ export default async function ChampionshipDetailsPage(
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-100 border-b border-gray-300">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Orario</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Squadra</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Serie</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Girone</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Avversario</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Luogo</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Indirizzo</th>
+              <tr className="bg-gray-100 border-b border-gray-300 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                <th className="px-2 sm:px-3 py-2 whitespace-nowrap">Orario</th>
+                <th className="px-2 sm:px-3 py-2">Squadra</th>
+                <th className="px-2 sm:px-3 py-2">Convocati</th>
+                <th className="px-2 sm:px-3 py-2">Avversario</th>
+                <th className="px-2 sm:px-3 py-2">Tipo</th>
+                <th className="px-2 sm:px-3 py-2">Serie</th>
+                <th className="px-2 sm:px-3 py-2">Girone</th>
+                <th className="px-2 sm:px-3 py-2">Luogo</th>
+                <th className="px-2 sm:px-3 py-2">Indirizzo</th>
               </tr>
             </thead>
-            <tbody>
-              {matchInfo.matches.map((match, idx) => (
-                <tr key={match.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="px-6 py-3 text-sm text-gray-900 font-medium">
-                    {formatTime(match.start_time)}
-                  </td>
-                  <td className="px-6 py-3 text-sm font-medium text-gray-900">
-                    {match.team_name}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-700">
-                    <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded font-semibold">
-                      {match.series}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-700">
-                    {match.round_name}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-700">
-                    {match.opponent}
-                  </td>
-                  <td className="px-6 py-3 text-sm">
-                    <span className={`inline-block px-3 py-1 rounded-full font-semibold ${
-                      match.is_home
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      {match.is_home ? "Casa" : "Trasferta"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-700">
-                    {match.location}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-700">
-                    {match.address || "-"}
-                  </td>
-                </tr>
-              ))}
+            <tbody className="text-xs sm:text-sm">
+              {matchInfo.matches.map((match, idx) => {
+                const convocati = convocatiByMatch.get(match.id) ?? [];
+                return (
+                  <tr key={match.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    <td className="px-2 sm:px-3 py-2 text-gray-900 font-medium whitespace-nowrap align-top">
+                      {formatTime(match.start_time)}
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 font-medium text-gray-900 align-top">
+                      {match.team_name}
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 text-gray-700 align-top">
+                      {convocati.length > 0 ? convocati.join(", ") : "—"}
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 text-gray-700 align-top">
+                      {match.opponent}
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 align-top">
+                      <span className={`inline-block whitespace-nowrap px-2 py-0.5 rounded-full font-semibold ${
+                        match.is_home
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {match.is_home ? "Casa" : "Trasferta"}
+                      </span>
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 text-gray-700 align-top">
+                      <span className="inline-block bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-semibold">
+                        {match.series}
+                      </span>
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 text-gray-700 align-top">
+                      {match.round_name}
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 text-gray-700 align-top">
+                      {match.location}
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 text-gray-700 align-top">
+                      {match.address || "-"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
