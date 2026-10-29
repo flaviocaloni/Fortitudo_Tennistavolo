@@ -22,6 +22,7 @@ interface Convocation {
 export default function ConvocazioniPublicPage() {
   const [convocations, setConvocations] = useState<Convocation[]>([]);
   const [latestConvocations, setLatestConvocations] = useState<Convocation[]>([]);
+  const [nextMatches, setNextMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,19 +88,34 @@ export default function ConvocazioniPublicPage() {
 
         if (matchError || !matches || matches.length === 0) {
           setLatestConvocations([]);
+          setNextMatches([]);
           setSearchLoading(false);
           return;
         }
 
-        const matchIds = matches.map((m: any) => m.id);
+        const now = Date.now();
+        const nextMatchByTeam = new Map<string, any>();
+        for (const m of matches as any[]) {
+          if (new Date(m.scheduled_start_at).getTime() < now) continue;
+          const current = nextMatchByTeam.get(m.team_id);
+          if (!current || new Date(m.scheduled_start_at) < new Date(current.scheduled_start_at)) {
+            nextMatchByTeam.set(m.team_id, m);
+          }
+        }
+        const nextMatches = Array.from(nextMatchByTeam.values());
+        setNextMatches(nextMatches);
+        const nextMatchIds = nextMatches.map((m: any) => m.id);
 
-        // Get latest convocations (ordered by convocated_at DESC, limited to recent ones)
+        if (nextMatchIds.length === 0) {
+          setLatestConvocations([]);
+          setSearchLoading(false);
+          return;
+        }
+
         const { data: convData, error: convError } = await supabase
           .from("championship_match_convocations")
           .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_card_number)")
-          .in("match_id", matchIds)
-          .order("convocated_at", { ascending: false })
-          .limit(20);
+          .in("match_id", nextMatchIds);
 
         if (convError) {
           console.error("Error loading latest convocations:", convError);
@@ -231,7 +247,6 @@ export default function ConvocazioniPublicPage() {
     );
   };
 
-  const latestGrouped = groupByMatch(latestConvocations);
   const searchGrouped = groupByMatch(convocations);
 
   return (
@@ -249,41 +264,44 @@ export default function ConvocazioniPublicPage() {
         <h2 className="text-2xl font-bold text-gray-900 mb-6">⏰ Ultime Convocazioni</h2>
         {searchLoading ? (
           <div className="text-center text-gray-600 py-8">Caricamento...</div>
-        ) : Object.keys(latestGrouped).length === 0 ? (
+        ) : nextMatches.length === 0 ? (
           <div className="bg-gray-50 rounded-lg border-l-4 border-gray-600 p-6 text-center text-gray-800">
-            Nessuna convocazione disponibile
+            Nessuna partita in programma
           </div>
         ) : (
           <div className="space-y-4">
-            {Object.entries(latestGrouped).map(([matchId, { match, players }]) => (
-              <div key={matchId} className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-600">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-gray-900">
-                    {match?.championship_teams?.name || "—"} vs {match?.opponent_name || "—"}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {match?.scheduled_start_at
-                      ? new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "—"}
-                  </p>
-                </div>
-                {players.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {players.map((p) => (
-                      <span key={p.id} className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                        {p.profiles?.full_name}
-                      </span>
-                    ))}
+            {nextMatches.map((match: any) => {
+              const players = latestConvocations.filter((c) => c.match_id === match.id && c.profiles);
+              return (
+                <div key={match.id} className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-600">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-semibold text-gray-900">
+                      {match.championship_teams?.name || "—"} vs {match.opponent_name || "—"}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
                   </div>
-                )}
-              </div>
-            ))}
+                  {players.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {players.map((p) => (
+                        <span key={p.id} className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                          {p.profiles?.full_name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Nessun convocato</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -292,7 +310,7 @@ export default function ConvocazioniPublicPage() {
 
       {/* SEARCH SECTION */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">🔍 Ricerca Convocazioni</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">🔍 Ricerca Storico Convocazioni</h2>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtri</h3>
