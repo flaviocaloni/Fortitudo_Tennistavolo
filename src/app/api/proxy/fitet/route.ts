@@ -38,8 +38,12 @@ export async function GET(request: NextRequest) {
     }
 
     const html = await response.text();
+    const base = `<base href="${new URL(".", fitetUrl).href}" target="_blank">`;
+    const htmlWithBase = /<base\b[^>]*>/i.test(html)
+      ? html.replace(/<base\b[^>]*>/i, base)
+      : html.replace(/<head[^>]*>/i, (head) => `${head}${base}`);
 
-    return new NextResponse(html, {
+    return new NextResponse(htmlWithBase, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
