@@ -23,6 +23,7 @@ export default function ConvocazioniPublicPage() {
   const [convocations, setConvocations] = useState<Convocation[]>([]);
   const [latestConvocations, setLatestConvocations] = useState<Convocation[]>([]);
   const [nextMatches, setNextMatches] = useState<any[]>([]);
+  const [latestLineups, setLatestLineups] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,12 @@ export default function ConvocazioniPublicPage() {
         });
         setNextMatches(nextMatches);
         const nextMatchIds = nextMatches.map((m: any) => m.id);
+
+        const { data: lineupData } = await supabase
+          .from("championship_match_lineups")
+          .select("match_id, user_id, letter, is_doubles, profiles!user_id(full_name)")
+          .in("match_id", nextMatchIds);
+        setLatestLineups(lineupData || []);
 
         if (nextMatchIds.length === 0) {
           setLatestConvocations([]);
@@ -260,8 +267,8 @@ export default function ConvocazioniPublicPage() {
         <Link href="/campionato" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
           ← Torna al Campionato
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">📋 Convocazioni</h1>
-        <p className="text-gray-600 mt-2">Visualizza le convocazioni per le partite di campionato</p>
+        <h1 className="text-3xl font-bold text-gray-900">📋 Convocazioni e Formazioni</h1>
+        <p className="text-gray-600 mt-2">Visualizza le convocazioni e le formazioni per le partite di campionato</p>
       </div>
 
       {/* ULTIME CONVOCAZIONI SECTION */}
@@ -303,6 +310,58 @@ export default function ConvocazioniPublicPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-gray-500">Nessun convocato</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ULTIME FORMAZIONI SECTION */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">📝 Ultime Formazioni</h2>
+        {searchLoading ? (
+          <div className="text-center text-gray-600 py-8">Caricamento...</div>
+        ) : nextMatches.length === 0 ? (
+          <div className="bg-gray-50 rounded-lg border-l-4 border-gray-600 p-6 text-center text-gray-800">
+            Nessuna partita in programma
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {nextMatches.map((match: any) => {
+              const rows = latestLineups.filter((l: any) => l.match_id === match.id);
+              const nameOf = (letter: string) =>
+                rows.find((r: any) => r.letter === letter)?.profiles?.full_name ?? "—";
+              const doubles =
+                rows
+                  .filter((r: any) => r.is_doubles)
+                  .map((r: any) => r.profiles?.full_name)
+                  .filter(Boolean)
+                  .join(" / ") || "—";
+              return (
+                <div key={match.id} className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-600">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-semibold text-gray-900">{match.championship_teams?.name || "—"}</h3>
+                    <p className="text-sm text-gray-600">
+                      {new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  {rows.length > 0 ? (
+                    <div className="text-sm space-y-1">
+                      <p><span className="inline-block w-20 font-semibold">a</span>{nameOf("A")}</p>
+                      <p><span className="inline-block w-20 font-semibold">b</span>{nameOf("B")}</p>
+                      <p><span className="inline-block w-20 font-semibold">c</span>{nameOf("C")}</p>
+                      <p><span className="inline-block w-20 font-semibold">doppio</span>{doubles}</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Nessuna formazione</p>
                   )}
                 </div>
               );
