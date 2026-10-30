@@ -292,6 +292,7 @@ export default function ConvocazioniPublicPage() {
                     </h3>
                     <p className="text-sm text-gray-600">
                       {new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+                        timeZone: "UTC",
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
@@ -345,6 +346,7 @@ export default function ConvocazioniPublicPage() {
                     <h3 className="font-semibold text-gray-900">{match.championship_teams?.name || "—"}</h3>
                     <p className="text-sm text-gray-600">
                       {new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+                        timeZone: "UTC",
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
@@ -475,6 +477,7 @@ export default function ConvocazioniPublicPage() {
                       <p className="text-sm text-gray-700 font-medium">
                         {match?.scheduled_start_at
                           ? new Date(match.scheduled_start_at).toLocaleDateString("it-IT", {
+                        timeZone: "UTC",
                               year: "numeric",
                               month: "2-digit",
                               day: "2-digit",
@@ -483,6 +486,7 @@ export default function ConvocazioniPublicPage() {
                         •{" "}
                         {match?.scheduled_start_at
                           ? new Date(match.scheduled_start_at).toLocaleTimeString("it-IT", {
+                            timeZone: "UTC",
                               hour: "2-digit",
                               minute: "2-digit",
                             })
