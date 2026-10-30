@@ -64,7 +64,7 @@ export default async function CampionatoPage() {
       .from("championship_matches")
       .select("*", { count: "exact", head: true })
       .eq("championship_id", currentChampionship.id)
-      .eq("status", "PLAYED");
+      .eq("status", "COMPLETED");
     completedCount = completed || 0;
   }
 
