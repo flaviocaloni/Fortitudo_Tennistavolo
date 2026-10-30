@@ -273,7 +273,7 @@ export default function ConvocazioniPublicPage() {
 
       {/* ULTIME CONVOCAZIONI SECTION */}
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">⏰ Ultime Convocazioni</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">⏰ Convocazioni</h2>
         {searchLoading ? (
           <div className="text-center text-gray-600 py-8">Caricamento...</div>
         ) : nextMatches.length === 0 ? (
@@ -321,7 +321,7 @@ export default function ConvocazioniPublicPage() {
 
       {/* ULTIME FORMAZIONI SECTION */}
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">📝 Ultime Formazioni</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">📝 Formazioni</h2>
         {searchLoading ? (
           <div className="text-center text-gray-600 py-8">Caricamento...</div>
         ) : nextMatches.length === 0 ? (
