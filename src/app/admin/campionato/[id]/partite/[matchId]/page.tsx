@@ -614,7 +614,10 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
           return (
             <>
-              <form action={saveMatchLineupAction}>
+              <form
+                key={(lineupRows || []).map((l: any) => `${l.user_id}:${l.letter}:${l.is_doubles}`).join("|")}
+                action={saveMatchLineupAction}
+              >
                 <input type="hidden" name="match_id" value={matchId} />
                 <input type="hidden" name="championship_id" value={championshipId} />
                 <table className="w-full">
