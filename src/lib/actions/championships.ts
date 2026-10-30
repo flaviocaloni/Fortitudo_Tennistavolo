@@ -1197,3 +1197,114 @@ export async function sendConvocationsSummaryToTelegram(formData: FormData) {
     return { error: err instanceof Error ? err.message : "Errore sconosciuto" };
   }
 }
+
+// ============ LINEUPS ============
+
+export async function saveMatchLineupAction(formData: FormData) {
+  const supabase = await requireAdmin();
+  const matchId = String(formData.get("match_id") ?? "");
+  const championshipId = String(formData.get("championship_id") ?? "");
+  const back = `/admin/campionato/${championshipId}/partite/${matchId}`;
+
+  if (!matchId) backWithError(back, "Dati mancanti");
+
+  const letters = new Map<string, string>();
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("letter_")) continue;
+    const letter = String(value);
+    if (letter) letters.set(key.slice("letter_".length), letter);
+  }
+  const doublesIds = formData.getAll("doubles").map(String);
+
+  if (new Set(letters.values()).size !== letters.size) {
+    backWithError(back, "Ogni lettera può essere assegnata a un solo giocatore");
+  }
+  if (doublesIds.length !== 0 && doublesIds.length !== 2) {
+    backWithError(back, "Il doppio richiede esattamente 2 giocatori");
+  }
+
+  const userIds = new Set([...letters.keys(), ...doublesIds]);
+  const rows = [...userIds].map((userId) => ({
+    match_id: matchId,
+    user_id: userId,
+    letter: letters.get(userId) ?? null,
+    is_doubles: doublesIds.includes(userId),
+  }));
+
+  const { error: deleteError } = await supabase
+    .from("championship_match_lineups")
+    .delete()
+    .eq("match_id", matchId);
+  if (deleteError) backWithError(back, deleteError.message);
+
+  if (rows.length > 0) {
+    const { error } = await supabase.from("championship_match_lineups").insert(rows);
+    if (error) backWithError(back, error.message);
+  }
+
+  revalidatePath(back);
+}
+
+export async function cloneMatchConvocationsAndLineupAction(formData: FormData) {
+  const supabase = await requireAdmin();
+  const matchId = String(formData.get("match_id") ?? "");
+  const sourceMatchId = String(formData.get("source_match_id") ?? "");
+  const championshipId = String(formData.get("championship_id") ?? "");
+  const back = `/admin/campionato/${championshipId}/partite/${matchId}`;
+
+  if (!matchId || !sourceMatchId) {
+    backWithError(back, "Seleziona la partita da cui copiare");
+  }
+
+  const { data: target } = await supabase
+    .from("championship_matches")
+    .select("team_id")
+    .eq("id", matchId)
+    .single();
+  const { data: source } = await supabase
+    .from("championship_matches")
+    .select("team_id")
+    .eq("id", sourceMatchId)
+    .single();
+
+  if (!target || !source || target.team_id !== source.team_id) {
+    backWithError(back, "Puoi copiare solo da una partita della stessa squadra");
+  }
+
+  const { data: sourceConvocations } = await supabase
+    .from("championship_match_convocations")
+    .select("user_id")
+    .eq("match_id", sourceMatchId);
+  const { data: sourceLineup } = await supabase
+    .from("championship_match_lineups")
+    .select("user_id, letter, is_doubles")
+    .eq("match_id", sourceMatchId);
+
+  const { error: deleteConvError } = await supabase
+    .from("championship_match_convocations")
+    .delete()
+    .eq("match_id", matchId);
+  if (deleteConvError) backWithError(back, deleteConvError.message);
+
+  const { error: deleteLineupError } = await supabase
+    .from("championship_match_lineups")
+    .delete()
+    .eq("match_id", matchId);
+  if (deleteLineupError) backWithError(back, deleteLineupError.message);
+
+  if (sourceConvocations && sourceConvocations.length > 0) {
+    const { error } = await supabase
+      .from("championship_match_convocations")
+      .insert(sourceConvocations.map((c) => ({ match_id: matchId, user_id: c.user_id })));
+    if (error) backWithError(back, error.message);
+  }
+
+  if (sourceLineup && sourceLineup.length > 0) {
+    const { error } = await supabase
+      .from("championship_match_lineups")
+      .insert(sourceLineup.map((l) => ({ match_id: matchId, user_id: l.user_id, letter: l.letter, is_doubles: l.is_doubles })));
+    if (error) backWithError(back, error.message);
+  }
+
+  revalidatePath(back);
+}

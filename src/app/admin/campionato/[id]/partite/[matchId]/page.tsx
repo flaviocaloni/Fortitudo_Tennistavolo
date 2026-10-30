@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as championships from "@/lib/supabase/championships";
-import { updateAdminAttendance, updateMatchResult, updateMatchDetails, addConvocationAction, removeConvocationAction } from "@/lib/actions/championships";
+import { updateAdminAttendance, updateMatchResult, updateMatchDetails, addConvocationAction, removeConvocationAction, saveMatchLineupAction, cloneMatchConvocationsAndLineupAction } from "@/lib/actions/championships";
 import { isAdmin } from "@/lib/utils/roles";
 import ConfirmDeleteButton from "@/components/confirm-delete-button";
 
@@ -88,6 +88,19 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
   const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
   const attendanceMap = new Map(attendances?.map((a: any) => [a.user_id, a]) || []);
   const convocationSet = new Set((convocations || []).map((c: any) => c.user_id));
+
+  const { data: lineupRows } = await dbClient
+    .from("championship_match_lineups")
+    .select("user_id, letter, is_doubles")
+    .eq("match_id", matchId);
+  const lineupByUser = new Map((lineupRows || []).map((l: any) => [l.user_id, l]));
+
+  const { data: sourceMatches } = await dbClient
+    .from("championship_matches")
+    .select("id, scheduled_start_at, opponent_name")
+    .eq("team_id", match.team_id)
+    .neq("id", matchId)
+    .order("scheduled_start_at", { ascending: false });
 
   // Combina dati: usa attendances se esistono, altrimenti usa teamPlayers
   let players: any[] = [];
@@ -543,6 +556,127 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
             Nessun giocatore assegnato
           </div>
         )}
+      </div>
+
+      {/* FORMAZIONI */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b bg-gray-50">
+          <h2 className="font-semibold text-gray-900">Formazioni</h2>
+        </div>
+
+        <div className="px-6 py-4 border-b">
+          <form action={cloneMatchConvocationsAndLineupAction} className="flex flex-wrap gap-3 items-end">
+            <input type="hidden" name="match_id" value={matchId} />
+            <input type="hidden" name="championship_id" value={championshipId} />
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Copia convocati e formazione da una partita precedente
+              </label>
+              <select
+                name="source_match_id"
+                defaultValue=""
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>Seleziona partita</option>
+                {(sourceMatches || []).map((m: any) => (
+                  <option key={m.id} value={m.id}>
+                    {new Date(m.scheduled_start_at).toLocaleDateString("it-IT")} - vs {m.opponent_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+            >
+              Copia (sostituisce convocati e formazione)
+            </button>
+          </form>
+        </div>
+
+        {(() => {
+          const convokedPlayers = players.filter((p) => p.isConvoked);
+          if (convokedPlayers.length === 0) {
+            return (
+              <div className="px-6 py-8 text-center text-gray-500">
+                Convoca i giocatori per definire la formazione
+              </div>
+            );
+          }
+
+          const slotName = (letter: string) =>
+            convokedPlayers.find((p) => lineupByUser.get(p.id)?.letter === letter)?.full_name ?? "—";
+          const doublesNames = convokedPlayers
+            .filter((p) => lineupByUser.get(p.id)?.is_doubles)
+            .map((p) => p.full_name)
+            .join(" / ") || "—";
+
+          return (
+            <>
+              <form action={saveMatchLineupAction}>
+                <input type="hidden" name="match_id" value={matchId} />
+                <input type="hidden" name="championship_id" value={championshipId} />
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b">
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Giocatore</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Lettera</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Doppio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {convokedPlayers.map((p) => {
+                      const lineup = lineupByUser.get(p.id);
+                      return (
+                        <tr key={p.id} className="border-b">
+                          <td className="px-6 py-3 text-sm text-gray-900 font-medium">{p.full_name}</td>
+                          <td className="px-6 py-3 text-sm">
+                            <select
+                              name={`letter_${p.id}`}
+                              defaultValue={lineup?.letter ?? ""}
+                              className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">—</option>
+                              <option value="A">A</option>
+                              <option value="B">B</option>
+                              <option value="C">C</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-3 text-sm">
+                            <input
+                              type="checkbox"
+                              name="doubles"
+                              value={p.id}
+                              defaultChecked={!!lineup?.is_doubles}
+                              className="h-4 w-4"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="px-6 py-4 text-right">
+                  <button
+                    type="submit"
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                  >
+                    Salva formazione
+                  </button>
+                </div>
+              </form>
+
+              <div className="px-6 py-4 border-t bg-gray-50 text-sm space-y-1">
+                <p className="font-semibold text-gray-700 mb-2">Riepilogo formazione</p>
+                <p><span className="inline-block w-20 font-semibold">a</span>{slotName("A")}</p>
+                <p><span className="inline-block w-20 font-semibold">b</span>{slotName("B")}</p>
+                <p><span className="inline-block w-20 font-semibold">c</span>{slotName("C")}</p>
+                <p><span className="inline-block w-20 font-semibold">doppio</span>{doublesNames}</p>
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );

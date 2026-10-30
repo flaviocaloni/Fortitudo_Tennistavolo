@@ -55,6 +55,9 @@ export default async function ChampionatoClassificaPage({
           {championship.name}
         </h1>
         <p className="text-xs sm:text-sm text-gray-600 mt-1">Classifica e Risultati</p>
+        <p className="text-xs sm:text-sm text-gray-500 mt-2">
+          I dati FITET vengono letti in tempo reale dal portale risultati FITET: aprendo classifica, risultati o atleti vedrai sempre le informazioni aggiornate.
+        </p>
       </div>
 
       {/* SQUADRE E LINK FITET */}
