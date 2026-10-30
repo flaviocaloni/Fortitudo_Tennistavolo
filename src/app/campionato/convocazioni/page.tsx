@@ -357,9 +357,9 @@ export default function ConvocazioniPublicPage() {
                   </div>
                   {rows.length > 0 ? (
                     <div className="text-sm space-y-1">
-                      <p><span className="inline-block w-20 font-semibold">a</span>{nameOf("A")}</p>
-                      <p><span className="inline-block w-20 font-semibold">b</span>{nameOf("B")}</p>
-                      <p><span className="inline-block w-20 font-semibold">c</span>{nameOf("C")}</p>
+                      <p><span className="inline-block w-20 font-semibold">a-z</span>{nameOf("A")}</p>
+                      <p><span className="inline-block w-20 font-semibold">b-x</span>{nameOf("B")}</p>
+                      <p><span className="inline-block w-20 font-semibold">c-y</span>{nameOf("C")}</p>
                       <p><span className="inline-block w-20 font-semibold">doppio</span>{doubles}</p>
                     </div>
                   ) : (

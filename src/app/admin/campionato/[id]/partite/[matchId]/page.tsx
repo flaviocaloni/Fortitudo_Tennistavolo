@@ -672,9 +672,9 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
 
               <div className="px-6 py-4 border-t bg-gray-50 text-sm space-y-1">
                 <p className="font-semibold text-gray-700 mb-2">Riepilogo formazione</p>
-                <p><span className="inline-block w-20 font-semibold">a</span>{slotName("A")}</p>
-                <p><span className="inline-block w-20 font-semibold">b</span>{slotName("B")}</p>
-                <p><span className="inline-block w-20 font-semibold">c</span>{slotName("C")}</p>
+                <p><span className="inline-block w-20 font-semibold">a-z</span>{slotName("A")}</p>
+                <p><span className="inline-block w-20 font-semibold">b-x</span>{slotName("B")}</p>
+                <p><span className="inline-block w-20 font-semibold">c-y</span>{slotName("C")}</p>
                 <p><span className="inline-block w-20 font-semibold">doppio</span>{doublesNames}</p>
               </div>
             </>
