@@ -37,6 +37,32 @@ export default function ConvocazioniPublicPage() {
 
   const supabase = createClient();
 
+  const loadRoster = async (matchIds: string[]) => {
+    if (matchIds.length === 0) return { convocations: [] as any[], lineups: [] as any[] };
+    const { data } = await supabase.rpc("get_match_roster_public", { match_ids: matchIds });
+    const rows = (data || []) as any[];
+    return {
+      convocations: rows
+        .filter((r) => !r.is_lineup)
+        .map((r) => ({
+          id: `${r.match_id}-${r.user_id}`,
+          match_id: r.match_id,
+          user_id: r.user_id,
+          convocated_at: null,
+          profiles: { id: r.user_id, full_name: r.full_name, fitet_card_number: null },
+          championship_matches: null,
+        })),
+      lineups: rows
+        .filter((r) => r.is_lineup)
+        .map((r) => ({
+          match_id: r.match_id,
+          letter: r.letter,
+          is_doubles: r.is_doubles,
+          profiles: { full_name: r.full_name },
+        })),
+    };
+  };
+
   // Load championships on mount
   useEffect(() => {
     const loadChampionships = async () => {
@@ -112,36 +138,14 @@ export default function ConvocazioniPublicPage() {
         setNextMatches(nextMatches);
         const nextMatchIds = nextMatches.map((m: any) => m.id);
 
-        const { data: lineupData } = await supabase
-          .from("championship_match_lineups")
-          .select("match_id, user_id, letter, is_doubles, profiles!user_id(full_name)")
-          .in("match_id", nextMatchIds);
-        setLatestLineups(lineupData || []);
-
-        if (nextMatchIds.length === 0) {
-          setLatestConvocations([]);
-          setSearchLoading(false);
-          return;
-        }
-
-        const { data: convData, error: convError } = await supabase
-          .from("championship_match_convocations")
-          .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_card_number)")
-          .in("match_id", nextMatchIds);
-
-        if (convError) {
-          console.error("Error loading latest convocations:", convError);
-          setLatestConvocations([]);
-        } else {
-          const enriched = (convData || []).map((conv: any) => {
-            const match = matches?.find((m: any) => m.id === conv.match_id);
-            return {
-              ...conv,
-              championship_matches: match,
-            };
-          });
-          setLatestConvocations(enriched);
-        }
+        const roster = await loadRoster(nextMatchIds);
+        setLatestLineups(roster.lineups);
+        setLatestConvocations(
+          roster.convocations.map((conv) => ({
+            ...conv,
+            championship_matches: matches.find((m: any) => m.id === conv.match_id),
+          }))
+        );
       } catch (err) {
         console.error("Error:", err);
         setLatestConvocations([]);
@@ -187,22 +191,14 @@ export default function ConvocazioniPublicPage() {
 
       const matchIds = matches.map((m: any) => m.id);
 
-      const { data: convData, error: convError } = await supabase
-        .from("championship_match_convocations")
-        .select("id, match_id, user_id, convocated_at, profiles!user_id(id, full_name, fitet_card_number)");
-
-      if (convError) {
-        setError(`Errore caricamento convocazioni: ${convError.message}`);
-        setConvocations([]);
-      } else {
+      {
+        const roster = await loadRoster(matchIds);
         const convByMatch = new Map<string, any[]>();
-        (convData || []).forEach((conv: any) => {
-          if (matchIds.includes(conv.match_id)) {
-            if (!convByMatch.has(conv.match_id)) {
-              convByMatch.set(conv.match_id, []);
-            }
-            convByMatch.get(conv.match_id)!.push(conv);
+        roster.convocations.forEach((conv) => {
+          if (!convByMatch.has(conv.match_id)) {
+            convByMatch.set(conv.match_id, []);
           }
+          convByMatch.get(conv.match_id)!.push(conv);
         });
 
         const allConvocations: any[] = [];
