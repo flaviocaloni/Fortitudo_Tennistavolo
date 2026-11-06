@@ -32,6 +32,7 @@ export default async function Navbar() {
           { href: "/prenotazioni", label: "Le mie prenotazioni" },
           { href: "/campionato", label: "Campionato" },
           { href: "/statistiche", label: "Statistiche" },
+          { href: "/faq", label: "❓ FAQ" },
         ]
       : []),
     ...(isSuperAdmin(profile?.role)
@@ -98,6 +99,9 @@ export default async function Navbar() {
                   </Link>
                   <Link href="/statistiche" className="hover:text-crimson-500">
                     Statistiche
+                  </Link>
+                  <Link href="/faq" className="hover:text-crimson-500">
+                    ❓ FAQ
                   </Link>
                   {isSuperAdmin(profile?.role) && (
                     <Link
