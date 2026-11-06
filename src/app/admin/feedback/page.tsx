@@ -29,6 +29,7 @@ interface AdminFeedback {
   status: FeedbackStatus;
   category: FeedbackCategory | null;
   admin_note: string | null;
+  profiles: { email: string | null } | null;
   feedback_replies: Reply[];
 }
 
@@ -44,7 +45,7 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps) {
 
   const { data } = await supabase
     .from("feedback")
-    .select("id, created_at, user_id, page_path, rating, note, status, category, admin_note, feedback_replies(id, body, created_at)")
+    .select("id, created_at, user_id, page_path, rating, note, status, category, admin_note, profiles!user_id(email), feedback_replies(id, body, created_at)")
     .order("created_at", { ascending: false })
     .limit(500);
 
@@ -147,7 +148,7 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps) {
                   <span>{new Date(item.created_at).toLocaleString("it-IT", { timeZone: "Europe/Rome" })}</span>
                   <span>· <code>{item.page_path}</code></span>
                   <span>· {item.rating === 1 ? "👍" : "👎"}</span>
-                  <span>· utente #{item.user_id.slice(0, 8)}</span>
+                  <span>· utente {item.profiles?.email ?? item.user_id}</span>
                   {highlight && (
                     <span className="rounded bg-red-100 px-2 py-0.5 font-semibold text-red-700">{highlight}</span>
                   )}

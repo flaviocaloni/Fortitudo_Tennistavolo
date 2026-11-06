@@ -24,7 +24,7 @@ const STATUSES: FeedbackStatus[] = ["NEW", "REVIEWED", "RESOLVED", "DISMISSED"];
 const TELEGRAM_MODES: FeedbackTelegramMode[] = ["OFF", "NEGATIVE", "ALL"];
 
 export async function submitFeedback(formData: FormData): Promise<FeedbackActionResult> {
-  const { supabase, user } = await getSessionProfile();
+  const { supabase, user, profile } = await getSessionProfile();
   if (!user) return { ok: false, error: "Devi essere loggato per inviare un feedback" };
 
   const settings = await getFeedbackSettings(supabase);
@@ -65,7 +65,7 @@ export async function submitFeedback(formData: FormData): Promise<FeedbackAction
       `💬 <b>Nuovo feedback</b>\n` +
       `Pagina: <code>${escapeHtml(pagePath)}</code>\n` +
       `Voto: ${rating === 1 ? "👍" : "👎"}\n` +
-      `Utente: #${escapeHtml(user.id.slice(0, 8))}` +
+      `Utente: ${escapeHtml(profile?.email ?? user.email ?? user.id)}` +
       (note ? `\n\n${escapeHtml(note)}` : "");
     await sendFeedbackToTelegram(message);
   }
