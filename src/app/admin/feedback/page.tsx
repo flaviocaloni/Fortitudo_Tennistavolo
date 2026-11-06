@@ -68,6 +68,7 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps) {
 
   const items = all.filter((item) => {
     if (params.status && item.status !== params.status) return false;
+    if (!params.status && item.status === "DISMISSED") return false;
     if (params.rating && String(item.rating) !== params.rating) return false;
     if (params.category && item.category !== params.category) return false;
     if (params.page && !item.page_path.includes(params.page)) return false;
