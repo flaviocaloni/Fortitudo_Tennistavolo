@@ -8,6 +8,34 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Ultimo giorno (YYYY-MM-DD) in cui gli slot ricorrenti sono visibili.
+ *  - DAYS: `days` giorni a partire da `windowStart`.
+ *  - NEXT_WEEK_FROM_SATURDAY: la settimana successiva si apre il sabato della
+ *    settimana precedente; il limite è la domenica di quella settimana. */
+export function recurringCutoffDate(
+  mode: "DAYS" | "NEXT_WEEK_FROM_SATURDAY",
+  days: number,
+  today: string,
+  windowStart: string
+): string {
+  if (mode === "NEXT_WEEK_FROM_SATURDAY") {
+    const d = new Date(today + "T00:00:00");
+    const currentMonday = new Date(d);
+    currentMonday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const saturdayOfCurrentWeek = new Date(currentMonday);
+    saturdayOfCurrentWeek.setDate(currentMonday.getDate() + 5);
+
+    const lastVisibleMonday = new Date(currentMonday);
+    if (d >= saturdayOfCurrentWeek) lastVisibleMonday.setDate(currentMonday.getDate() + 7);
+
+    const sunday = new Date(lastVisibleMonday);
+    sunday.setDate(lastVisibleMonday.getDate() + 6);
+    return toISODate(sunday);
+  }
+
+  return toISODate(new Date(new Date(windowStart + "T00:00:00").getTime() + days * 24 * 60 * 60 * 1000));
+}
+
 export function formatDateIT(iso: string): string {
   return new Date(iso + "T00:00:00").toLocaleDateString("it-IT", {
     weekday: "long",

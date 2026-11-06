@@ -8,6 +8,7 @@ import {
   formatTime,
   monthBounds,
   shiftMonth,
+  recurringCutoffDate,
   slotsForDate,
   toISODate,
 } from "@/lib/dates";
@@ -16,7 +17,7 @@ import { getChampionshipMatchesByDate, type ChampionshipMatchByDate } from "@/li
 import { createClient } from "@/lib/supabase/server";
 import ErrorBanner from "@/components/error-banner";
 import SlotParticipantsModal from "@/components/slot-participants-modal";
-import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
+import { getCalendarVisibility, getCurrentSeason } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +31,11 @@ export default async function CalendarioPubblicPage(
 
   const supabasePublic = await createClient();
   const season = await getCurrentSeason(supabasePublic);
-  const DAYS_AHEAD = await getCalendarDaysAhead(supabasePublic);
+  const visibility = await getCalendarVisibility(supabasePublic);
 
   const today = toISODate(new Date());
   const windowStart = season && today < season.start_date ? season.start_date : today;
-  const cutoffDate = toISODate(
-    new Date(new Date(windowStart + "T00:00:00").getTime() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
-  );
+  const cutoffDate = recurringCutoffDate(visibility.mode, visibility.days, today, windowStart);
 
   const todayMonth = today.slice(0, 7);
   const seasonStartMonth = season ? season.start_date.slice(0, 7) : todayMonth;

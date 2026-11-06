@@ -172,21 +172,29 @@ export async function deleteSlot(formData: FormData) {
   revalidatePath("/calendario");
 }
 
-/** Aggiorna la finestra di visibilità del calendario (giorni). */
-export async function updateCalendarDays(formData: FormData) {
+/** Aggiorna la modalità di visibilità del calendario e i giorni di anticipo. */
+export async function updateCalendarVisibility(formData: FormData) {
   const supabase = await requireAdmin();
+  const mode = String(formData.get("mode"));
   const days = Number(formData.get("days"));
+  if (mode !== "DAYS" && mode !== "NEXT_WEEK_FROM_SATURDAY") {
+    backWithError("/admin/slot/visibilita", "Modalità non valida");
+  }
   if (!Number.isInteger(days) || days < 1 || days > 365) {
-    backWithError("/admin/slot", "Valore non valido: inserire un numero di giorni tra 1 e 365");
+    backWithError("/admin/slot/visibilita", "Valore non valido: inserire un numero di giorni tra 1 e 365");
   }
 
-  const { error } = await supabase
-    .from("app_settings")
-    .upsert({ key: "calendar_days_ahead", value: String(days), updated_at: new Date().toISOString() });
+  const updatedAt = new Date().toISOString();
+  const { error } = await supabase.from("app_settings").upsert([
+    { key: "calendar_visibility_mode", value: mode, updated_at: updatedAt },
+    { key: "calendar_days_ahead", value: String(days), updated_at: updatedAt },
+  ]);
 
-  if (error) backWithError("/admin/slot", error.message);
+  if (error) backWithError("/admin/slot/visibilita", error.message);
   revalidatePath("/admin/slot");
+  revalidatePath("/admin/slot/visibilita");
   revalidatePath("/calendario");
+  revalidatePath("/calendario-pubblico");
 }
 
 /** Aggiunge un periodo di chiusura del centro. */

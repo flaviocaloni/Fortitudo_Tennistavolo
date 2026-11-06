@@ -10,13 +10,14 @@ import {
   monthBounds,
   shiftMonth,
   slotsForDate,
+  recurringCutoffDate,
   toISODate,
 } from "@/lib/dates";
 import { AUDIENCE_LABEL, type TrainingSlot } from "@/lib/types";
 import { getChampionshipMatches, type ChampionshipMatch, type GroupedMatches } from "@/lib/supabase/championship-calendar";
 import ErrorBanner from "@/components/error-banner";
 import SlotParticipantsModal from "@/components/slot-participants-modal";
-import { getCalendarDaysAhead, getCurrentSeason } from "@/lib/settings";
+import { getCalendarVisibility, getCurrentSeason } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export default async function CalendarioPage(
     redirect("/calendario-pubblico");
   }
 
-  const DAYS_AHEAD = await getCalendarDaysAhead(supabase);
+  const visibility = await getCalendarVisibility(supabase);
   const season = await getCurrentSeason(supabase);
 
   const today = toISODate(new Date());
@@ -43,9 +44,7 @@ export default async function CalendarioPage(
   // ricorrenti del primo mese di stagione risulterebbero sempre nascosti
   // quando "oggi" precede di molto l'avvio della stagione).
   const windowStart = season && today < season.start_date ? season.start_date : today;
-  const cutoffDate = toISODate(
-    new Date(new Date(windowStart + "T00:00:00").getTime() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
-  );
+  const cutoffDate = recurringCutoffDate(visibility.mode, visibility.days, today, windowStart);
 
   const todayMonth = today.slice(0, 7);
   const seasonStartMonth = season ? season.start_date.slice(0, 7) : todayMonth;
@@ -128,7 +127,7 @@ export default async function CalendarioPage(
     <div>
       <h1 className="mb-1 text-2xl font-bold">Calendario allenamenti</h1>
       <p className="mb-4 text-sm text-slate-600">
-        Slot ricorrenti visibili fino a {DAYS_AHEAD} giorni da oggi (gli eventi extra
+        Slot ricorrenti visibili fino al {formatDateIT(cutoffDate)} (gli eventi extra
         futuri sono sempre visibili){season ? ` · stagione ${season.name}` : ""} · il
         tuo limite: {profile.weekly_limit} prenotazion
         {profile.weekly_limit === 1 ? "e" : "i"} a settimana

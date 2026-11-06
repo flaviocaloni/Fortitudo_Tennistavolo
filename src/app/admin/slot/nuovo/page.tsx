@@ -1,16 +1,17 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createSlot, updateCalendarDays } from "@/lib/actions/admin";
-import { getCurrentSeason, getCalendarDaysAhead } from "@/lib/settings";
+import { createSlot } from "@/lib/actions/admin";
+import { getCurrentSeason, getCalendarVisibility } from "@/lib/settings";
 import SlotForm from "@/components/admin/slot-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewSlotPage() {
   const supabase = await createClient();
-  const [{ data: seasons }, currentSeason, calendarDays] = await Promise.all([
+  const [{ data: seasons }, currentSeason, visibility] = await Promise.all([
     supabase.from("seasons").select("*").order("start_date", { ascending: false }),
     getCurrentSeason(supabase),
-    getCalendarDaysAhead(supabase),
+    getCalendarVisibility(supabase),
   ]);
 
   return (
@@ -28,28 +29,12 @@ export default async function NewSlotPage() {
           Configura quanti giorni in avanti gli utenti possono visualizzare e prenotare nel calendario.
         </p>
 
-        <form
-          action={updateCalendarDays}
-          className="card flex flex-col gap-4"
-        >
-          <div>
-            <label className="label">Giorni visibili in anticipo</label>
-            <input
-              name="days"
-              type="number"
-              min={1}
-              max={365}
-              defaultValue={calendarDays}
-              required
-              className="input w-full max-w-xs"
-            />
-          </div>
-          <button className="btn-navy w-fit">Salva</button>
-        </form>
-
-        <div className="card mt-4 bg-slate-50">
+        <div className="card bg-slate-50">
           <p className="text-xs text-slate-600">
-            Attualmente: gli utenti vedono slot fino a <strong>{calendarDays} giorni</strong> da oggi.
+            Attualmente: {visibility.mode === "NEXT_WEEK_FROM_SATURDAY"
+              ? <>la settimana successiva si apre il sabato precedente</>
+              : <>gli utenti vedono slot fino a <strong>{visibility.days} giorni</strong> da oggi</>}.
+            {" "}<Link href="/admin/slot/visibilita" className="text-navy-700 underline">Modifica</Link>
           </p>
         </div>
       </div>

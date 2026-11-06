@@ -15,19 +15,28 @@ export async function getCurrentSeason(
   return data ?? null;
 }
 
-/** Giorni di calendario visibili/prenotabili (impostazione admin).
- *  Torna il default se la tabella non esiste ancora o il valore non è valido. */
-export async function getCalendarDaysAhead(
+export type CalendarVisibilityMode = "DAYS" | "NEXT_WEEK_FROM_SATURDAY";
+
+/** Modalità di visibilità del calendario (impostazione admin) e giorni di anticipo.
+ *  Torna i default se le impostazioni non esistono o hanno valori non validi. */
+export async function getCalendarVisibility(
   supabase: SupabaseClient
-): Promise<number> {
+): Promise<{ mode: CalendarVisibilityMode; days: number }> {
   const { data } = await supabase
     .from("app_settings")
-    .select("value")
-    .eq("key", "calendar_days_ahead")
-    .maybeSingle();
+    .select("key, value")
+    .in("key", ["calendar_visibility_mode", "calendar_days_ahead"]);
 
-  const n = Number(data?.value);
-  return Number.isInteger(n) && n >= 1 && n <= 365 ? n : DEFAULT_CALENDAR_DAYS;
+  const values = new Map((data ?? []).map((row) => [row.key, row.value]));
+  const n = Number(values.get("calendar_days_ahead"));
+
+  return {
+    mode:
+      values.get("calendar_visibility_mode") === "NEXT_WEEK_FROM_SATURDAY"
+        ? "NEXT_WEEK_FROM_SATURDAY"
+        : "DAYS",
+    days: Number.isInteger(n) && n >= 1 && n <= 365 ? n : DEFAULT_CALENDAR_DAYS,
+  };
 }
 
 /** Campionato in corso (impostazione admin), se impostato. */
