@@ -80,6 +80,21 @@ export const FAQ_ITEMS: FaqItem[] = [
     roles: EVERYONE,
   },
 
+  {
+    id: "feedback-invio",
+    category: "Feedback",
+    question: "Come segnalo un problema o lascio un suggerimento?",
+    answer: "Usa il pulsante 💬 in basso a destra su qualsiasi pagina: scegli pollice su o giù, aggiungi una nota se vuoi e invia. Riceverai una conferma immediata. Puoi inviare al massimo 10 feedback all'ora.",
+    roles: EVERYONE,
+  },
+  {
+    id: "feedback-risposte",
+    category: "Feedback",
+    question: "Come vedo le risposte ai miei feedback?",
+    answer: "Nel menu trovi 💬 I miei feedback: qui sono elencati i tuoi feedback con lo stato (Nuovo, Visto, Risolto, Archiviato) e le eventuali risposte della società.",
+    roles: EVERYONE,
+  },
+
   // ===== Agonisti =====
   {
     id: "agonista-presenza",
@@ -181,6 +196,20 @@ export const FAQ_ITEMS: FaqItem[] = [
     category: "Amministrazione",
     question: "Come invio il riepilogo convocazioni su Telegram?",
     answer: "Vai su Statistiche → Riepilogo Convocazioni, esegui la ricerca per campionato, squadra o periodo e premi Invia su Telegram. Il messaggio contiene squadra, serie, girone e convocati della ricerca.",
+    roles: ADMINS,
+  },
+  {
+    id: "admin-feedback",
+    category: "Amministrazione",
+    question: "Come gestisco i feedback degli utenti?",
+    answer: "Vai su Admin → Feedback. Trovi i feedback con evidenziazioni automatiche: Bug probabile (parole chiave nella nota) e Risultato inatteso (3 o più pollici giù sulla stessa pagina in 7 giorni). Per ogni feedback puoi cambiare stato e categoria, aggiungere una nota interna e rispondere all'utente. I feedback archiviati si vedono scegliendo lo stato Archiviato.",
+    roles: ADMINS,
+  },
+  {
+    id: "admin-feedback-config",
+    category: "Amministrazione",
+    question: "Come attivo il feedback e le notifiche Telegram?",
+    answer: "Vai su Admin → Feedback → Configurazione. Puoi attivare o disattivare il pulsante 💬 e scegliere le notifiche Telegram: disattivate, solo pollici giù (consigliata) oppure tutti i feedback.",
     roles: ADMINS,
   },
   {
