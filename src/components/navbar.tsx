@@ -33,6 +33,7 @@ export default async function Navbar() {
           { href: "/campionato", label: "Campionato" },
           { href: "/statistiche", label: "Statistiche" },
           { href: "/faq", label: "❓ FAQ" },
+          { href: "/feedback", label: "💬 I miei feedback" },
         ]
       : []),
     ...(isSuperAdmin(profile?.role)

@@ -55,6 +55,11 @@ export default async function AdminDashboard() {
       badge: "Beta",
     },
     {
+      href: "/admin/feedback",
+      title: "💬 Feedback",
+      description: "Feedback degli utenti: riepilogo, categorie, risposte",
+    },
+    {
       href: "/admin/notifiche",
       title: "📧 Notifiche",
       description: "Configura notifiche email per eventi",

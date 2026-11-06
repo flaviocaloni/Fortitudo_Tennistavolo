@@ -184,3 +184,35 @@ function buildTelegramMessage(payload: TelegramPayload): string {
 
 ✅ La prenotazione è confermata!`;
 }
+
+export async function sendFeedbackToTelegram(message: string): Promise<TelegramResult> {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
+    return { success: false, error: "Telegram not configured" };
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHANNEL_ID,
+          text: message,
+          parse_mode: "HTML",
+        }),
+      }
+    );
+
+    const result = await response.json();
+    if (!result.ok) {
+      return { success: false, error: result.description };
+    }
+    return { success: true, messageId: result.result.message_id };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}

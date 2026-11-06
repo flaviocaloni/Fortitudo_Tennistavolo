@@ -23,6 +23,7 @@ export default async function AdminLayout({
         <Link href="/admin/statistiche" className="hover:text-navy-700">Statistiche</Link>
         <Link href="/admin/campionato" className="hover:text-navy-700">🏆 Campionato</Link>
         <Link href="/admin/notifiche" className="hover:text-navy-700">📧 Notifiche</Link>
+        <Link href="/admin/feedback" className="hover:text-navy-700">💬 Feedback</Link>
       </div>
       {children}
     </div>
