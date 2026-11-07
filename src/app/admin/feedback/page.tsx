@@ -160,7 +160,11 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps) {
 
                 {item.note && <p className="whitespace-pre-wrap text-sm text-slate-800">{item.note}</p>}
 
-                <form action={updateFeedback} className="mt-3 flex flex-wrap items-end gap-2 border-t pt-3">
+                <form
+                  key={`${item.id}-${item.status}-${item.category ?? ""}-${item.admin_note ?? ""}`}
+                  action={updateFeedback}
+                  className="mt-3 flex flex-wrap items-end gap-2 border-t pt-3"
+                >
                   <input type="hidden" name="feedback_id" value={item.id} />
                   <label className="flex flex-col text-xs text-slate-600">
                     Stato
