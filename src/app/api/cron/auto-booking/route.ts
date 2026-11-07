@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getAllUsersWithAutoBooking } from "@/lib/supabase/auto-booking";
 
 export const maxDuration = 60;
@@ -11,7 +11,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const supabase = await createClient();
+    // Service role: il cron non ha sessione utente, quindi le RLS
+    // di user_auto_booking_enabled nasconderebbero tutte le righe.
+    const supabase = createAdminClient();
+    if (!supabase) {
+      return Response.json(
+        { success: false, message: "SUPABASE_SERVICE_ROLE_KEY non configurata" },
+        { status: 500 }
+      );
+    }
 
     // Get all users with auto-booking enabled
     const usersWithAutoBooking = await getAllUsersWithAutoBooking(supabase);
