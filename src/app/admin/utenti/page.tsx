@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionProfile } from "@/lib/supabase/server";
+import { isSuperAdmin } from "@/lib/utils/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminCreateUser } from "@/lib/actions/users";
 import type { Profile } from "@/lib/types";
@@ -30,6 +31,8 @@ export default async function AdminUtentiPage(
   const searchParams = await props.searchParams;
   const supabase = await createClient();
   const admin = createAdminClient();
+  const { profile: viewer } = await getSessionProfile();
+  const viewerIsSuperAdmin = isSuperAdmin(viewer?.role);
 
   let adminError = "";
   if (!admin) {
@@ -147,6 +150,8 @@ export default async function AdminUtentiPage(
               <select name="role" className="input" defaultValue="amatore">
                 <option value="amatore">Amatore</option>
                 <option value="agonista">Agonista</option>
+                {viewerIsSuperAdmin && <option value="admin">Admin</option>}
+                {viewerIsSuperAdmin && <option value="superadmin">Superadmin</option>}
               </select>
             </div>
             <div>
@@ -168,7 +173,7 @@ export default async function AdminUtentiPage(
         </details>
       )}
 
-      <AdminUsersListClient users={users as any} isAdmin={Boolean(admin)} teams={teamsWithChampionship} />
+      <AdminUsersListClient users={users as any} isAdmin={Boolean(admin)} viewerIsSuperAdmin={viewerIsSuperAdmin} teams={teamsWithChampionship} />
     </div>
   );
 }

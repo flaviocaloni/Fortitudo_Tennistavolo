@@ -4,12 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isAdmin, isSuperAdmin } from "@/lib/utils/roles";
 
 const PAGE = "/admin/utenti";
 
 async function requireAdminWithService() {
   const { supabase, profile } = await getSessionProfile();
-  if (!profile || profile.role !== "admin") redirect("/calendario");
+  if (!profile || !isAdmin(profile.role)) redirect("/calendario");
   const admin = createAdminClient();
   if (!admin) {
     redirect(
@@ -18,7 +19,14 @@ async function requireAdminWithService() {
       )}`
     );
   }
-  return { supabase, admin: admin! };
+  return { supabase, admin: admin!, callerRole: profile.role as string };
+}
+
+/** Admin e superadmin possono essere assegnati solo da un superadmin. */
+function assertRoleAssignable(role: string, callerRole: string) {
+  if ((role === "admin" || role === "superadmin") && !isSuperAdmin(callerRole)) {
+    backWithError("Solo un superadmin può assegnare i ruoli admin e superadmin");
+  }
 }
 
 function backWithError(message: string): never {
@@ -31,7 +39,7 @@ function backWithOk(message: string): never {
 
 /** Registra un nuovo utente (email già confermata, entra subito). */
 export async function adminCreateUser(formData: FormData) {
-  const { admin } = await requireAdminWithService();
+  const { admin, callerRole } = await requireAdminWithService();
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -39,13 +47,16 @@ export async function adminCreateUser(formData: FormData) {
     backWithError("Email e password (min 6 caratteri) sono obbligatorie");
   }
 
+  const role = String(formData.get("role") ?? "amatore");
+  assertRoleAssignable(role, callerRole);
+
   const { error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: {
       full_name: String(formData.get("full_name") ?? ""),
-      role: String(formData.get("role") ?? "amatore"),
+      role,
       weekly_limit: String(formData.get("weekly_limit") ?? "1"),
     },
   });
@@ -57,8 +68,10 @@ export async function adminCreateUser(formData: FormData) {
 
 /** Aggiorna dati di registrazione: nome, email, ruolo, limite settimanale. */
 export async function adminUpdateUser(formData: FormData) {
-  const { supabase, admin } = await requireAdminWithService();
+  const { supabase, admin, callerRole } = await requireAdminWithService();
   const userId = String(formData.get("user_id"));
+  const newRole = String(formData.get("role"));
+  assertRoleAssignable(newRole, callerRole);
   const email = String(formData.get("email") ?? "").trim();
 
   const certExpiry = String(formData.get("medical_certificate_expiry") ?? "").trim();
@@ -71,7 +84,7 @@ export async function adminUpdateUser(formData: FormData) {
     .from("profiles")
     .update({
       full_name: String(formData.get("full_name") ?? ""),
-      role: String(formData.get("role")),
+      role: newRole,
       weekly_limit: Number(formData.get("weekly_limit")),
       medical_certificate_expiry: certExpiry || null,
       fitet_card_number: fitetCard || null,

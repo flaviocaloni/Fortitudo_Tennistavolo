@@ -62,10 +62,12 @@ function getCertStatus(expiry: string | null) {
 export default function AdminUsersListClient({
   users,
   isAdmin,
+  viewerIsSuperAdmin = false,
   teams = [],
 }: {
   users: UserRow[];
   isAdmin: boolean;
+  viewerIsSuperAdmin?: boolean;
   teams?: Team[];
 }) {
   const [search, setSearch] = useState("");
@@ -274,6 +276,7 @@ export default function AdminUsersListClient({
                         <option value="amatore">Amatore</option>
                         <option value="agonista">Agonista</option>
                         <option value="admin">Admin</option>
+                        {viewerIsSuperAdmin && <option value="superadmin">Superadmin</option>}
                       </select>
                     </div>
                     <div>
