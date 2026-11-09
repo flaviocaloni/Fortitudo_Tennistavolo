@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { toggleSlotAutoBooking } from "@/lib/actions/auto-booking";
 import Toast from "@/components/toast";
 
-const weekdayNames = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+// Indice = training_slots.weekday (0 = domenica, come EXTRACT(DOW) in Postgres)
+const weekdayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
 
 export default function AutoBookingPage() {
   const [loading, setLoading] = useState(true);
