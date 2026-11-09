@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSuperAdmin } from "@/lib/utils/roles";
+import { runAutoBookingJob } from "@/lib/services/auto-booking-job";
 
 async function requireSuperAdmin() {
   const { supabase, profile } = await getSessionProfile();
@@ -129,4 +130,32 @@ export async function toggleSlotAutoBooking(formData: FormData) {
   const { revalidatePath } = await import("next/cache");
   revalidatePath("/calendario/auto-booking");
   revalidatePath("/calendario");
+}
+
+/** Superadmin lancia manualmente il job di auto-booking (stesso del cron) */
+export async function runAutoBookingNowAction() {
+  await requireSuperAdmin();
+
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    backWithError("/sys/auto-booking", "Service Role Key non configurata");
+  }
+
+  let summary: URLSearchParams;
+  try {
+    const r = await runAutoBookingJob(adminClient);
+    summary = new URLSearchParams({
+      run: "1",
+      users: String(r.users_processed),
+      created: String(r.bookings_created),
+      skipped: String(r.bookings_skipped),
+      failed: String(r.bookings_failed),
+      errors: String(r.errors.length),
+      detail: r.errors.slice(0, 3).join(" | ") || r.message,
+    });
+  } catch (e: any) {
+    backWithError("/sys/auto-booking", `Errore job: ${e?.message ?? "sconosciuto"}`);
+  }
+
+  redirect(`/sys/auto-booking?${summary.toString()}`);
 }

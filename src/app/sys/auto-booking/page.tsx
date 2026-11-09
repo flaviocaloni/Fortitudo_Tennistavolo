@@ -2,15 +2,37 @@ import { redirect } from "next/navigation";
 import { getSessionProfile, createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSuperAdmin } from "@/lib/utils/roles";
-import { toggleUserAutoBooking } from "@/lib/actions/auto-booking";
+import { toggleUserAutoBooking, runAutoBookingNowAction } from "@/lib/actions/auto-booking";
 import { getProfilesByIds } from "@/lib/supabase/auto-booking";
 
 interface PageProps {
-  searchParams: Promise<{ search?: string; sort?: string; order?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    sort?: string;
+    order?: string;
+    run?: string;
+    users?: string;
+    created?: string;
+    skipped?: string;
+    failed?: string;
+    errors?: string;
+    detail?: string;
+  }>;
 }
 
 export default async function AutoBookingPage(props: PageProps) {
   const searchParams = await props.searchParams;
+  const runResult =
+    searchParams.run === "1"
+      ? {
+          users: searchParams.users ?? "0",
+          created: searchParams.created ?? "0",
+          skipped: searchParams.skipped ?? "0",
+          failed: searchParams.failed ?? "0",
+          errors: searchParams.errors ?? "0",
+          detail: searchParams.detail ?? "",
+        }
+      : null;
   const searchTerm = (searchParams.search || "").toLowerCase().trim();
   const sortBy = (searchParams.sort || "nome") as string;
   const sortOrder = (searchParams.order || "asc") as "asc" | "desc";
@@ -187,6 +209,35 @@ export default async function AutoBookingPage(props: PageProps) {
           {error}
         </div>
       )}
+
+      <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="font-semibold text-gray-900">▶️ Esegui auto-booking ora</h2>
+            <p className="text-sm text-gray-600">
+              Lancia lo stesso job del cron per tutti gli utenti abilitati (oggi + 30 giorni).
+              Crea prenotazioni reali.
+            </p>
+          </div>
+          <form action={runAutoBookingNowAction}>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-navy-600 text-white rounded-lg font-semibold hover:bg-navy-700"
+            >
+              Esegui ora
+            </button>
+          </form>
+        </div>
+        {runResult && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+            <p>
+              Utenti: <b>{runResult.users}</b> · Create: <b>{runResult.created}</b> · Già presenti:{" "}
+              <b>{runResult.skipped}</b> · Fallite: <b>{runResult.failed}</b> · Errori: <b>{runResult.errors}</b>
+            </p>
+            {runResult.detail && <p className="mt-2 break-words text-xs">{runResult.detail}</p>}
+          </div>
+        )}
+      </div>
 
       <div className="mb-6">
         <form method="get" className="flex gap-2">
