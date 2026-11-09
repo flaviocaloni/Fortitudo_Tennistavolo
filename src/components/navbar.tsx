@@ -44,7 +44,6 @@ export default async function Navbar() {
       : []),
     ...(isSuperAdmin(profile?.role)
       ? [
-          { href: "/calendario", label: "📋 Calendario Avanzato", highlight: true },
           { href: "/sys", label: "🔧 SYS", highlight: true }
         ]
       : []),
@@ -104,14 +103,6 @@ export default async function Navbar() {
                   <Link href="/faq" className="hover:text-crimson-500">
                     ❓ FAQ
                   </Link>
-                  {isSuperAdmin(profile?.role) && (
-                    <Link
-                      href="/calendario"
-                      className="font-semibold text-amber-400 hover:text-amber-300"
-                    >
-                      📋 Calendario Avanzato
-                    </Link>
-                  )}
                 </>
               )}
               {isSuperAdmin(profile?.role) && (
