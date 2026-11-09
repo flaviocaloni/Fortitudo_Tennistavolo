@@ -61,7 +61,13 @@ export async function adminCreateUser(formData: FormData) {
     },
   });
 
-  if (error) backWithError(error.message);
+  if (error) {
+    const e = error as { message?: string; code?: string; status?: number };
+    const detail = [e.message, e.code, e.status ? `HTTP ${e.status}` : null]
+      .filter(Boolean)
+      .join(" · ");
+    backWithError(`Creazione utente fallita: ${detail || JSON.stringify(error)}`);
+  }
   revalidatePath(PAGE);
   backWithOk(`Utente ${email} creato`);
 }
