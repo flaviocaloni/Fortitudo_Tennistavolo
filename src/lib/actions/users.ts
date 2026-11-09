@@ -68,7 +68,7 @@ export async function adminCreateUser(formData: FormData) {
 
 /** Aggiorna dati di registrazione: nome, email, ruolo, limite settimanale. */
 export async function adminUpdateUser(formData: FormData) {
-  const { supabase, admin, callerRole } = await requireAdminWithService();
+  const { admin, callerRole } = await requireAdminWithService();
   const userId = String(formData.get("user_id"));
   const newRole = String(formData.get("role"));
   assertRoleAssignable(newRole, callerRole);
@@ -80,7 +80,8 @@ export async function adminUpdateUser(formData: FormData) {
   const girone = String(formData.get("girone") ?? "").trim();
   const serie = String(formData.get("serie") ?? "").trim();
 
-  const { error: profErr } = await supabase
+  // Service role: stessa ragione di adminToggleUserActive (la RLS esclude il superadmin).
+  const { error: profErr } = await admin
     .from("profiles")
     .update({
       full_name: String(formData.get("full_name") ?? ""),
@@ -139,7 +140,7 @@ export async function adminSetPassword(formData: FormData) {
 /** Disattiva/riattiva l'accesso di un utente senza toccare i dati storicizzati:
  *  blocca il login (ban Supabase Auth) e marca il profilo come inattivo. */
 export async function adminToggleUserActive(formData: FormData) {
-  const { supabase, admin } = await requireAdminWithService();
+  const { admin } = await requireAdminWithService();
   const userId = String(formData.get("user_id"));
   const activate = String(formData.get("activate")) === "true";
 
@@ -148,7 +149,9 @@ export async function adminToggleUserActive(formData: FormData) {
   });
   if (authErr) backWithError(authErr.message);
 
-  const { error: profErr } = await supabase
+  // Service role: la policy "profiles update" non include il superadmin,
+  // con il client di sessione l'update non dava errore ma non aggiornava nulla.
+  const { error: profErr } = await admin
     .from("profiles")
     .update({ is_active: activate })
     .eq("id", userId);
