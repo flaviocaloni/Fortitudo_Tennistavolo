@@ -55,6 +55,10 @@ export async function runAutoBookingJob(supabase: SupabaseClient): Promise<AutoB
         result.bookings_created += data.bookings_created || 0;
         result.bookings_skipped += data.bookings_skipped || 0;
         result.bookings_failed += data.bookings_failed || 0;
+        // La RPC restituisce solo l'ultimo errore SQL: lo riportiamo per capire la causa
+        if ((data.bookings_failed || 0) > 0 && data.error_detail) {
+          result.errors.push(`User ${user.user_id} (ultimo errore): ${data.error_detail}`);
+        }
       }
     } catch (err) {
       result.errors.push(`User ${user.user_id}: ${err instanceof Error ? err.message : String(err)}`);
