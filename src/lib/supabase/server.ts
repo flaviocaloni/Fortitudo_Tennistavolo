@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -28,8 +29,12 @@ export async function createClient() {
   );
 }
 
-/** Utente corrente + profilo (null se non autenticato). */
-export async function getSessionProfile() {
+/**
+ * Utente corrente + profilo (null se non autenticato).
+ * Memoizzata con cache() di React: layout, navbar e pagina nella stessa richiesta
+ * condividono un'unica chiamata a auth.getUser() e alla tabella profiles.
+ */
+export const getSessionProfile = cache(async function getSessionProfile() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,4 +54,4 @@ export async function getSessionProfile() {
   }
 
   return { supabase, user, profile };
-}
+});
