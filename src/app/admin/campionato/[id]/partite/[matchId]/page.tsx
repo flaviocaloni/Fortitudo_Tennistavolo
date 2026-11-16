@@ -644,6 +644,8 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                               <option value="A">A</option>
                               <option value="B">B</option>
                               <option value="C">C</option>
+                              <option value="R1">Riserva 1</option>
+                              <option value="R2">Riserva 2</option>
                             </select>
                           </td>
                           <td className="px-6 py-3 text-sm">
@@ -675,6 +677,8 @@ export default async function AdminMatchDetailsPage({ params }: PageProps) {
                 <p><span className="inline-block w-20 font-semibold">a-z</span>{slotName("A")}</p>
                 <p><span className="inline-block w-20 font-semibold">b-x</span>{slotName("B")}</p>
                 <p><span className="inline-block w-20 font-semibold">c-y</span>{slotName("C")}</p>
+                <p><span className="inline-block w-20 font-semibold">riserva1</span>{slotName("R1")}</p>
+                <p><span className="inline-block w-20 font-semibold">riserva2</span>{slotName("R2")}</p>
                 <p><span className="inline-block w-20 font-semibold">doppio</span>{doublesNames}</p>
               </div>
             </>

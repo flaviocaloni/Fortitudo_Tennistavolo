@@ -188,7 +188,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "admin-convocazioni-formazioni",
     category: "Amministrazione",
     question: "Come convoco i giocatori e definisco la formazione?",
-    answer: "Nella partita usa il pulsante Convoca per ogni giocatore, poi assegna la lettera (a, b, c) e il doppio nella sezione Formazioni. Con Copia da partita precedente puoi riusare convocati e formazione di un altro incontro della stessa squadra e modificarli.",
+    answer: "Nella partita usa il pulsante Convoca per ogni giocatore, poi assegna la lettera (a, b, c, riserva 1, riserva 2) e il doppio nella sezione Formazioni. Con Copia da partita precedente puoi riusare convocati e formazione di un altro incontro della stessa squadra e modificarli.",
     roles: ADMINS,
   },
   {
