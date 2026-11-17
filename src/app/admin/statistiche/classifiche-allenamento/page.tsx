@@ -14,21 +14,13 @@ interface PlayerRow {
   id: string;
   full_name: string;
   role: "amatore" | "agonista";
+  weekly_limit: number;
 }
 interface BookingRow {
   user_id: string;
   session_date: string;
   status: "active" | "cancelled";
   is_overbooking: boolean;
-}
-interface ConvocationRow {
-  user_id: string;
-  championship_matches: { scheduled_start_at: string } | null;
-}
-interface AttendanceRow {
-  user_id: string;
-  status: "PRESENT" | "ABSENT";
-  championship_matches: { scheduled_start_at: string } | null;
 }
 
 // Supabase restituisce al massimo 1000 righe per richiesta: pagina finché serve.
@@ -59,7 +51,7 @@ function monthsBetween(from: string, to: string): string[] {
 
 const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 100) : null);
 
-export default async function ClassifichePage(props: {
+export default async function ClassificheAllenamentoPage(props: {
   searchParams: Promise<{ from?: string; to?: string; tipo?: string; utenti?: string | string[] }>;
 }) {
   const sp = await props.searchParams;
@@ -75,12 +67,11 @@ export default async function ClassifichePage(props: {
   const selectedIds = (
     Array.isArray(sp.utenti) ? sp.utenti : sp.utenti ? [sp.utenti] : []
   ).filter(Boolean);
-  const toEnd = `${to}T23:59:59`;
 
-  // Giocatori (amatori e agonisti)
+  // Giocatori (amatori e agonisti) con il limite settimanale di prenotazioni
   const { data: profilesData } = await db
     .from("profiles")
-    .select("id, full_name, role")
+    .select("id, full_name, role, weekly_limit")
     .in("role", ["amatore", "agonista"])
     .order("full_name");
   const allPlayers = (profilesData ?? []) as PlayerRow[];
@@ -90,7 +81,7 @@ export default async function ClassifichePage(props: {
     : pool;
   const popIds = new Set(population.map((p) => p.id));
 
-  // Prenotazioni allenamento nel periodo
+  // Allenamenti (prenotazioni) nel periodo
   const bookings = await fetchAll<BookingRow>((a, b) =>
     db
       .from("bookings")
@@ -101,27 +92,7 @@ export default async function ClassifichePage(props: {
       .range(a, b)
   );
 
-  // Convocazioni e disponibilità agonisti (partite nel periodo)
-  const convocations = await fetchAll<ConvocationRow>((a, b) =>
-    db
-      .from("championship_match_convocations")
-      .select("user_id, championship_matches!inner(scheduled_start_at)")
-      .gte("championship_matches.scheduled_start_at", from)
-      .lte("championship_matches.scheduled_start_at", toEnd)
-      .order("id")
-      .range(a, b)
-  );
-  const attendances = await fetchAll<AttendanceRow>((a, b) =>
-    db
-      .from("championship_match_attendances")
-      .select("user_id, status, championship_matches!inner(scheduled_start_at)")
-      .gte("championship_matches.scheduled_start_at", from)
-      .lte("championship_matches.scheduled_start_at", toEnd)
-      .order("id")
-      .range(a, b)
-  );
-
-  // Aggregazione per utente
+  // Settimane del periodo (minimo 1 per evitare divisioni per zero)
   const days = Math.max(1, (new Date(to).getTime() - new Date(from).getTime()) / 86400000 + 1);
   const weeks = Math.max(1, days / 7);
 
@@ -129,28 +100,25 @@ export default async function ClassifichePage(props: {
     const mine = bookings.filter((b) => b.user_id === p.id);
     const active = mine.filter((b) => b.status === "active");
     const cancelled = mine.length - active.length;
-    const conv = convocations.filter((c) => c.user_id === p.id).length;
-    const att = attendances.filter((a) => a.user_id === p.id);
-    const present = att.filter((a) => a.status === "PRESENT").length;
-    const absent = att.length - present;
+    // Slot potenziali = limite settimanale × settimane del periodo (es. 3 × 2 = 6)
+    const potential = Math.round(p.weekly_limit * weeks);
     return {
       id: p.id,
       name: p.full_name,
       role: p.role,
+      weeklyLimit: p.weekly_limit,
+      potential,
       active: active.length,
       cancelled,
       cancelRate: pct(cancelled, mine.length),
       overbooking: active.filter((b) => b.is_overbooking).length,
       perWeek: active.length / weeks,
-      convocations: conv,
-      present,
-      absent,
-      availability: pct(present, present + absent),
+      trainingPct: pct(active.length, potential),
     };
   });
-  rows.sort((x, y) => y.active - x.active || x.name.localeCompare(y.name));
+  rows.sort((x, y) => (y.trainingPct ?? -1) - (x.trainingPct ?? -1) || x.name.localeCompare(y.name));
 
-  // Serie mensile (prenotazioni attive) per il gruppo selezionato
+  // Serie mensile (allenamenti attivi) per il gruppo selezionato
   const months = monthsBetween(from, to);
   const monthly = months.map((m) => ({
     month: m,
@@ -163,15 +131,8 @@ export default async function ClassifichePage(props: {
 
   // Totali
   const totalActive = rows.reduce((s, r) => s + r.active, 0);
-  const totalConv = rows.reduce((s, r) => s + r.convocations, 0);
-  const totalPresent = rows.reduce((s, r) => s + r.present, 0);
-  const totalAbsent = rows.reduce((s, r) => s + r.absent, 0);
-  const agonistRows = rows.filter((r) => r.role === "agonista");
-  const avgAvail = pct(totalPresent, totalPresent + totalAbsent);
-  const avgPerWeekAmatori = rows.filter((r) => r.role === "amatore").length
-    ? rows.filter((r) => r.role === "amatore").reduce((s, r) => s + r.perWeek, 0) /
-      rows.filter((r) => r.role === "amatore").length
-    : null;
+  const totalPotential = rows.reduce((s, r) => s + r.potential, 0);
+  const totalPct = pct(totalActive, totalPotential);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -186,11 +147,11 @@ export default async function ClassifichePage(props: {
           ← Torna alle Statistiche
         </Link>
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-gray-900">Classifiche</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Classifiche allenamento</h1>
           <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">BETA</span>
         </div>
         <p className="text-gray-600 mt-1">
-          Partecipazione agli allenamenti e disponibilità alle partite, dal {from} al {to}
+          Partecipazione agli allenamenti dal {from} al {to}
           {population.length === 1
             ? ` · ${population[0].full_name}`
             : selectedIds.length
@@ -233,7 +194,7 @@ export default async function ClassifichePage(props: {
         </label>
         <div className="flex gap-2">
           <button type="submit" className="btn btn-primary">Applica</button>
-          <Link href="/admin/statistiche/classifiche" className="btn">Reimposta</Link>
+          <Link href="/admin/statistiche/classifiche-allenamento" className="btn">Reimposta</Link>
         </div>
       </form>
 
@@ -242,16 +203,15 @@ export default async function ClassifichePage(props: {
       </div>
 
       {/* Riepilogo */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card label="Prenotazioni attive" value={totalActive} />
-        <Card label="Media a settimana (amatori)" value={avgPerWeekAmatori === null ? "—" : avgPerWeekAmatori.toFixed(1)} />
-        <Card label="Convocazioni" value={totalConv} />
-        <Card label="Disponibilità agonisti" value={avgAvail === null ? "—" : `${avgAvail}%`} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card label="Allenamenti effettuati" value={totalActive} />
+        <Card label="Slot potenziali (100%)" value={totalPotential} />
+        <Card label="% allenamento complessiva" value={totalPct === null ? "—" : `${totalPct}%`} />
       </div>
 
       {/* Andamento mensile */}
       <section className="print-page bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Andamento mensile prenotazioni attive</h2>
+        <h2 className="text-lg font-semibold mb-4">Andamento mensile allenamenti</h2>
         {monthly.length === 0 ? (
           <p className="text-gray-500">Nessun mese nel periodo selezionato.</p>
         ) : (
@@ -282,15 +242,13 @@ export default async function ClassifichePage(props: {
               <tr className="text-left text-gray-600 border-b">
                 <th className="py-2 pr-3">Utente</th>
                 <th className="py-2 pr-3">Tipo</th>
-                <th className="py-2 pr-3 w-48">Prenotazioni attive</th>
+                <th className="py-2 pr-3 text-right">Slot potenziali</th>
+                <th className="py-2 pr-3 w-48">Allenamenti effettuati</th>
                 <th className="py-2 pr-3 text-right">Annullate</th>
                 <th className="py-2 pr-3 text-right">% annullate</th>
                 <th className="py-2 pr-3 text-right">Overbooking</th>
                 <th className="py-2 pr-3 text-right">Media/sett.</th>
-                <th className="py-2 pr-3 text-right">Convocazioni</th>
-                <th className="py-2 pr-3 text-right">Disponibile</th>
-                <th className="py-2 pr-3 text-right">Non disp.</th>
-                <th className="py-2 text-right">% disponibilità</th>
+                <th className="py-2 text-right">% allenamento</th>
               </tr>
             </thead>
             <tbody>
@@ -298,6 +256,7 @@ export default async function ClassifichePage(props: {
                 <tr key={r.id} className="border-b last:border-0">
                   <td className="py-2 pr-3 font-medium text-gray-900">{r.name}</td>
                   <td className="py-2 pr-3 capitalize text-gray-600">{r.role}</td>
+                  <td className="py-2 pr-3 text-right">{r.potential}</td>
                   <td className="py-2 pr-3">
                     <div className="flex items-center gap-2">
                       <div className="h-3 bg-blue-500 rounded" style={{ width: `${(r.active / maxActive) * 100}%`, minWidth: r.active ? 4 : 0 }} />
@@ -308,30 +267,21 @@ export default async function ClassifichePage(props: {
                   <td className="py-2 pr-3 text-right">{r.cancelRate === null ? "—" : `${r.cancelRate}%`}</td>
                   <td className="py-2 pr-3 text-right">{r.overbooking}</td>
                   <td className="py-2 pr-3 text-right">{r.perWeek.toFixed(1)}</td>
-                  <td className="py-2 pr-3 text-right">{r.role === "agonista" ? r.convocations : "—"}</td>
-                  <td className="py-2 pr-3 text-right">{r.role === "agonista" ? r.present : "—"}</td>
-                  <td className="py-2 pr-3 text-right">{r.role === "agonista" ? r.absent : "—"}</td>
-                  <td className="py-2 text-right">
-                    {r.role === "agonista" ? (r.availability === null ? "—" : `${r.availability}%`) : "—"}
-                  </td>
+                  <td className="py-2 text-right font-semibold">{r.trainingPct === null ? "—" : `${r.trainingPct}%`}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-        {agonistRows.length > 0 && (
-          <p className="text-xs text-gray-500 mt-3">
-            Disponibilità = risposte &quot;presente&quot; / (presente + assente) sulle partite del periodo. Le partite senza risposta non sono conteggiate.
-          </p>
         )}
       </section>
 
       <section className="text-xs text-gray-500 bg-white rounded-lg p-4">
         <p className="font-semibold text-gray-700 mb-1">Note (beta)</p>
         <ul className="list-disc pl-5 space-y-1">
-          <li>Prenotazioni attive: prenotazioni non annullate con data sessione nel periodo. Le annullate sono conteggiate a parte.</li>
-          <li>Media a settimana = prenotazioni attive / settimane del periodo (minimo 1).</li>
-          <li>Convocazioni e disponibilità derivano dalle partite di campionato con data di inizio nel periodo.</li>
+          <li>Slot potenziali = limite settimanale dell&apos;utente × settimane del periodo (es. 3 slot/settimana × 2 settimane = 6).</li>
+          <li>Allenamenti effettuati = prenotazioni attive con data sessione nel periodo. Le annullate sono escluse dal conteggio.</li>
+          <li>% allenamento = allenamenti effettuati / slot potenziali. Può superare il 100% per overbooking.</li>
+          <li>Media/sett. = allenamenti effettuati / settimane del periodo.</li>
         </ul>
       </section>
     </div>
