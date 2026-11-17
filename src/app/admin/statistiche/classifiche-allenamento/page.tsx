@@ -112,7 +112,24 @@ export default async function ClassificheAllenamentoPage(props: {
       trainingPct: pct(active.length, potential),
     };
   });
-  rows.sort((x, y) => (y.trainingPct ?? -1) - (x.trainingPct ?? -1) || x.name.localeCompare(y.name));
+  // Ordine: % allenamento, allenamenti effettuati (decrescenti), poi tipologia e utente (alfabetico)
+  rows.sort(
+    (x, y) =>
+      (y.trainingPct ?? -1) - (x.trainingPct ?? -1) ||
+      y.active - x.active ||
+      x.role.localeCompare(y.role) ||
+      x.name.localeCompare(y.name)
+  );
+
+  // Semaforo: rosso < 50%, giallo 50–79%, verde ≥ 80%
+  const trafficLight = (p: number | null) =>
+    p === null
+      ? "bg-gray-100 text-gray-500"
+      : p >= 80
+        ? "bg-green-100 text-green-800"
+        : p >= 50
+          ? "bg-amber-100 text-amber-800"
+          : "bg-red-100 text-red-800";
 
   // Serie mensile (allenamenti attivi) per il gruppo selezionato
   const months = monthsBetween(from, to);
@@ -264,7 +281,11 @@ export default async function ClassificheAllenamentoPage(props: {
                   <td className="py-2 pr-3 text-right">{r.cancelRate === null ? "—" : `${r.cancelRate}%`}</td>
                   <td className="py-2 pr-3 text-right">{r.overbooking}</td>
                   <td className="py-2 pr-3 text-right">{r.perWeek.toFixed(1)}</td>
-                  <td className="py-2 text-right font-semibold">{r.trainingPct === null ? "—" : `${r.trainingPct}%`}</td>
+                  <td className="py-2 text-right">
+                    <span className={`inline-block min-w-[3.5rem] rounded px-2 py-0.5 text-center font-semibold ${trafficLight(r.trainingPct)}`}>
+                      {r.trainingPct === null ? "—" : `${r.trainingPct}%`}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
