@@ -185,8 +185,8 @@ export default async function ClassificheAllenamentoPage(props: {
   const buckets = [
     { label: "Sotto 50%", bar: "bg-red-500", test: (p: number) => p < 50 },
     { label: "50–79%", bar: "bg-amber-400", test: (p: number) => p >= 50 && p < 80 },
-    { label: "80–99%", bar: "bg-green-500", test: (p: number) => p >= 80 && p < 100 },
-    { label: "100% e oltre", bar: "bg-emerald-700", test: (p: number) => p >= 100 },
+    { label: "80–94%", bar: "bg-green-500", test: (p: number) => p >= 80 && p < 95 },
+    { label: "95% e oltre", bar: "bg-emerald-700", test: (p: number) => p >= 95 },
   ];
   const withPct = rows.filter((r) => r.trainingPct !== null);
   const distribution = buckets.map((b) => ({
@@ -245,12 +245,21 @@ export default async function ClassificheAllenamentoPage(props: {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <style>{`@media print {
-        nav, header, .no-print { display: none !important; }
-        body { background: #fff !important; }
-        .print-page { box-shadow: none !important; }
-      }`}</style>
+    <div className="print-root max-w-6xl mx-auto px-4 py-8">
+      <style>{`
+        @page { size: A4 portrait; margin: 10mm; }
+        @media print {
+          nav, header, .no-print { display: none !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          body { background: #fff !important; }
+          /* Layout desktop, scalato per stare nella larghezza utile di un A4 verticale */
+          .print-root { max-width: none !important; width: 1100px; zoom: 0.65; padding: 0 !important; }
+          .print-page, section { box-shadow: none !important; break-inside: avoid; }
+          .overflow-x-auto { overflow: visible !important; }
+          table, tr, td, th { break-inside: avoid; }
+          thead { display: table-header-group; }
+        }
+      `}</style>
 
       <div className="mb-6">
         <Link href="/admin/statistiche" className="text-blue-600 hover:underline mb-4 inline-block no-print">
@@ -275,7 +284,7 @@ export default async function ClassificheAllenamentoPage(props: {
       </div>
 
       {/* Filtri (GET, funzionano senza JavaScript) */}
-      <form method="get" className="no-print mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end bg-white rounded-lg shadow p-4">
+      <form method="get" className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end bg-white rounded-lg shadow p-4">
         <input type="hidden" name="ord" value={sortKey} />
         <input type="hidden" name="dir" value={sortDir} />
         <label className="flex flex-col text-sm text-gray-700">
@@ -304,7 +313,7 @@ export default async function ClassificheAllenamentoPage(props: {
             ))}
           </select>
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 no-print">
           <button type="submit" className="btn btn-primary">Applica</button>
           <Link href="/admin/statistiche/classifiche-allenamento" className="btn">Reimposta</Link>
         </div>
