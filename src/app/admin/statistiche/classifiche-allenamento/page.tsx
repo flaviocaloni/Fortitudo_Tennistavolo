@@ -28,6 +28,33 @@ interface SlotRow {
   id: string;
   slot_type: "RECURRING" | "EVENT" | "PIZZA" | null;
 }
+interface RowData {
+  id: string;
+  name: string;
+  role: "amatore" | "agonista";
+  weeklyLimit: number;
+  potential: number;
+  active: number;
+  cancelled: number;
+  cancelRate: number | null;
+  overbooking: number;
+  perWeek: number;
+  trainingPct: number | null;
+}
+
+type SortKey = keyof RowData;
+const SORT_KEYS: SortKey[] = [
+  "name",
+  "role",
+  "potential",
+  "active",
+  "cancelled",
+  "cancelRate",
+  "overbooking",
+  "perWeek",
+  "trainingPct",
+];
+const TEXT_KEYS: SortKey[] = ["name", "role"];
 
 function monthsBetween(from: string, to: string): string[] {
   const months: string[] = [];
@@ -41,7 +68,14 @@ function monthsBetween(from: string, to: string): string[] {
 }
 
 export default async function ClassificheAllenamentoPage(props: {
-  searchParams: Promise<{ from?: string; to?: string; tipo?: string; utenti?: string | string[] }>;
+  searchParams: Promise<{
+    from?: string;
+    to?: string;
+    tipo?: string;
+    utenti?: string | string[];
+    ord?: string;
+    dir?: string;
+  }>;
 }) {
   const sp = await props.searchParams;
   const { supabase, profile } = await getSessionProfile();
@@ -57,6 +91,10 @@ export default async function ClassificheAllenamentoPage(props: {
   const selectedIds = (
     Array.isArray(sp.utenti) ? sp.utenti : sp.utenti ? [sp.utenti] : []
   ).filter(Boolean);
+
+  // Ordinamento: colonna e direzione dalla URL (default: % allenamento decrescente)
+  const sortKey: SortKey = SORT_KEYS.includes(sp.ord as SortKey) ? (sp.ord as SortKey) : "trainingPct";
+  const sortDir: "asc" | "desc" = sp.dir === "asc" || sp.dir === "desc" ? sp.dir : "desc";
 
   // Giocatori (amatori e agonisti) con il limite settimanale di prenotazioni
   const { data: profilesData } = await db
@@ -92,7 +130,7 @@ export default async function ClassificheAllenamentoPage(props: {
   const days = Math.max(1, (new Date(to).getTime() - new Date(from).getTime()) / 86400000 + 1);
   const weeks = Math.max(1, days / 7);
 
-  const rows = population.map((p) => {
+  const rows: RowData[] = population.map((p) => {
     const mine = bookings.filter((b) => b.user_id === p.id);
     const active = mine.filter((b) => b.status === "active");
     const cancelled = mine.length - active.length;
@@ -112,10 +150,22 @@ export default async function ClassificheAllenamentoPage(props: {
       trainingPct: pct(active.length, potential),
     };
   });
-  // Ordine: % allenamento, allenamenti effettuati (decrescenti), poi tipologia e utente (alfabetico)
+
+  // Ordine: colonna scelta (valori vuoti sempre in fondo), poi allenamenti, tipologia e utente
+  const compareCol = (x: RowData, y: RowData): number => {
+    const a = x[sortKey];
+    const b = y[sortKey];
+    if (a === null && b === null) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    const c = TEXT_KEYS.includes(sortKey)
+      ? String(a).localeCompare(String(b))
+      : (a as number) - (b as number);
+    return sortDir === "asc" ? c : -c;
+  };
   rows.sort(
     (x, y) =>
-      (y.trainingPct ?? -1) - (x.trainingPct ?? -1) ||
+      compareCol(x, y) ||
       y.active - x.active ||
       x.role.localeCompare(y.role) ||
       x.name.localeCompare(y.name)
@@ -130,6 +180,21 @@ export default async function ClassificheAllenamentoPage(props: {
         : p >= 50
           ? "bg-amber-100 text-amber-800"
           : "bg-red-100 text-red-800";
+
+  // Distribuzione utenti per fascia di % allenamento (segue i filtri attivi)
+  const buckets = [
+    { label: "Sotto 50%", bar: "bg-red-500", test: (p: number) => p < 50 },
+    { label: "50–79%", bar: "bg-amber-400", test: (p: number) => p >= 50 && p < 80 },
+    { label: "80–99%", bar: "bg-green-500", test: (p: number) => p >= 80 && p < 100 },
+    { label: "100% e oltre", bar: "bg-emerald-700", test: (p: number) => p >= 100 },
+  ];
+  const withPct = rows.filter((r) => r.trainingPct !== null);
+  const distribution = buckets.map((b) => ({
+    ...b,
+    count: withPct.filter((r) => b.test(r.trainingPct as number)).length,
+  }));
+  const maxDist = Math.max(1, ...distribution.map((d) => d.count));
+  const noPotential = rows.length - withPct.length;
 
   // Serie mensile (allenamenti attivi) per il gruppo selezionato
   const months = monthsBetween(from, to);
@@ -147,6 +212,37 @@ export default async function ClassificheAllenamentoPage(props: {
   const totalPotential = rows.reduce((s, r) => s + r.potential, 0);
   const totalPct = pct(totalActive, totalPotential);
 
+  // Link di ordinamento: mantiene periodo, tipologia e utenti selezionati
+  const buildHref = (params: Record<string, string>) => {
+    const q = new URLSearchParams();
+    q.set("from", from);
+    q.set("to", to);
+    if (tipo !== "all") q.set("tipo", tipo);
+    for (const id of selectedIds) q.append("utenti", id);
+    for (const [k, v] of Object.entries(params)) q.set(k, v);
+    return `/admin/statistiche/classifiche-allenamento?${q.toString()}`;
+  };
+  const sortHref = (key: SortKey) => {
+    const nextDir =
+      sortKey === key
+        ? sortDir === "desc" ? "asc" : "desc"
+        : TEXT_KEYS.includes(key) ? "asc" : "desc";
+    return buildHref({ ord: key, dir: nextDir });
+  };
+  const Th = ({ k, label, right }: { k: SortKey; label: string; right?: boolean }) => {
+    const active = sortKey === k;
+    return (
+      <th className={`py-2 pr-3 ${right ? "text-right" : ""}`}>
+        <Link
+          href={sortHref(k)}
+          className={`inline-flex items-center gap-1 hover:text-gray-900 ${active ? "text-gray-900 font-semibold" : ""}`}
+        >
+          {label}
+          <span className="text-xs">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+        </Link>
+      </th>
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -180,6 +276,8 @@ export default async function ClassificheAllenamentoPage(props: {
 
       {/* Filtri (GET, funzionano senza JavaScript) */}
       <form method="get" className="no-print mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end bg-white rounded-lg shadow p-4">
+        <input type="hidden" name="ord" value={sortKey} />
+        <input type="hidden" name="dir" value={sortDir} />
         <label className="flex flex-col text-sm text-gray-700">
           Data inizio
           <input type="date" name="from" defaultValue={from} className="input" />
@@ -245,6 +343,34 @@ export default async function ClassificheAllenamentoPage(props: {
         )}
       </section>
 
+      {/* Distribuzione % allenamento */}
+      <section className="print-page bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-1">Distribuzione % allenamento</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Numero di utenti per fascia di % allenamento, sul gruppo e periodo selezionati.
+          {noPotential > 0 ? ` ${noPotential} utente/i senza slot potenziali esclusi.` : ""}
+        </p>
+        {withPct.length === 0 ? (
+          <p className="text-gray-500">Nessun utente con slot potenziali nel periodo.</p>
+        ) : (
+          <div className="space-y-3">
+            {distribution.map((d) => (
+              <div key={d.label} className="grid grid-cols-[8rem_1fr_3rem] items-center gap-3 text-sm">
+                <span className="text-gray-700">{d.label}</span>
+                <div className="h-5 bg-gray-100 rounded overflow-hidden">
+                  <div
+                    className={`h-full ${d.bar} rounded`}
+                    style={{ width: `${(d.count / maxDist) * 100}%`, minWidth: d.count ? 4 : 0 }}
+                    title={`${d.label}: ${d.count} utenti`}
+                  />
+                </div>
+                <span className="text-right font-semibold text-gray-900">{d.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Classifica utenti */}
       <section className="print-page bg-white rounded-lg shadow p-6 mb-6 overflow-x-auto">
         <h2 className="text-lg font-semibold mb-4">Classifica partecipazione</h2>
@@ -254,15 +380,15 @@ export default async function ClassificheAllenamentoPage(props: {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-gray-600 border-b">
-                <th className="py-2 pr-3">Utente</th>
-                <th className="py-2 pr-3">Tipo</th>
-                <th className="py-2 pr-3 text-right">Slot potenziali</th>
-                <th className="py-2 pr-3 w-48">Allenamenti effettuati</th>
-                <th className="py-2 pr-3 text-right">Annullate</th>
-                <th className="py-2 pr-3 text-right">% annullate</th>
-                <th className="py-2 pr-3 text-right">Overbooking</th>
-                <th className="py-2 pr-3 text-right">Media/sett.</th>
-                <th className="py-2 text-right">% allenamento</th>
+                <Th k="name" label="Utente" />
+                <Th k="role" label="Tipo" />
+                <Th k="potential" label="Slot potenziali" right />
+                <Th k="active" label="Allenamenti effettuati" />
+                <Th k="cancelled" label="Annullate" right />
+                <Th k="cancelRate" label="% annullate" right />
+                <Th k="overbooking" label="Overbooking" right />
+                <Th k="perWeek" label="Media/sett." right />
+                <Th k="trainingPct" label="% allenamento" right />
               </tr>
             </thead>
             <tbody>
@@ -301,6 +427,7 @@ export default async function ClassificheAllenamentoPage(props: {
           <li>Allenamenti effettuati = prenotazioni attive con data sessione nel periodo. Le annullate sono escluse dal conteggio.</li>
           <li>% allenamento = allenamenti effettuati / slot potenziali. Può superare il 100% per overbooking.</li>
           <li>Media/sett. = allenamenti effettuati / settimane del periodo.</li>
+          <li>Clicca un&apos;intestazione di colonna per ordinare; un secondo clic inverte l&apos;ordine.</li>
         </ul>
       </section>
     </div>
