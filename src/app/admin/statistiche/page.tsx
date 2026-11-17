@@ -15,6 +15,21 @@ export default async function AdminStatistichePage() {
       <p className="mb-8 text-gray-600">Seleziona una sezione per visualizzare i dettagli</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Classifiche (beta) */}
+        <Link
+          href="/admin/statistiche/classifiche"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-indigo-600"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-2xl font-bold text-indigo-600">🏆</div>
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">BETA</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Classifiche</h2>
+          <p className="text-sm text-gray-600">
+            Partecipazione agli allenamenti e disponibilità alle partite per amatori e agonisti. Filtri per periodo, tipologia e utente; esportabile in PDF.
+          </p>
+        </Link>
+
         {/* Prenotazioni */}
         <Link
           href="/admin/statistiche/prenotazioni"
