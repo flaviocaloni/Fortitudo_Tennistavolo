@@ -50,8 +50,9 @@ export default async function ClassificheAllenamentoPage(props: {
   const db = createAdminClient() || supabase;
   const season = await getCurrentSeason(db);
   const today = new Date().toISOString().slice(0, 10);
+  // Default: dall'inizio del campionato in corso (stagione corrente) a oggi
   const from = sp.from || season?.start_date || today;
-  const to = sp.to || season?.end_date || today;
+  const to = sp.to || today;
   const tipo: Tipo = sp.tipo === "amatore" || sp.tipo === "agonista" ? sp.tipo : "all";
   const selectedIds = (
     Array.isArray(sp.utenti) ? sp.utenti : sp.utenti ? [sp.utenti] : []
