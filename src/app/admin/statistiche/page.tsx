@@ -30,6 +30,21 @@ export default async function AdminStatistichePage() {
           </p>
         </Link>
 
+        {/* Eventi extra (beta) */}
+        <Link
+          href="/admin/statistiche/eventi-extra"
+          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-l-4 border-pink-600"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-2xl font-bold text-pink-600">🎉</div>
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">BETA</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Eventi extra</h2>
+          <p className="text-sm text-gray-600">
+            Riepilogo e analisi di open day, tornei e pizzate: partecipanti, riempimento e annullamenti.
+          </p>
+        </Link>
+
         {/* Prenotazioni */}
         <Link
           href="/admin/statistiche/prenotazioni"
