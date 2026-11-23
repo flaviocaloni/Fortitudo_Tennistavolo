@@ -82,8 +82,8 @@ export default function SlotParticipantsModal({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="card w-full max-w-sm overflow-y-auto max-h-96">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="card w-full max-w-sm overflow-y-auto max-h-96 text-gray-900">
+            <div className="mb-2 flex items-center justify-between">
               <h3 className="font-semibold text-navy-800">Partecipanti</h3>
               <button
                 onClick={() => setIsOpen(false)}
@@ -92,6 +92,14 @@ export default function SlotParticipantsModal({
                 ✕
               </button>
             </div>
+
+            {!loading && participants.length > 0 && (
+              <p className="mb-4 text-xs font-semibold">
+                <span className="text-blue-600">amatori={participants.filter((p) => p.role === "amatore").length}</span>
+                {" · "}
+                <span className="text-red-600">agonisti={participants.filter((p) => p.role === "agonista").length}</span>
+              </p>
+            )}
 
             {loading && <p className="text-sm text-slate-500">Caricamento...</p>}
 
@@ -105,7 +113,7 @@ export default function SlotParticipantsModal({
                     <div className="space-y-1">
                       {confirmed.map((p, i) => (
                         <div key={i} className="flex items-center justify-between text-xs">
-                          <span>{p.full_name}</span>
+                          <span className="text-gray-900">{p.full_name}</span>
                           <div className="flex items-center gap-2">
                             {isPizza && p.selected_participants && (
                               <span className="text-slate-400">({p.selected_participants})</span>
@@ -126,7 +134,7 @@ export default function SlotParticipantsModal({
                     <div className="space-y-1">
                       {waitlist.map((p, i) => (
                         <div key={i} className="flex items-center justify-between text-xs opacity-75">
-                          <span>{p.full_name}</span>
+                          <span className="text-gray-900">{p.full_name}</span>
                           <div className="flex items-center gap-2">
                             {isPizza && p.selected_participants && (
                               <span className="text-slate-400">({p.selected_participants})</span>
