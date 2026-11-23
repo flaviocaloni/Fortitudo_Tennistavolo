@@ -57,6 +57,14 @@ export default function SlotParticipantsModal({
     }
   }, [isOpen, slotId, sessionDate]);
 
+  // Colore per tipologia: amatori blu, agonisti rosso
+  const roleClass = (role: string) =>
+    role === "amatore"
+      ? "text-blue-600 font-medium"
+      : role === "agonista"
+        ? "text-red-600 font-medium"
+        : "text-slate-500";
+
   const confirmed = participants.filter((p) => !p.is_overbooking);
   const waitlist = participants.filter((p) => p.is_overbooking);
 
@@ -102,7 +110,7 @@ export default function SlotParticipantsModal({
                             {isPizza && p.selected_participants && (
                               <span className="text-slate-400">({p.selected_participants})</span>
                             )}
-                            <span className="text-slate-500">{p.role}</span>
+                            <span className={roleClass(p.role)}>{p.role}</span>
                           </div>
                         </div>
                       ))}
@@ -123,7 +131,7 @@ export default function SlotParticipantsModal({
                             {isPizza && p.selected_participants && (
                               <span className="text-slate-400">({p.selected_participants})</span>
                             )}
-                            <span className="text-slate-500">{p.role}</span>
+                            <span className={roleClass(p.role)}>{p.role}</span>
                           </div>
                         </div>
                       ))}
